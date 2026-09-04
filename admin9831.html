@@ -113,6 +113,27 @@
     pointer-events:none; box-shadow:0 8px 24px rgba(0,0,0,.5);
   }
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  .admin-tabs{display:flex; gap:6px; margin:16px 0 14px; flex-wrap:wrap}
+  .atab{
+    padding:9px 14px; border-radius:4px; border:1px solid var(--border); background:var(--surface2);
+    color:var(--text); cursor:pointer; font-family:inherit; font-size:13px; font-weight:700;
+  }
+  .atab.on{background:var(--accent); border-color:var(--accent); color:#fff}
+  .tab-n{display:none; margin-right:6px; background:#ef4444; color:#fff; font-size:11px; padding:1px 7px; border-radius:99px}
+  .tab-n.show{display:inline-block}
+  .vip-thumb{max-width:100%; max-height:420px; border:1px solid var(--border); border-radius:4px; display:block; margin:10px 0}
+  .stpill{font-size:11px; font-weight:800; padding:3px 8px; border-radius:3px; display:inline-block}
+  .st-pending,.st-awaiting_receipt{background:rgba(249,115,22,.18); color:#fdba74}
+  .st-rejected,.st-expired{background:rgba(239,68,68,.16); color:#fca5a5}
+  .st-in_progress{background:rgba(250,204,21,.16); color:#fde047}
+  .st-done{background:rgba(34,197,94,.16); color:#86efac}
+  .assign-list{max-height:240px; overflow:auto; border:1px solid var(--border); padding:8px; margin:8px 0}
+  .assign-list label{display:flex; gap:8px; align-items:center; color:var(--text); font-size:13px; margin-bottom:6px}
+  .assign-list input{width:auto}
+  .ov{position:fixed; inset:0; background:rgba(0,0,0,.72); display:none; align-items:center; justify-content:center; z-index:40; padding:16px}
+  .ov.open{display:flex}
+  .ov-box{background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px; max-width:520px; width:100%; max-height:90vh; overflow:auto}
 </style>
 </head>
 <body>
@@ -144,6 +165,13 @@
   </header>
 
   <div class="wrap">
+    <div class="admin-tabs" id="adminTabs">
+      <button type="button" class="atab on" data-tab="servers">سرورها</button>
+      <button type="button" class="atab" data-tab="receipts">فیش‌ها <span class="tab-n" id="receiptBadge"></span></button>
+      <button type="button" class="atab" data-tab="vipcf">کانفیگ اختصاصی</button>
+    </div>
+
+    <div id="tab-servers">
     <div class="card" id="formCard">
       <h3 id="formTitle">➕ افزودن سرور جدید</h3>
       <div class="form-row">
@@ -207,6 +235,66 @@
         </table>
       </div>
     </div>
+    </div>
+
+    <div id="tab-receipts" style="display:none">
+      <div class="card">
+        <h3>تنظیمات خرید اختصاصی</h3>
+        <div class="form-row">
+          <div class="field"><label>شماره کارت</label><input id="vipCardNumber" placeholder="6037...." dir="ltr"></div>
+          <div class="field"><label>نام صاحب کارت</label><input id="vipCardName" placeholder="طبق کارت"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>نمایش دکمه خرید در سایت</label>
+            <select id="vipEnabled"><option value="0">خاموش</option><option value="1">روشن</option></select>
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end">
+            <button type="button" class="btn btn-primary" id="vipSaveSettings" style="width:100%">ذخیره تنظیمات</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>فیش‌ها و سفارش‌ها</h3>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>کد</th><th>پلن</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <tbody id="vipOrderRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-vipcf" style="display:none">
+      <div class="card">
+        <h3>افزودن کانفیگ اختصاصی</h3>
+        <div class="form-row">
+          <div class="field"><label>نام</label><input id="vipCfName" placeholder="مثلاً آلمان ۱"></div>
+          <div class="field"><label>لینک</label><input id="vipCfLink" placeholder="vless://..." dir="ltr"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="vipCfAdd">افزودن</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>استخر کانفیگ اختصاصی</h3>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>نام</th><th>لینک</th><th></th></tr></thead>
+            <tbody id="vipCfRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="vipOv">
+  <div class="ov-box">
+    <h3 id="vipOvTitle">فیش</h3>
+    <div id="vipOvBody"></div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="vipOvClose">بستن</button>
+    </div>
   </div>
 </div>
 
@@ -254,7 +342,7 @@
   function doLogin(){
     api('/api/admin/login', { method:'POST', body:JSON.stringify({ password: document.getElementById('passInput').value }) })
       .then(function(d){
-        if(d.ok){ showDash(); loadServers(); document.getElementById('passInput').value=''; }
+        if(d.ok){ showDash(); loadServers(); loadVipAll(); document.getElementById('passInput').value=''; }
         else { document.getElementById('loginErr').textContent=d.error||'رمز اشتباه است'; document.getElementById('loginErr').classList.add('show'); }
       });
   }
@@ -458,8 +546,152 @@
     toast(p?'پروتکل '+p.toUpperCase()+' تشخیص داده شد':'پروتکل تشخیص داده نشد');
   });
 
+
+  // ---- تب‌ها و VIP ----
+  var vipOrders = [], vipConfigs = [];
+  var PLAN_FA = { bronze:'برنز', silver:'نقره', gold:'طلایی' };
+  var ST_FA = {
+    awaiting_receipt:'در انتظار فیش', pending:'در انتظار تأیید', rejected:'رد شده',
+    in_progress:'در حال انجام', done:'انجام شد', expired:'منقضی'
+  };
+  document.getElementById('adminTabs').addEventListener('click', function(e){
+    var b=e.target.closest('[data-tab]'); if(!b) return;
+    var tab=b.getAttribute('data-tab');
+    document.querySelectorAll('.atab').forEach(function(x){ x.classList.toggle('on', x===b); });
+    document.getElementById('tab-servers').style.display = tab==='servers'?'block':'none';
+    document.getElementById('tab-receipts').style.display = tab==='receipts'?'block':'none';
+    document.getElementById('tab-vipcf').style.display = tab==='vipcf'?'block':'none';
+    if(tab!=='servers') loadVipAll();
+  });
+  document.getElementById('vipOvClose').addEventListener('click', function(){ document.getElementById('vipOv').classList.remove('open'); });
+
+  function loadVipAll(){
+    api('/api/admin/vip/settings').then(function(d){
+      if(!d.ok) return;
+      document.getElementById('vipEnabled').value = d.enabled ? '1' : '0';
+      document.getElementById('vipCardNumber').value = d.cardNumber||'';
+      document.getElementById('vipCardName').value = d.cardName||'';
+    });
+    api('/api/admin/vip/orders').then(function(d){
+      if(!d.ok) return;
+      vipOrders = d.orders||[];
+      renderVipOrders();
+    });
+    api('/api/admin/vip/configs').then(function(d){
+      if(!d.ok) return;
+      vipConfigs = d.configs||[];
+      renderVipConfigs();
+    });
+  }
+  function renderVipOrders(){
+    var pending = vipOrders.filter(function(o){ return o.status==='pending'; }).length;
+    var badge=document.getElementById('receiptBadge');
+    badge.textContent = pending||'';
+    badge.classList.toggle('show', pending>0);
+    var rows=document.getElementById('vipOrderRows');
+    if(!vipOrders.length){ rows.innerHTML='<tr><td colspan="4"><div class="empty">سفارشی نیست</div></td></tr>'; return; }
+    rows.innerHTML = vipOrders.map(function(o){
+      var acts='';
+      if(o.has_receipt) acts += '<button class="mini" data-vphoto="'+o.id+'">فیش</button>';
+      if(o.status==='pending'){
+        acts += '<button class="mini" data-vok="'+o.id+'">تأیید</button>';
+        acts += '<button class="mini del" data-vno="'+o.id+'">رد</button>';
+      }
+      if(o.status==='in_progress') acts += '<button class="mini" data-vdone="'+o.id+'">تخصیص و انجام شد</button>';
+      return '<tr>'+
+        '<td class="t-name" dir="ltr">'+esc(o.code)+'</td>'+
+        '<td>'+esc(PLAN_FA[o.plan]||o.plan)+'</td>'+
+        '<td><span class="stpill st-'+esc(o.status)+'">'+esc(ST_FA[o.status]||o.status)+'</span></td>'+
+        '<td><div class="row-actions">'+acts+'</div></td>'+
+      '</tr>';
+    }).join('');
+  }
+  function renderVipConfigs(){
+    var rows=document.getElementById('vipCfRows');
+    if(!vipConfigs.length){ rows.innerHTML='<tr><td colspan="3"><div class="empty">کانفیگ اختصاصی ثبت نشده</div></td></tr>'; return; }
+    rows.innerHTML = vipConfigs.map(function(c){
+      return '<tr><td class="t-name">'+esc(c.name)+'</td><td><span class="t-link">'+esc(c.link)+'</span></td>'+
+        '<td><button class="mini del" data-vcfdel="'+c.id+'">حذف</button></td></tr>';
+    }).join('');
+  }
+  document.getElementById('vipSaveSettings').addEventListener('click', function(){
+    api('/api/admin/vip/settings', { method:'POST', body: JSON.stringify({
+      enabled: document.getElementById('vipEnabled').value==='1',
+      cardNumber: document.getElementById('vipCardNumber').value,
+      cardName: document.getElementById('vipCardName').value
+    })}).then(function(d){ toast(d.ok?'تنظیمات ذخیره شد':(d.error||'خطا')); });
+  });
+  document.getElementById('vipCfAdd').addEventListener('click', function(){
+    var name=document.getElementById('vipCfName').value.trim();
+    var link=document.getElementById('vipCfLink').value.trim();
+    if(!name||!link){ toast('نام و لینک لازم است'); return; }
+    api('/api/admin/vip/configs', { method:'POST', body: JSON.stringify({ name:name, link:link }) }).then(function(d){
+      if(d.ok){ document.getElementById('vipCfName').value=''; document.getElementById('vipCfLink').value=''; loadVipAll(); toast('اضافه شد'); }
+      else toast(d.error||'خطا');
+    });
+  });
+  document.getElementById('vipCfRows').addEventListener('click', function(e){
+    var b=e.target.closest('[data-vcfdel]'); if(!b) return;
+    if(!confirm('حذف شود؟')) return;
+    api('/api/admin/vip/configs/'+b.getAttribute('data-vcfdel'), { method:'DELETE' }).then(function(){ loadVipAll(); });
+  });
+  document.getElementById('vipOrderRows').addEventListener('click', function(e){
+    var photo=e.target.closest('[data-vphoto]');
+    if(photo){
+      api('/api/admin/vip/orders/'+photo.getAttribute('data-vphoto')).then(function(d){
+        if(!d.ok){ toast(d.error||'خطا'); return; }
+        document.getElementById('vipOvTitle').textContent='فیش '+d.order.code;
+        document.getElementById('vipOvBody').innerHTML = '';
+        if(d.order.receipt && d.order.receipt.indexOf('data:image/')===0){
+          var im=document.createElement('img'); im.className='vip-thumb'; im.src=d.order.receipt; document.getElementById('vipOvBody').appendChild(im);
+        } else {
+          document.getElementById('vipOvBody').textContent='فیشی نیست';
+        }
+        document.getElementById('vipOv').classList.add('open');
+      });
+      return;
+    }
+    var ok=e.target.closest('[data-vok]');
+    if(ok){
+      api('/api/admin/vip/orders/'+ok.getAttribute('data-vok'), { method:'POST', body: JSON.stringify({ action:'approve' }) }).then(function(d){
+        toast(d.ok?'تأیید شد — حالا کانفیگ بده':(d.error||'خطا')); loadVipAll();
+      });
+      return;
+    }
+    var no=e.target.closest('[data-vno]');
+    if(no){
+      var reason=prompt('دلیل رد؟','سفارش رد شد')||'سفارش رد شد';
+      api('/api/admin/vip/orders/'+no.getAttribute('data-vno'), { method:'POST', body: JSON.stringify({ action:'reject', reason: reason }) }).then(function(d){
+        toast(d.ok?'رد شد':(d.error||'خطا')); loadVipAll();
+      });
+      return;
+    }
+    var dn=e.target.closest('[data-vdone]');
+    if(dn){
+      var oid=parseInt(dn.getAttribute('data-vdone'),10);
+      var ord=vipOrders.find(function(x){return x.id===oid;});
+      var max = ord && ord.plan==='gold' ? 30 : (ord && ord.plan==='silver' ? 20 : 10);
+      var html = '<p>حداکثر '+max+' کانفیگ برای این پلن. از استخر انتخاب کن.</p><div class="assign-list">';
+      vipConfigs.forEach(function(c){
+        html += '<label><input type="checkbox" value="'+c.id+'"> '+esc(c.name)+'</label>';
+      });
+      html += '</div><button type="button" class="btn btn-primary" id="vipDoComplete">ثبت و انجام شد</button>';
+      document.getElementById('vipOvTitle').textContent='تخصیص به '+ (ord?ord.code:'');
+      document.getElementById('vipOvBody').innerHTML = html;
+      document.getElementById('vipOv').classList.add('open');
+      document.getElementById('vipDoComplete').addEventListener('click', function(){
+        var ids=[].slice.call(document.querySelectorAll('#vipOvBody input:checked')).map(function(i){return parseInt(i.value,10);});
+        if(!ids.length){ toast('حداقل یکی را تیک بزن'); return; }
+        api('/api/admin/vip/orders/'+oid, { method:'POST', body: JSON.stringify({ action:'complete', configIds: ids }) }).then(function(d){
+          if(d.ok){ toast('انجام شد'); document.getElementById('vipOv').classList.remove('open'); loadVipAll(); }
+          else toast(d.error||'خطا');
+        });
+      });
+    }
+  });
+
   // ---- شروع ----
-  api('/api/admin/check').then(function(d){ if(d.ok){ showDash(); loadServers(); } else showLogin(); });
+  api('/api/admin/check').then(function(d){ if(d.ok){ showDash(); loadServers(); loadVipAll(); } else showLogin(); });
 })();
 </script>
 </body>

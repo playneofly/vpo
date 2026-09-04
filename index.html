@@ -119,6 +119,98 @@
   .modal-actions{display:flex; gap:10px; margin-top:8px}
   .btn-close{flex:1; background:transparent; border:1px solid var(--border); color:var(--text)}
   .btn-close:hover{border-color:#7f1d1d; color:#fca5a5}
+
+  .head-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+  @media (max-width:640px){
+    .head{flex-wrap:wrap}
+    .head-actions{width:100%; justify-content:flex-start}
+  }
+  .vip-buy{
+    display:none; align-items:center; gap:8px; padding:6px 12px 6px 6px; border-radius:4px;
+    border:1px solid rgba(251,191,36,.45); background:#16140e; cursor:pointer; font-family:inherit;
+  }
+  .vip-buy img{width:32px; height:32px; border-radius:8px; flex:0 0 auto; display:block}
+  .vip-buy-txt{
+    font-size:13px; font-weight:800; white-space:nowrap;
+    background:linear-gradient(90deg,#b45309,#fbbf24,#fde68a,#fbbf24,#b45309);
+    background-size:200% auto; -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    animation:goldshine 3s linear infinite;
+    filter:drop-shadow(0 0 8px rgba(251,191,36,.55));
+  }
+  @keyframes goldshine{to{background-position:200% center}}
+  .vip-chip{
+    display:none; position:relative; text-align:right; padding:8px 12px 10px 18px; border-radius:4px;
+    border:1px solid var(--border); background:var(--surface2); cursor:pointer; font-family:inherit; color:var(--text);
+  }
+  .vip-chip-code{font-weight:800; font-size:13px; letter-spacing:.4px; direction:ltr}
+  .vip-chip-hint{font-size:11px; color:var(--muted); margin-top:2px; max-width:160px; line-height:1.4}
+  .vip-dot{
+    position:absolute; left:6px; bottom:6px; width:8px; height:8px; border-radius:50%; background:#f97316;
+  }
+  .vip-dot.pending{background:#f97316}
+  .vip-dot.rejected{background:#ef4444}
+  .vip-dot.progress{background:#facc15; animation:vipblink 1s ease-in-out infinite}
+  .vip-dot.done{background:#22c55e}
+  .vip-dot.expired{background:#6b7280}
+  @keyframes vipblink{0%,100%{opacity:1}50%{opacity:.2}}
+
+  .vip-ov{position:fixed; inset:0; z-index:45; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.72); padding:16px; overflow:auto}
+  .vip-ov.open{display:flex}
+  .vip-box{background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:22px;
+    width:100%; max-width:920px; margin:auto; position:relative}
+  .vip-box h3{text-align:center; margin-bottom:6px; font-size:18px}
+  .vip-sub{text-align:center; color:var(--muted); font-size:13px; margin-bottom:18px}
+  .vip-x{position:absolute; top:10px; left:10px; background:transparent; border:1px solid var(--border);
+    color:var(--text); width:34px; height:34px; border-radius:4px; cursor:pointer; font-size:18px}
+
+  .plan-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+  @media (max-width:800px){.plan-grid{grid-template-columns:1fr}}
+  .plan-card{overflow:hidden; border:1px solid var(--border); background:#141414; transition:.15s}
+  .plan-card:hover{transform:translateY(-3px)}
+  .plan-bar{height:6px}
+  .plan-card.bronze .plan-bar{background:#e67e22}
+  .plan-card.silver .plan-bar{background:#e8e8e8}
+  .plan-card.gold .plan-bar{background:#d4af37}
+  .plan-body{padding:22px 20px 8px}
+  .plan-card h4{font-size:22px; margin-bottom:8px}
+  .plan-card.bronze h4,.plan-card.bronze .plan-price{color:#e67e22}
+  .plan-card.silver h4,.plan-card.silver .plan-price{color:#f3f4f6}
+  .plan-card.gold h4,.plan-card.gold .plan-price{color:#fbbf24}
+  .plan-desc{color:var(--muted); font-size:13px; margin-bottom:12px}
+  .plan-price{font-size:26px; font-weight:800; margin-bottom:14px}
+  .plan-price small{font-size:13px; font-weight:600; color:var(--muted)}
+  .plan-card ul{list-style:none; font-size:13.5px; color:#d1d5db; margin-bottom:8px}
+  .plan-card li{margin-bottom:8px; display:flex; gap:8px; align-items:flex-start}
+  .plan-card li svg{flex:0 0 16px; margin-top:3px}
+  .plan-foot{padding:12px 16px 16px}
+  .plan-foot .btn{width:100%}
+  .plan-card.bronze .plan-foot .btn{background:#e67e22; color:#1a0e04}
+  .plan-card.silver .plan-foot .btn{background:#e8e8e8; color:#111}
+  .plan-card.gold .plan-foot .btn{background:#d4af37; color:#1a1404}
+
+  .bank-card{
+    position:relative; width:260px; height:166px; margin:0 auto 18px; border-radius:16px;
+    background:#171717; color:#fff; box-shadow:rgba(0,0,0,.4) 0 2px 2px, rgba(0,0,0,.3) 0 7px 13px -3px;
+    overflow:hidden; direction:ltr; text-align:left;
+  }
+  .bank-card .bc-lab{position:absolute; top:14px; right:16px; font-size:9px; letter-spacing:.18em; opacity:.85}
+  .bank-card .bc-chip{position:absolute; top:22px; left:18px; width:32px; height:24px; border-radius:4px;
+    background:linear-gradient(135deg,#e8d48b,#c9a227 40%,#f5e6a6); border:1px solid #b8860b}
+  .bank-card .bc-num{position:absolute; top:84px; left:18px; font-weight:800; font-size:15px; letter-spacing:1.5px}
+  .bank-card .bc-name{position:absolute; bottom:16px; left:18px; font-weight:700; font-size:11px; letter-spacing:.12em}
+
+  .pay-timer{text-align:center; font-size:22px; font-weight:800; color:#fbbf24; margin:8px 0 14px; direction:ltr}
+  .pay-note{text-align:center; color:var(--muted); font-size:13px; margin-bottom:12px}
+  #vipStatusBox{text-align:center; padding:20px 8px}
+  .st-light{width:18px; height:18px; border-radius:50%; margin:0 auto 12px}
+  .st-light.wait{background:#f97316}
+  .st-light.no{background:#ef4444}
+  .st-light.work{background:#facc15; animation:vipblink 1s ease-in-out infinite}
+  .st-light.ok{background:#22c55e; box-shadow:0 0 12px rgba(34,197,94,.6)}
+  .st-code{margin-top:22px; font-size:13px; color:var(--muted)}
+  .st-code b{display:block; color:var(--text); font-size:18px; letter-spacing:1px; direction:ltr; margin-top:4px}
 </style>
 </head>
 <body>
@@ -132,7 +224,20 @@
         <p>کانفیگ‌های اختصاصی و پرسرعت</p>
       </div>
     </div>
-    <div class="count-pill"><b id="count">–</b> سرور فعال</div>
+    <div class="head-actions">
+      <button type="button" class="vip-buy" id="vipBuyBtn">
+        <img alt="VIP" src="data:image/png;base64,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">
+        <span class="vip-buy-txt">خرید کانفیگ اختصاصی</span>
+      </button>
+      <button type="button" class="vip-chip" id="vipChip">
+        <span class="vip-dot pending" id="vipDot"></span>
+        <div class="vip-chip-body">
+          <div class="vip-chip-code" id="vipChipCode">FL-————</div>
+          <div class="vip-chip-hint" id="vipChipHint">برای اطلاع از وضعیت سفارش کلیک کنید</div>
+        </div>
+      </button>
+      <div class="count-pill"><b id="count">–</b> سرور فعال</div>
+    </div>
   </div>
 </header>
 
@@ -153,6 +258,86 @@
 <footer>
   <div class="wrap">FILTERNET © ۲۰۲۶ — تمامی حقوق محفوظ است.</div>
 </footer>
+
+
+<div class="vip-ov" id="vipPlans">
+  <div class="vip-box">
+    <button type="button" class="vip-x" data-vip-close="vipPlans">×</button>
+    <h3>خرید کانفیگ اختصاصی</h3>
+    <p class="vip-sub">پله را انتخاب کن. زمان نوشته‌شده فقط مدت پشتیبانی است، نه قطع خودکار.</p>
+    <div class="plan-grid">
+      <div class="plan-card bronze">
+        <div class="plan-bar"></div>
+        <div class="plan-body">
+          <h4>برنز</h4>
+          <p class="plan-desc">شروع اقتصادی</p>
+          <p class="plan-price">۱۲۰٬۰۰۰ <small>تومان</small></p>
+          <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۱۰ کانفیگ اختصاصی</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۱ هفته</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>سرعت بالا</li>
+          </ul>
+        </div>
+        <div class="plan-foot"><button type="button" class="btn" data-plan="bronze">Select Plan</button></div>
+      </div>
+      <div class="plan-card silver">
+        <div class="plan-bar"></div>
+        <div class="plan-body">
+          <h4>نقره</h4>
+          <p class="plan-desc">انتخاب متعادل</p>
+          <p class="plan-price">۲۴۰٬۰۰۰ <small>تومان</small></p>
+          <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۲۰ کانفیگ اختصاصی</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۲ هفته</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>بدون قطعی، مناسب اینترنت سیم‌کارت</li>
+          </ul>
+        </div>
+        <div class="plan-foot"><button type="button" class="btn" data-plan="silver">Select Plan</button></div>
+      </div>
+      <div class="plan-card gold">
+        <div class="plan-bar"></div>
+        <div class="plan-body">
+          <h4>طلایی</h4>
+          <p class="plan-desc">بهترین تجربه</p>
+          <p class="plan-price">۳۶۰٬۰۰۰ <small>تومان</small></p>
+          <ul>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۳۰ کانفیگ اختصاصی</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۳ هفته</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>بدون قطعی، سرعت بالا، تست‌شده روی اینترنت‌های مختلف و انتخاب بهترین پینگ</li>
+          </ul>
+        </div>
+        <div class="plan-foot"><button type="button" class="btn" data-plan="gold">Select Plan</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vip-ov" id="vipPay">
+  <div class="vip-box" style="max-width:420px">
+    <button type="button" class="vip-x" data-vip-close="vipPay">×</button>
+    <h3>پرداخت کارت‌به‌کارت</h3>
+    <p class="vip-sub" id="payPlanLabel">—</p>
+    <div class="bank-card">
+      <div class="bc-lab">BANK CARD</div>
+      <div class="bc-chip"></div>
+      <div class="bc-num" id="cardNum">---- ---- ---- ----</div>
+      <div class="bc-name" id="cardHolder">—</div>
+    </div>
+    <div class="pay-timer" id="payTimer">۶۰:۰۰</div>
+    <p class="pay-note">یک ساعت فرصت داری عکس فیش واریزی را بفرستی.</p>
+    <input type="file" id="vipReceiptFile" accept="image/*" style="margin-bottom:12px">
+    <button type="button" class="btn btn-primary" id="vipSendReceipt" style="width:100%">ارسال فیش</button>
+    <p class="pay-note" id="vipPayCodeHint" style="margin-top:14px"></p>
+  </div>
+</div>
+
+<div class="vip-ov" id="vipStatus">
+  <div class="vip-box" style="max-width:420px">
+    <button type="button" class="vip-x" data-vip-close="vipStatus">×</button>
+    <h3>وضعیت سفارش</h3>
+    <div id="vipStatusBox"></div>
+  </div>
+</div>
 
 <div id="toast">✅ کپی شد</div>
 
@@ -375,6 +560,201 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   document.getElementById('qrClose').addEventListener('click', function () { modal.classList.remove('open'); });
   modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.remove('open'); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') modal.classList.remove('open'); });
+
+
+  var VIP_LS = 'fn_vip_code';
+  var vipState = { enabled:false, cardNumber:'', cardName:'', code:'', order:null, tick:null };
+
+  function vipOpen(id){ document.getElementById(id).classList.add('open'); }
+  function vipClose(id){ document.getElementById(id).classList.remove('open'); }
+
+  function formatCard(n){
+    n = String(n||'').replace(/\D/g,'');
+    if(!n) return '---- ---- ---- ----';
+    return n.replace(/(.{4})/g,'$1 ').trim();
+  }
+  function faPrice(){ return ''; }
+
+  function setChip(order){
+    var chip = document.getElementById('vipChip');
+    if(!order || !order.code){ chip.style.display='none'; return; }
+    if(order.status==='expired'){ chip.style.display='none'; return; }
+    chip.style.display='block';
+    document.getElementById('vipChipCode').textContent = order.code;
+    var dot = document.getElementById('vipDot');
+    var hint = document.getElementById('vipChipHint');
+    dot.className = 'vip-dot';
+    if(order.status==='rejected'){ dot.classList.add('rejected'); hint.textContent='برای اطلاع از وضعیت سفارش کلیک کنید'; }
+    else if(order.status==='in_progress'){ dot.classList.add('progress'); hint.textContent='برای اطلاع از وضعیت سفارش کلیک کنید'; }
+    else if(order.status==='done'){ dot.classList.add('done'); hint.textContent='سفارش شما انجام شد برای دریافت کانفیگ ها کلیک کنید'; }
+    else { dot.classList.add('pending'); hint.textContent='برای اطلاع از وضعیت سفارش کلیک کنید'; }
+  }
+
+  function loadVipSettings(){
+    fetch('/api/vip/settings').then(function(r){ return r.json(); }).then(function(d){
+      if(!d || !d.ok) return;
+      vipState.enabled = !!d.enabled;
+      vipState.cardNumber = d.cardNumber||'';
+      vipState.cardName = d.cardName||'';
+      var btn = document.getElementById('vipBuyBtn');
+      if(vipState.enabled){ btn.style.display='inline-flex'; }
+      else btn.style.display='none';
+      document.getElementById('cardNum').textContent = formatCard(vipState.cardNumber);
+      document.getElementById('cardHolder').textContent = (vipState.cardName||'—').toUpperCase();
+    }).catch(function(){});
+  }
+
+  function refreshVipOrder(cb){
+    var code = localStorage.getItem(VIP_LS);
+    if(!code){ vipState.order=null; setChip(null); if(cb) cb(null); return; }
+    fetch('/api/vip/order?code='+encodeURIComponent(code)).then(function(r){ return r.json(); }).then(function(d){
+      if(!d || !d.ok){ if(cb) cb(null); return; }
+      vipState.order = d;
+      vipState.code = d.code;
+      setChip(d);
+      if(cb) cb(d);
+    }).catch(function(){ if(cb) cb(null); });
+  }
+
+  function startTimer(exp){
+    if(vipState.tick) clearInterval(vipState.tick);
+    function draw(){
+      var left = exp - Math.floor(Date.now()/1000);
+      if(left < 0) left = 0;
+      var m = Math.floor(left/60), s = left%60;
+      document.getElementById('payTimer').textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+      if(left<=0){ clearInterval(vipState.tick); document.getElementById('vipSendReceipt').disabled = true; }
+    }
+    draw();
+    vipState.tick = setInterval(draw, 1000);
+  }
+
+  function compressImage(file){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function(){
+        try{
+          var max=900, w=img.width, h=img.height;
+          if(w>max || h>max){ if(w>h){ h=Math.round(h*max/w); w=max; } else { w=Math.round(w*max/h); h=max; } }
+          var c=document.createElement('canvas'); c.width=w; c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg', 0.65));
+        }catch(e){ reject(e); }
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = reject;
+      img.src = url;
+    }).catch(function(){
+      return new Promise(function(resolve, reject){
+        var r=new FileReader();
+        r.onload=function(){ resolve(r.result); };
+        r.onerror=reject;
+        r.readAsDataURL(file);
+      });
+    });
+  }
+
+  function renderStatus(d){
+    var box = document.getElementById('vipStatusBox');
+    if(!d){ box.innerHTML='<p class="vip-sub">سفارشی پیدا نشد</p>'; return; }
+    var html = '';
+    if(d.status==='awaiting_receipt'){
+      html += '<div class="st-light wait"></div><p>در انتظار ارسال فیش</p><p class="vip-sub">هنوز فیش نفرستادی. از دکمه خرید دوباره وارد پرداخت شو.</p>';
+    } else if(d.status==='pending'){
+      html += '<div class="st-light wait"></div><p>در انتظار تأیید</p><p class="vip-sub">فیش رسیده؛ منتظر بررسی ادمین باش.</p>';
+    } else if(d.status==='rejected'){
+      html += '<div class="st-light no"></div><p>سفارش رد شد</p><p class="vip-sub">'+esc(d.rejectReason||'متأسفانه این سفارش تأیید نشد.')+'</p>';
+      html += '<button type="button" class="btn btn-ghost" id="vipAckReject" style="margin-top:12px">متوجه شدم</button>';
+    } else if(d.status==='in_progress'){
+      html += '<div class="st-light work"></div><p>در حال انجام</p><p class="vip-sub">سفارش قبول شده. کانفیگ‌ها در حال آماده‌سازی است.</p>';
+    } else if(d.status==='done'){
+      html += '<div class="st-light ok"></div><p>سفارش شما قبول شد</p><p class="vip-sub">برای کپی کانفیگ‌ها کلیک کنید</p>';
+      html += '<button type="button" class="btn btn-primary" id="vipCopyAll" style="margin-top:12px;width:100%">کپی کانفیگ‌ها</button>';
+    } else if(d.status==='expired'){
+      html += '<div class="st-light wait"></div><p>زمان ارسال فیش تمام شد</p>';
+      html += '<button type="button" class="btn btn-ghost" id="vipAckReject" style="margin-top:12px">بستن</button>';
+    }
+    html += '<div class="st-code">کد اشتراک شما (به کسی ندهید)<b>'+esc(d.code)+'</b></div>';
+    box.innerHTML = html;
+    var ack = document.getElementById('vipAckReject');
+    if(ack) ack.addEventListener('click', function(){
+      localStorage.removeItem(VIP_LS); vipState.order=null; setChip(null); vipClose('vipStatus');
+    });
+    var cp = document.getElementById('vipCopyAll');
+    if(cp) cp.addEventListener('click', function(){
+      var links = d.links||[];
+      if(!links.length){ toast('هنوز کانفیگی نیست'); return; }
+      copyText(links.join('\n')).then(function(ok){ toast(ok?'✅ کانفیگ‌ها کپی شد':'❌ کپی نشد'); });
+    });
+  }
+
+  document.getElementById('vipBuyBtn').addEventListener('click', function(){
+    var o = vipState.order;
+    if(o && o.status && ['awaiting_receipt','pending','in_progress'].indexOf(o.status)>=0){
+      document.getElementById('vipChip').click();
+      return;
+    }
+    vipOpen('vipPlans');
+  });
+  document.getElementById('vipChip').addEventListener('click', function(){
+    refreshVipOrder(function(d){
+      if(!d) return;
+      if(d.status==='awaiting_receipt'){
+        document.getElementById('payPlanLabel').textContent = 'کد شما: '+d.code;
+        document.getElementById('vipPayCodeHint').innerHTML = 'کد اشتراک: <b dir="ltr">'+esc(d.code)+'</b><br>این کد برای اینکه اشتراک شما ثابت شود نیاز است. لطفا این کد را به کسی ندهید.';
+        startTimer(d.expiresAt);
+        vipOpen('vipPay');
+      } else {
+        renderStatus(d); vipOpen('vipStatus');
+      }
+    });
+  });
+  document.querySelectorAll('[data-vip-close]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var id = b.getAttribute('data-vip-close');
+      if(id==='vipStatus' && vipState.order && (vipState.order.status==='rejected' || vipState.order.status==='expired')){
+        localStorage.removeItem(VIP_LS); vipState.order=null; setChip(null);
+      }
+      vipClose(id);
+    });
+  });
+  document.querySelectorAll('#vipPlans [data-plan]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var plan = b.getAttribute('data-plan');
+      fetch('/api/vip/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan: plan }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(!d.ok){ toast(d.error||'خطا'); return; }
+          localStorage.setItem(VIP_LS, d.code);
+          vipState.code = d.code;
+          vipState.order = d;
+          setChip({ code:d.code, status:'awaiting_receipt' });
+          document.getElementById('payPlanLabel').textContent = 'پلن '+plan+' — مبلغ طبق کارت';
+          document.getElementById('vipPayCodeHint').innerHTML = 'کد اشتراک: <b dir="ltr">'+esc(d.code)+'</b><br>این کد برای اینکه اشتراک شما ثابت شود نیاز است. لطفا این کد را به کسی ندهید.';
+          startTimer(d.expiresAt);
+          vipClose('vipPlans'); vipOpen('vipPay');
+        });
+    });
+  });
+  document.getElementById('vipSendReceipt').addEventListener('click', function(){
+    var f = document.getElementById('vipReceiptFile').files[0];
+    var code = localStorage.getItem(VIP_LS);
+    if(!code){ toast('کد سفارش نیست'); return; }
+    if(!f){ toast('اول عکس فیش را انتخاب کن'); return; }
+    compressImage(f).then(function(data){
+      return fetch('/api/vip/receipt', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code: code, image: data }) });
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if(!d.ok){ toast(d.error||'خطا'); return; }
+      toast('فیش ارسال شد');
+      vipClose('vipPay');
+      refreshVipOrder(function(ord){ renderStatus(ord); vipOpen('vipStatus'); });
+    }).catch(function(){ toast('ارسال فیش نشد'); });
+  });
+
+  loadVipSettings();
+  refreshVipOrder();
+  setInterval(function(){ loadVipSettings(); refreshVipOrder(); }, 20000);
 
   load();
 

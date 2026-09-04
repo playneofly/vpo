@@ -15,5 +15,31 @@ CREATE TABLE IF NOT EXISTS servers (
 
 CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers (enabled);
 
+CREATE TABLE IF NOT EXISTS vip_settings (
+  k TEXT PRIMARY KEY,
+  v TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS vip_configs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       TEXT NOT NULL,
+  link       TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS vip_orders (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  code          TEXT NOT NULL UNIQUE,
+  plan          TEXT NOT NULL,
+  status        TEXT NOT NULL,
+  receipt       TEXT DEFAULT '',
+  reject_reason TEXT DEFAULT '',
+  assigned      TEXT DEFAULT '',
+  created_at    INTEGER NOT NULL,
+  expires_at    INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_vip_orders_code ON vip_orders (code);
+
 -- اگر جدول از قبل بدون ستون دسته ساخته شده:
 -- ALTER TABLE servers ADD COLUMN category TEXT DEFAULT '';
