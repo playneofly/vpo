@@ -46,21 +46,14 @@
   .hero h2{font-size:clamp(24px,4vw,34px); font-weight:800; margin-bottom:10px}
   .hero p{color:var(--muted); max-width:560px; margin:0 auto; font-size:15px}
 
-  .cats{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:8px 0 6px}
-  .cat-chip{display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:999px; overflow:hidden; background:var(--surface)}
-  .cat-chip.on{border-color:var(--accent)}
+  .cats{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:8px 0 6px}
   .cat-btn{
-    padding:7px 14px; border:0; background:transparent; color:var(--muted); cursor:pointer; font-family:inherit;
+    padding:7px 14px; border-radius:999px; border:1px solid var(--border);
+    background:var(--surface); color:var(--muted); cursor:pointer; font-family:inherit;
     font-size:13px; font-weight:700; transition:.15s;
   }
-  .cat-btn:hover{color:var(--text); background:var(--surface2)}
-  .cat-chip.on .cat-btn{background:var(--accent); color:#fff}
-  .cat-copy{
-    padding:7px 11px; border:0; border-right:1px solid var(--border); background:transparent;
-    color:var(--muted); cursor:pointer; font-family:inherit; font-size:13px; font-weight:700;
-  }
-  .cat-chip.on .cat-copy{border-right-color:rgba(255,255,255,.25); color:#fff; background:var(--accent-hover)}
-  .cat-copy:hover{color:var(--text); background:var(--surface2)}
+  .cat-btn:hover{border-color:#3a4150; color:var(--text)}
+  .cat-btn.on{background:var(--accent); border-color:var(--accent); color:#fff}
   .cat-copy-bar{margin:14px auto 0; max-width:420px; text-align:center}
   .cat-copy-bar .btn{width:100%}
   .cat-copy-bar p{color:var(--muted); font-size:12px; margin-top:8px}
@@ -271,12 +264,9 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     var cats = catsOf(servers);
     if (!cats.length) { box.innerHTML = ''; bar.innerHTML = ''; return; }
     if (activeCat && cats.indexOf(activeCat) < 0) activeCat = '';
-    var html = '<div class="cat-chip' + (activeCat ? '' : ' on') + '">' +
-      '<button type="button" class="cat-btn" data-cat="">همه</button></div>';
+    var html = '<button type="button" class="cat-btn' + (activeCat ? '' : ' on') + '" data-cat="">همه</button>';
     cats.forEach(function (c) {
-      html += '<div class="cat-chip' + (activeCat === c ? ' on' : '') + '">' +
-        '<button type="button" class="cat-copy" data-copy-cat="' + esc(c) + '" title="کپی همه این دسته">📋</button>' +
-        '<button type="button" class="cat-btn" data-cat="' + esc(c) + '">' + esc(c) + '</button></div>';
+      html += '<button type="button" class="cat-btn' + (activeCat === c ? ' on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>';
     });
     box.innerHTML = html;
     if (activeCat) {
