@@ -27,13 +27,13 @@
   header{position:sticky; top:0; z-index:10; background:var(--surface); border-bottom:1px solid var(--border)}
   .head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0}
   .brand{display:flex; align-items:center; gap:12px}
-  .logo-img{width:42px; height:42px; border-radius:10px; flex:0 0 auto; border:1px solid var(--border)}
+  .logo-img{width:42px; height:42px; border-radius:4px; flex:0 0 auto; border:1px solid var(--border)}
   .brand h1{font-size:18px;font-weight:800}
   .brand p{font-size:12px;color:var(--muted);margin-top:-2px}
 
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    padding:11px 16px; border-radius:8px; border:1px solid transparent; cursor:pointer; font-family:inherit;
+    padding:11px 16px; border-radius:4px; border:1px solid transparent; cursor:pointer; font-family:inherit;
     font-size:13.5px; font-weight:700; transition:.15s;
   }
   .btn:active{transform:scale(.98)}
@@ -47,16 +47,16 @@
   /* ورود */
   #loginView{display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px}
   .login-card{
-    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:34px 30px;
+    background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:34px 30px;
     width:100%; max-width:400px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,.35);
   }
-  .login-card .logo-img{margin:0 auto 16px; width:64px; height:64px; border-radius:14px; display:block}
+  .login-card .logo-img{margin:0 auto 16px; width:64px; height:64px; border-radius:6px; display:block}
   .login-card h2{margin-bottom:6px}
   .login-card p{color:var(--muted); font-size:13px; margin-bottom:22px}
   .field{margin-bottom:14px; text-align:right}
   label{display:block; font-size:13px; margin-bottom:6px; color:var(--muted)}
   input, select, textarea{
-    width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:4px;
     color:var(--text); padding:11px 14px; font-family:inherit; font-size:14px;
   }
   input:focus, select:focus, textarea:focus{outline:none; border-color:var(--accent)}
@@ -70,7 +70,7 @@
   #dashView{display:none; padding-bottom:70px}
 
   .card{
-    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px;
+    background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:20px; margin-bottom:16px;
     box-shadow:0 1px 2px rgba(0,0,0,.35);
   }
   .card h3{margin-bottom:16px; font-size:16px}
@@ -84,14 +84,14 @@
   th{color:var(--muted); font-size:12px; font-weight:600}
   .t-name{font-weight:700}
   .t-flag{font-size:20px}
-  .badge{font-size:11px; font-weight:700; padding:3px 10px; border-radius:6px; white-space:nowrap}
+  .badge{font-size:11px; font-weight:700; padding:3px 10px; border-radius:3px; white-space:nowrap}
   .t-link{
     font-family:ui-monospace,Consolas,monospace; font-size:11px; color:var(--muted); direction:ltr; text-align:left;
     display:block; max-width:280px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   }
   .row-actions{display:flex; gap:6px; align-items:center; justify-content:flex-end; flex-wrap:wrap}
   .mini{
-    padding:7px 11px; border-radius:8px; border:1px solid var(--border); background:var(--surface2);
+    padding:7px 11px; border-radius:4px; border:1px solid var(--border); background:var(--surface2);
     color:var(--text); cursor:pointer; font-family:inherit; font-size:12px; font-weight:700; transition:.15s;
   }
   .mini:hover{border-color:#3a4150}
@@ -109,7 +109,7 @@
   #toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
     background:#1b1f27; border:1px solid var(--border); color:var(--text);
-    padding:12px 22px; border-radius:10px; font-size:14px; z-index:50; opacity:0; transition:.25s;
+    padding:12px 22px; border-radius:4px; font-size:14px; z-index:50; opacity:0; transition:.25s;
     pointer-events:none; box-shadow:0 8px 24px rgba(0,0,0,.5);
   }
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
@@ -174,9 +174,17 @@
           <datalist id="catList"></datalist>
         </div>
       </div>
+      <div class="form-row">
+        <div class="field"><label>پیشنهادی</label>
+          <select id="fFeatured"><option value="0">خیر</option><option value="1">بله — روی سایت بج پیشنهادی بخورد</option></select>
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn btn-ghost" id="disableCatBtn" style="width:100%">غیرفعال کردن همهٔ این دسته</button>
+        </div>
+      </div>
       <div class="form-row full">
-        <div class="field"><label>لینک کانفیگ *</label>
-          <textarea id="fLink" placeholder="vless://... یا vmess://..."></textarea>
+        <div class="field"><label>لینک کانفیگ * — چند لینک؟ هر خط یکی</label>
+          <textarea id="fLink" placeholder="یک لینک، یا چندتا زیر هم:&#10;vless://...&#10;trojan://..."></textarea>
         </div>
       </div>
       <div class="form-actions">
@@ -274,6 +282,7 @@
         '<td><span class="t-link">'+esc(s.link)+'</span></td>'+
         '<td><label class="switch"><input type="checkbox" '+(s.enabled?'checked':'')+' data-toggle="'+s.id+'"><span class="slider"></span></label></td>'+
         '<td><div class="row-actions">'+
+          '<button class="mini" data-feat="'+s.id+'">'+(s.featured?'★ پیشنهادی':'☆ پیشنهادی')+'</button>'+
           '<button class="mini" data-edit="'+s.id+'">✏️ ویرایش</button>'+
           '<button class="mini del" data-del="'+s.id+'">🗑 حذف</button>'+
         '</div></td>'+
@@ -289,6 +298,14 @@
       var s=servers.find(function(x){return x.id===tid;});
       if(s){ s.enabled = s.enabled ? 0 : 1; renderRows(); }   // تغییر لحظه‌ای
       api('/api/admin/servers/'+tid, {method:'POST', body:JSON.stringify({toggle:true})}).then(function(d){ if(d.ok){ toast('وضعیت تغییر کرد'); } });
+      return;
+    }
+    var ft=e.target.closest('[data-feat]');
+    if(ft){
+      var fid=parseInt(ft.getAttribute('data-feat'),10);
+      var fs=servers.find(function(x){return x.id===fid;});
+      if(fs){ fs.featured = fs.featured ? 0 : 1; renderRows(); }
+      api('/api/admin/servers/'+fid, {method:'POST', body:JSON.stringify({toggleFeatured:true})});
       return;
     }
     var ed=e.target.closest('[data-edit]');
@@ -320,6 +337,7 @@
     document.getElementById('cancelBtn').style.display='none';
     document.getElementById('fName').value=''; document.getElementById('fCountry').value='';
     document.getElementById('fProtocol').value='vless'; document.getElementById('fEnabled').value='1';
+    document.getElementById('fFeatured').value='0';
     document.getElementById('fLink').value='';
     document.getElementById('fCategory').value=stickyCategory;
     syncCatList();
@@ -336,9 +354,23 @@
     document.getElementById('fEnabled').value=s.enabled?'1':'0';
     document.getElementById('fLink').value=s.link;
     document.getElementById('fCategory').value=s.category||'';
+    document.getElementById('fFeatured').value=s.featured?'1':'0';
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.getElementById('cancelBtn').addEventListener('click', resetForm);
+  document.getElementById('disableCatBtn').addEventListener('click', function(){
+    var cat=document.getElementById('fCategory').value.trim();
+    if(!cat){ toast('اول اسم دسته را بنویس یا انتخاب کن'); return; }
+    if(!confirm('همه سرورهای دسته «'+cat+'» غیرفعال شوند؟')) return;
+    api('/api/admin/servers', {method:'POST', body:JSON.stringify({ disableCategory: cat })}).then(function(d){
+      if(d.ok){
+        servers.forEach(function(s){ if(String(s.category||'')===cat) s.enabled=0; });
+        renderRows();
+        toast('دسته «'+cat+'» خاموش شد');
+        loadServers();
+      } else toast(d.error||'خطا');
+    });
+  });
   document.getElementById('fCategory').addEventListener('input', function(){
     if(!editingId) stickyCategory = this.value.trim();
   });
@@ -352,26 +384,52 @@
       protocol: document.getElementById('fProtocol').value,
       link: document.getElementById('fLink').value.trim(),
       category: document.getElementById('fCategory').value.trim(),
-      enabled: document.getElementById('fEnabled').value==='1'
+      enabled: document.getElementById('fEnabled').value==='1',
+      featured: document.getElementById('fFeatured').value==='1'
     };
-    if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
-    var url = editingId ? '/api/admin/servers/'+editingId : '/api/admin/servers';
-    api(url, {method:'POST', body:JSON.stringify(payload)}).then(function(d){
-      if(d.ok){
-        if(editingId){
-          // ویرایش: به‌روزرسانی لحظه‌ای سطر موجود
+    var rawLines=payload.link.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
+    var linkLines=rawLines.filter(function(x){return /^[a-z0-9][a-z0-9+.\-]*:\/\//i.test(x);});
+    if(editingId){
+      if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
+      api('/api/admin/servers/'+editingId, {method:'POST', body:JSON.stringify(payload)}).then(function(d){
+        if(d.ok){
           var i=servers.findIndex(function(x){return x.id===editingId;});
           if(i>=0) servers[i]=Object.assign({}, servers[i], payload);
-        } else {
-          // افزودن: درج لحظه‌ای در بالای جدول
-          servers.unshift(Object.assign({ id: d.id, created_at: '' }, payload));
-        }
-        if(!editingId) stickyCategory = payload.category;
+          renderRows(); syncCatList(); toast('ذخیره شد'); resetForm(); loadServers();
+        } else toast(d.error||'خطا');
+      });
+      return;
+    }
+    if(linkLines.length>1){
+      var bulk=linkLines.map(function(link, idx){
+        var proto=detectProtocol(link)||payload.protocol;
+        var nm=parseName(link)||(payload.name? payload.name+' '+(idx+1) : proto.toUpperCase()+' '+(idx+1));
+        return { name:nm, link:link, protocol:proto, country:payload.country, category:payload.category, enabled:payload.enabled, featured:payload.featured };
+      });
+      api('/api/admin/servers', {method:'POST', body:JSON.stringify({ bulk: bulk })}).then(function(d){
+        if(d.ok){
+          var ids=d.ids||[];
+          for(var b=bulk.length-1;b>=0;b--){
+            servers.unshift(Object.assign({ id: ids[b]||0, created_at:'' }, bulk[b]));
+          }
+          stickyCategory=payload.category;
+          renderRows(); syncCatList();
+          toast(bulk.length+' کانفیگ افزوده شد');
+          resetForm(); loadServers();
+        } else toast(d.error||'خطا');
+      });
+      return;
+    }
+    if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
+    api('/api/admin/servers', {method:'POST', body:JSON.stringify(payload)}).then(function(d){
+      if(d.ok){
+        servers.unshift(Object.assign({ id: d.id, created_at: '' }, payload));
+        stickyCategory = payload.category;
         renderRows();
         syncCatList();
-        toast(editingId?'ذخیره شد':'افزوده شد');
+        toast('افزوده شد');
         resetForm();
-        loadServers(); // همگام‌سازی نهایی با سرور
+        loadServers();
       } else toast(d.error||'خطا');
     });
   });

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS servers (
   link       TEXT NOT NULL,
   enabled    INTEGER NOT NULL DEFAULT 1,
   category   TEXT DEFAULT '',
+  featured   INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

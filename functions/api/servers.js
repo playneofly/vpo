@@ -7,7 +7,7 @@ export async function onRequestGet({ env }) {
   try {
     const { results } = await db
       .prepare(
-        'SELECT id, name, country, protocol, link, category FROM servers WHERE enabled = 1 ORDER BY id DESC'
+        'SELECT id, name, country, protocol, link, category, featured FROM servers WHERE enabled = 1 ORDER BY featured DESC, id DESC'
       )
       .all();
     return Response.json({ ok: true, servers: results });
