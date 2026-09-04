@@ -4,11 +4,15 @@
 CREATE TABLE IF NOT EXISTS servers (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   name       TEXT NOT NULL,
-  country    TEXT DEFAULT '',          -- کد ۲ حرفی مثل DE یا ایموجی پرچم 🇩🇪
-  protocol   TEXT NOT NULL DEFAULT 'vless',  -- vless | vmess | trojan | ss | ssr | hysteria2 | tuic
-  link       TEXT NOT NULL,            -- لینک کامل کانفیگ مثل vless://...
-  enabled    INTEGER NOT NULL DEFAULT 1,     -- 1 = فعال | 0 = غیرفعال
+  country    TEXT DEFAULT '',
+  protocol   TEXT NOT NULL DEFAULT 'vless',
+  link       TEXT NOT NULL,
+  enabled    INTEGER NOT NULL DEFAULT 1,
+  category   TEXT DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers (enabled);
+
+-- اگر جدول از قبل بدون ستون دسته ساخته شده:
+-- ALTER TABLE servers ADD COLUMN category TEXT DEFAULT '';

@@ -168,6 +168,13 @@
         </div>
       </div>
       <div class="form-row full">
+        <div class="field">
+          <label>دسته‌بندی</label>
+          <input id="fCategory" list="catList" placeholder="مثلاً گیم — از لیست انتخاب کن یا اسم جدید بنویس" autocomplete="off">
+          <datalist id="catList"></datalist>
+        </div>
+      </div>
+      <div class="form-row full">
         <div class="field"><label>لینک کانفیگ *</label>
           <textarea id="fLink" placeholder="vless://... یا vmess://..."></textarea>
         </div>
@@ -185,7 +192,7 @@
         <table>
           <thead>
             <tr>
-              <th></th><th>نام</th><th>پروتکل</th><th>لینک</th><th>وضعیت</th><th>عملیات</th>
+              <th></th><th>نام</th><th>دسته</th><th>پروتکل</th><th>لینک</th><th>وضعیت</th><th>عملیات</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -205,7 +212,7 @@
     ssr:{label:'SSR',c:'#c4b5fd',bg:'rgba(167,139,250,.16)'}, hysteria2:{label:'Hysteria2',c:'#fda4af',bg:'rgba(251,113,133,.15)'}, tuic:{label:'TUIC',c:'#93c5fd',bg:'rgba(96,165,250,.16)'}
   };
 
-  var servers = [], editingId = null;
+  var servers = [], editingId = null, stickyCategory = '';
   var toastEl = document.getElementById('toast');
 
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -255,12 +262,14 @@
     });
   }
   function renderRows(){
+    syncCatList();
     var rows=document.getElementById('rows');
-    if(!servers.length){ rows.innerHTML='<tr><td colspan="6"><div class="empty">هنوز سروری ثبت نشده — از فرم بالا اضافه کن 🚀</div></td></tr>'; return; }
+    if(!servers.length){ rows.innerHTML='<tr><td colspan="7"><div class="empty">هنوز سروری ثبت نشده — از فرم بالا اضافه کن 🚀</div></td></tr>'; return; }
     rows.innerHTML=servers.map(function(s){
       return '<tr class="'+(s.enabled?'':'off')+'">'+
         '<td class="t-flag">'+flagEmoji(s.country)+'</td>'+
         '<td class="t-name">'+esc(s.name)+'</td>'+
+        '<td>'+(s.category?'<span class="badge" style="color:#cbd5e1;background:rgba(148,163,184,.14)">'+esc(s.category)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
         '<td>'+badge(s.protocol)+'</td>'+
         '<td><span class="t-link">'+esc(s.link)+'</span></td>'+
         '<td><label class="switch"><input type="checkbox" '+(s.enabled?'checked':'')+' data-toggle="'+s.id+'"><span class="slider"></span></label></td>'+
@@ -294,6 +303,16 @@
   });
 
   // ---- فرم افزودن/ویرایش ----
+  function syncCatList(){
+    var seen={}, cats=[];
+    servers.forEach(function(s){
+      var c=String(s.category||'').trim();
+      if(c && !seen[c]){ seen[c]=1; cats.push(c); }
+    });
+    if(stickyCategory && !seen[stickyCategory]) cats.push(stickyCategory);
+    cats.sort(function(a,b){ return a.localeCompare(b,'fa'); });
+    document.getElementById('catList').innerHTML=cats.map(function(c){ return '<option value="'+esc(c)+'">'; }).join('');
+  }
   function resetForm(){
     editingId=null;
     document.getElementById('formTitle').textContent='➕ افزودن سرور جدید';
@@ -302,6 +321,8 @@
     document.getElementById('fName').value=''; document.getElementById('fCountry').value='';
     document.getElementById('fProtocol').value='vless'; document.getElementById('fEnabled').value='1';
     document.getElementById('fLink').value='';
+    document.getElementById('fCategory').value=stickyCategory;
+    syncCatList();
   }
   function startEdit(id){
     var s=servers.find(function(x){return x.id===id;}); if(!s) return;
@@ -314,15 +335,23 @@
     document.getElementById('fProtocol').value=s.protocol||'vless';
     document.getElementById('fEnabled').value=s.enabled?'1':'0';
     document.getElementById('fLink').value=s.link;
+    document.getElementById('fCategory').value=s.category||'';
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.getElementById('cancelBtn').addEventListener('click', resetForm);
+  document.getElementById('fCategory').addEventListener('input', function(){
+    if(!editingId) stickyCategory = this.value.trim();
+  });
+  document.getElementById('fCategory').addEventListener('change', function(){
+    if(!editingId) stickyCategory = this.value.trim();
+  });
   document.getElementById('saveBtn').addEventListener('click', function(){
     var payload={
       name: document.getElementById('fName').value.trim(),
       country: document.getElementById('fCountry').value.trim(),
       protocol: document.getElementById('fProtocol').value,
       link: document.getElementById('fLink').value.trim(),
+      category: document.getElementById('fCategory').value.trim(),
       enabled: document.getElementById('fEnabled').value==='1'
     };
     if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
@@ -337,7 +366,9 @@
           // افزودن: درج لحظه‌ای در بالای جدول
           servers.unshift(Object.assign({ id: d.id, created_at: '' }, payload));
         }
+        if(!editingId) stickyCategory = payload.category;
         renderRows();
+        syncCatList();
         toast(editingId?'ذخیره شد':'افزوده شد');
         resetForm();
         loadServers(); // همگام‌سازی نهایی با سرور

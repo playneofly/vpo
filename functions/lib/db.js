@@ -1,8 +1,6 @@
 // دسترسی به D1 + ساخت خودکار جدول
-const SCHEMA = [
-  "CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, country TEXT DEFAULT '', protocol TEXT NOT NULL DEFAULT 'vless', link TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now')))",
-  "CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers (enabled)",
-].join(';');
+const CREATE_TABLE =
+  "CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, country TEXT DEFAULT '', protocol TEXT NOT NULL DEFAULT 'vless', link TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, category TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now')))";
 
 export function getDB(env) {
   return (env && (env.VPO || env.vpo)) || null;
@@ -12,10 +10,16 @@ export async function readyDB(env) {
   const db = getDB(env);
   if (!db) return null;
   try {
-    await db.exec(SCHEMA);
+    await db.exec(CREATE_TABLE);
+  } catch (e) {}
+  try {
+    await db.exec("ALTER TABLE servers ADD COLUMN category TEXT DEFAULT ''");
   } catch (e) {
-    // اگر جدول از قبل باشد مشکلی نیست
+    // ستون از قبل وجود دارد
   }
+  try {
+    await db.exec('CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers (enabled)');
+  } catch (e) {}
   return db;
 }
 

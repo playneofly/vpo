@@ -51,7 +51,7 @@ export async function onRequestPost({ request, env, params }) {
     }
     await db
       .prepare(
-        'UPDATE servers SET name = ?, country = ?, protocol = ?, link = ?, enabled = ? WHERE id = ?'
+        'UPDATE servers SET name = ?, country = ?, protocol = ?, link = ?, enabled = ?, category = ? WHERE id = ?'
       )
       .bind(
         name,
@@ -59,6 +59,7 @@ export async function onRequestPost({ request, env, params }) {
         String(body.protocol || 'vless'),
         link,
         body.enabled === false ? 0 : 1,
+        String(body.category || '').trim(),
         id
       )
       .run();

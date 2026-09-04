@@ -59,12 +59,15 @@ export async function onRequestPost({ request, env }) {
 
   const country = String(body.country || '').trim();
   const protocol = String(body.protocol || 'vless').trim();
+  const category = String(body.category || '').trim();
   const enabled = body.enabled === false ? 0 : 1;
 
   try {
     const info = await db
-      .prepare('INSERT INTO servers (name, country, protocol, link, enabled) VALUES (?, ?, ?, ?, ?)')
-      .bind(name, country, protocol, link, enabled)
+      .prepare(
+        'INSERT INTO servers (name, country, protocol, link, enabled, category) VALUES (?, ?, ?, ?, ?, ?)'
+      )
+      .bind(name, country, protocol, link, enabled, category)
       .run();
     return Response.json({ ok: true, id: info.meta.last_row_id });
   } catch (e) {
