@@ -1,4 +1,6 @@
 // GET/POST /api/admin/servers — لیست کامل + افزودن سرور
+import { readyDB, noDb, dbError } from '../../lib/db.js';
+
 async function verify(request, env) {
   const cookie = request.headers.get('Cookie') || '';
   const m = cookie.match(/(?:^|;\s*)vpo_admin=([^;]+)/);
@@ -25,16 +27,29 @@ export async function onRequestGet({ request, env }) {
   if (!(await verify(request, env))) {
     return Response.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
-  const { results } = await env.VPO.prepare("SELECT * FROM servers ORDER BY id DESC").all();
-  return Response.json({ ok: true, servers: results });
+  const db = await readyDB(env);
+  if (!db) return noDb();
+  try {
+    const { results } = await db.prepare('SELECT * FROM servers ORDER BY id DESC').all();
+    return Response.json({ ok: true, servers: results });
+  } catch (e) {
+    return dbError(e);
+  }
 }
 
 export async function onRequestPost({ request, env }) {
   if (!(await verify(request, env))) {
     return Response.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
+  const db = await readyDB(env);
+  if (!db) return noDb();
+
   let body = {};
-  try { body = await request.json(); } catch (e) { body = {}; }
+  try {
+    body = await request.json();
+  } catch (e) {
+    body = {};
+  }
 
   const name = String(body.name || '').trim();
   const link = String(body.link || '').trim();
@@ -46,11 +61,13 @@ export async function onRequestPost({ request, env }) {
   const protocol = String(body.protocol || 'vless').trim();
   const enabled = body.enabled === false ? 0 : 1;
 
-  const info = await env.VPO.prepare(
-    "INSERT INTO servers (name, country, protocol, link, enabled) VALUES (?, ?, ?, ?, ?)"
-  )
-    .bind(name, country, protocol, link, enabled)
-    .run();
-
-  return Response.json({ ok: true, id: info.meta.last_row_id });
+  try {
+    const info = await db
+      .prepare('INSERT INTO servers (name, country, protocol, link, enabled) VALUES (?, ?, ?, ?, ?)')
+      .bind(name, country, protocol, link, enabled)
+      .run();
+    return Response.json({ ok: true, id: info.meta.last_row_id });
+  } catch (e) {
+    return dbError(e);
+  }
 }

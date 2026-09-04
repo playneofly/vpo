@@ -1,4 +1,6 @@
 // POST/DELETE /api/admin/servers/:id — ویرایش / تغییر وضعیت / حذف
+import { readyDB, noDb, dbError } from '../../../lib/db.js';
+
 async function verify(request, env) {
   const cookie = request.headers.get('Cookie') || '';
   const m = cookie.match(/(?:^|;\s*)vpo_admin=([^;]+)/);
@@ -25,34 +27,57 @@ const deny = () => Response.json({ ok: false, error: 'unauthorized' }, { status:
 
 export async function onRequestPost({ request, env, params }) {
   if (!(await verify(request, env))) return deny();
+  const db = await readyDB(env);
+  if (!db) return noDb();
+
   const id = parseInt(params.id, 10);
   let body = {};
-  try { body = await request.json(); } catch (e) { body = {}; }
+  try {
+    body = await request.json();
+  } catch (e) {
+    body = {};
+  }
 
-  // فقط تغییر وضعیت فعال/غیرفعال
-  if (body.toggle) {
-    await env.VPO.prepare("UPDATE servers SET enabled = 1 - enabled WHERE id = ?").bind(id).run();
+  try {
+    if (body.toggle) {
+      await db.prepare('UPDATE servers SET enabled = 1 - enabled WHERE id = ?').bind(id).run();
+      return Response.json({ ok: true });
+    }
+
+    const name = String(body.name || '').trim();
+    const link = String(body.link || '').trim();
+    if (!name || !link) {
+      return Response.json({ ok: false, error: 'نام و لینک کانفیگ الزامی است' }, { status: 400 });
+    }
+    await db
+      .prepare(
+        'UPDATE servers SET name = ?, country = ?, protocol = ?, link = ?, enabled = ? WHERE id = ?'
+      )
+      .bind(
+        name,
+        String(body.country || ''),
+        String(body.protocol || 'vless'),
+        link,
+        body.enabled === false ? 0 : 1,
+        id
+      )
+      .run();
+
     return Response.json({ ok: true });
+  } catch (e) {
+    return dbError(e);
   }
-
-  // ویرایش کامل
-  const name = String(body.name || '').trim();
-  const link = String(body.link || '').trim();
-  if (!name || !link) {
-    return Response.json({ ok: false, error: 'نام و لینک کانفیگ الزامی است' }, { status: 400 });
-  }
-  await env.VPO.prepare(
-    "UPDATE servers SET name = ?, country = ?, protocol = ?, link = ?, enabled = ? WHERE id = ?"
-  )
-    .bind(name, String(body.country || ''), String(body.protocol || 'vless'), link, body.enabled === false ? 0 : 1, id)
-    .run();
-
-  return Response.json({ ok: true });
 }
 
 export async function onRequestDelete({ request, env, params }) {
   if (!(await verify(request, env))) return deny();
+  const db = await readyDB(env);
+  if (!db) return noDb();
   const id = parseInt(params.id, 10);
-  await env.VPO.prepare("DELETE FROM servers WHERE id = ?").bind(id).run();
-  return Response.json({ ok: true });
+  try {
+    await db.prepare('DELETE FROM servers WHERE id = ?').bind(id).run();
+    return Response.json({ ok: true });
+  } catch (e) {
+    return dbError(e);
+  }
 }

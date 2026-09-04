@@ -39,6 +39,20 @@
     background:var(--surface); border:1px solid var(--border); font-size:13px; color:var(--muted);
   }
   .count-pill b{color:var(--accent); font-size:16px}
+  .head-right{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+  .ping-btn{
+    display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px;
+    background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    cursor:pointer; font-family:inherit; font-size:13px; font-weight:700; transition:.15s;
+  }
+  .ping-btn:hover{border-color:#3a4150; background:var(--surface)}
+  .ping-btn.busy{opacity:.75; pointer-events:none}
+  .ping-btn .ms{color:var(--accent); font-variant-numeric:tabular-nums}
+  .top-meta{display:flex; flex-direction:column; align-items:flex-end; gap:6px}
+  .ping-val{font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; direction:ltr}
+  .ping-val.ok{color:#6ee7b7}
+  .ping-val.mid{color:#fcd34d}
+  .ping-val.bad{color:#fda4af}
 
   /* هیرو */
   .hero{text-align:center; padding:48px 0 34px}
@@ -128,7 +142,10 @@
         <p>کانفیگ‌های اختصاصی و پرسرعت</p>
       </div>
     </div>
-    <div class="count-pill"><b id="count">–</b> سرور فعال</div>
+    <div class="head-right">
+      <button type="button" class="ping-btn" id="pingBtn">📡 تست پینگ</button>
+      <div class="count-pill"><b id="count">–</b> سرور فعال</div>
+    </div>
   </div>
 </header>
 
@@ -186,7 +203,11 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   var countEl = document.getElementById('count');
   var toastEl = document.getElementById('toast');
   var modal = document.getElementById('modal');
+  var pingBtn = document.getElementById('pingBtn');
   var currentLink = '';
+  var pingById = {};
+  var sitePing = null;
+  var pinging = false;
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -206,6 +227,54 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   function badge(p) {
     var m = PROTO[p] || { label: String(p || '؟').toUpperCase(), c: '#cbd5e1', bg: 'rgba(148,163,184,.14)' };
     return '<span class="badge" style="color:' + m.c + ';background:' + m.bg + '">' + m.label + '</span>';
+  }
+
+  function pingClass(ms) {
+    if (ms == null || ms < 0) return 'bad';
+    if (ms < 150) return 'ok';
+    if (ms < 400) return 'mid';
+    return 'bad';
+  }
+  function pingText(ms) {
+    if (ms == null) return '—';
+    if (ms < 0) return 'timeout';
+    return ms + ' ms';
+  }
+  function hostFromLink(link) {
+    link = String(link || '').trim();
+    if (!link) return '';
+    if (/^vmess:\/\//i.test(link)) {
+      try {
+        var b64 = link.slice(8).split(/[?#]/)[0].replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        var j = JSON.parse(decodeURIComponent(escape(atob(b64))));
+        return String(j.add || j.host || '').replace(/^\[|\]$/g, '');
+      } catch (e) { return ''; }
+    }
+    var m = link.match(/@(\[[^\]]+\]|[^\/:?#]+)/);
+    return m ? m[1].replace(/^\[|\]$/g, '') : '';
+  }
+  function measureFetch(url, timeout, mode) {
+    var ctrl = new AbortController();
+    var to = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, timeout);
+    var t0 = performance.now();
+    return fetch(url, { method: 'GET', cache: 'no-store', mode: mode || 'cors', credentials: 'omit', signal: ctrl.signal })
+      .then(function () { return Math.round(performance.now() - t0); })
+      .catch(function () {
+        var dt = Math.round(performance.now() - t0);
+        return dt >= timeout - 40 ? -1 : dt;
+      })
+      .then(function (v) { clearTimeout(to); return v; });
+  }
+  function median(arr) {
+    var a = arr.filter(function (x) { return x >= 0; }).sort(function (x, y) { return x - y; });
+    if (!a.length) return -1;
+    var mid = Math.floor(a.length / 2);
+    return a.length % 2 ? a[mid] : Math.round((a[mid - 1] + a[mid]) / 2);
+  }
+  function setPingBtn(text, busy) {
+    pingBtn.innerHTML = text;
+    pingBtn.classList.toggle('busy', !!busy);
   }
 
   function toast(msg) {
@@ -239,13 +308,16 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     countEl.textContent = servers.length.toLocaleString('fa-IR');
     grid.innerHTML = servers.map(function (s) {
       var loc = s.country && /^[A-Z]{2}$/i.test(s.country) ? flagEmoji(s.country) + ' ' + s.country.toUpperCase() : (s.country || '');
+      var pv = pingById[s.id];
+      var pCls = pv == null ? '' : pingClass(pv);
       return '' +
       '<div class="card">' +
         '<div class="card-top">' +
           '<div><div class="flag">' + flagEmoji(s.country) + '</div>' +
           '<h3>' + esc(s.name) + '</h3>' +
           '<div class="loc">' + esc(loc) + '</div></div>' +
-          badge(s.protocol) +
+          '<div class="top-meta">' + badge(s.protocol) +
+          '<span class="ping-val ' + pCls + '" data-ping-id="' + s.id + '">' + pingText(pv) + '</span></div>' +
         '</div>' +
         '<div class="link-prev">' + esc(s.link) + '</div>' +
         '<div class="card-actions">' +
@@ -309,11 +381,59 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.remove('open'); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') modal.classList.remove('open'); });
 
+  function updatePingEl(id, ms) {
+    pingById[id] = ms;
+    var el = document.querySelector('[data-ping-id="' + id + '"]');
+    if (!el) return;
+    el.textContent = pingText(ms);
+    el.className = 'ping-val ' + pingClass(ms);
+  }
+
+  function runPings() {
+    if (pinging) return;
+    pinging = true;
+    setPingBtn('در حال تست…', true);
+
+    var samples = [];
+    var chain = Promise.resolve();
+    for (var i = 0; i < 3; i++) {
+      chain = chain.then(function () {
+        return measureFetch('/api/ping?t=' + Date.now(), 4000, 'cors').then(function (ms) { samples.push(ms); });
+      });
+    }
+
+    chain.then(function () {
+      sitePing = median(samples);
+      if (sitePing >= 0) setPingBtn('📡 پینگ شما: <span class="ms">' + sitePing + ' ms</span>', true);
+      else setPingBtn('📡 پینگ سایت ناموفق', true);
+
+      var jobs = servers.map(function (s) {
+        var host = hostFromLink(s.link);
+        if (!host) { updatePingEl(s.id, -1); return Promise.resolve(); }
+        updatePingEl(s.id, null);
+        var el = document.querySelector('[data-ping-id="' + s.id + '"]');
+        if (el) el.textContent = '…';
+        var url = 'https://' + host + '/?_=' + Date.now();
+        return measureFetch(url, 3500, 'no-cors').then(function (ms) { updatePingEl(s.id, ms); });
+      });
+      return Promise.all(jobs);
+    }).then(function () {
+      pinging = false;
+      if (sitePing != null && sitePing >= 0) setPingBtn('📡 پینگ شما: <span class="ms">' + sitePing + ' ms</span>', false);
+      else setPingBtn('📡 تست پینگ', false);
+    }).catch(function () {
+      pinging = false;
+      setPingBtn('📡 تست پینگ', false);
+    });
+  }
+
+  pingBtn.addEventListener('click', runPings);
+
   load();
 
   // به‌روزرسانی خودکار هر ۳۰ ثانیه — سرورهای جدید بدون رفرش دستی نمایش داده می‌شن
   setInterval(function () {
-    if (!modal.classList.contains('open')) load();
+    if (!modal.classList.contains('open') && !pinging) load();
   }, 30000);
 })();
 </script>

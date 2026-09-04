@@ -223,7 +223,11 @@
   function api(url, opts){
     opts=opts||{}; opts.credentials='include';
     opts.headers=Object.assign({'Content-Type':'application/json'}, opts.headers||{});
-    return fetch(url, opts).then(function(r){ return r.json().catch(function(){ return {}; }); });
+    return fetch(url, opts).then(function(r){
+      return r.json().catch(function(){
+        return { ok:false, error:'دیتابیس وصل نیست. در کلادفلر: Settings → Bindings → D1 با اسم VPO بساز و Retry deployment بزن' };
+      });
+    });
   }
 
   // ---- ورود / خروج ----

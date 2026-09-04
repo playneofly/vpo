@@ -12,8 +12,7 @@
 ```
 playneofly/
 ├── index.html                  → صفحه اصلی (لوگو و کتابخانه QR داخلش تعبیه شده)
-├── admin9831.html              → پنل ادمین
-├── _redirects                  → مسیردهی /admin9831
+├── admin9831.html              → پنل ادمین (آدرس: /admin9831 — بدون فایل _redirects)
 ├── schema.sql                  → اسکیمای دیتابیس
 ├── functions/
 │   ├── api/servers.js          → GET لیست سرورهای فعال (عمومی)
@@ -68,14 +67,17 @@ git push -u origin main
 4. **Save and Deploy**
 
 ### ۴) اتصال دیتابیس و رمز عبور
-در صفحه پروژه Pages → تب **Settings**:
-- بخش **Functions → D1 database bindings → Add binding**
-  - Variable name: `VPO`
-  - Database: `vpo`
-- بخش **Environment variables → Add variable**
-  - نام: `ADMIN_PASSWORD` — مقدار: رمز دلخواهت برای پنل ادمین
+در صفحه پروژه **Pages** (نه صفحهٔ خود دیتابیس) → تب **Settings**:
 
-بعد از هر تغییر، یک commit جدید push کن تا خودکار دیپلوی بشه.
+- **Bindings → Add → D1 database**
+  - Variable name: دقیقاً `VPO` (حروف بزرگ)
+  - Database: `vpo`
+- **Variables and Secrets → Add**
+  - نام: `ADMIN_PASSWORD` — مقدار: رمز پنل ادمین — Environment: Production
+
+بعد از ذخیره، **حتماً** تب Deployments → **Retry deployment**. بدون این مرحله تنظیمات اعمال نمی‌شود.
+
+> جدول سرورها با اولین درخواست به‌صورت خودکار ساخته می‌شود؛ اگر خواستی دستی هم می‌توانی `schema.sql` را در Console دیتابیس `vpo` اجرا کنی.
 
 ---
 
@@ -95,4 +97,4 @@ git push -u origin main
 - کوکی لاگین ۷ روز اعتبار داره و با `HttpOnly` ست می‌شه.
 - سرورهای غیرفعال توی سایت عمومی نمایش داده نمی‌شن.
 - لوگو به‌صورت data URI داخل HTML جاسازی شده؛ هیچ فایل عکسی برای دانلود وجود نداره.
-- برای تغییر آدرس پنل ادمین: اسم فایل `admin9831.html` و خط مربوطه در `_redirects` را با هم عوض کن.
+- برای تغییر آدرس پنل ادمین فقط اسم فایل `admin9831.html` را عوض کن (مثلاً `admin1234.html` → آدرس می‌شود `/admin1234`). **فایل `_redirects` نساز** — کلادفلر خودش `.html` را از آدرس برمی‌دارد؛ اگر `_redirects` بگذاری صفحه با `ERR_TOO_MANY_REDIRECTS` لوپ می‌شود.
