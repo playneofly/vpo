@@ -240,25 +240,11 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     if (ms < 0) return 'timeout';
     return ms + ' ms';
   }
-  function hostFromLink(link) {
-    link = String(link || '').trim();
-    if (!link) return '';
-    if (/^vmess:\/\//i.test(link)) {
-      try {
-        var b64 = link.slice(8).split(/[?#]/)[0].replace(/-/g, '+').replace(/_/g, '/');
-        while (b64.length % 4) b64 += '=';
-        var j = JSON.parse(decodeURIComponent(escape(atob(b64))));
-        return String(j.add || j.host || '').replace(/^\[|\]$/g, '');
-      } catch (e) { return ''; }
-    }
-    var m = link.match(/@(\[[^\]]+\]|[^\/:?#]+)/);
-    return m ? m[1].replace(/^\[|\]$/g, '') : '';
-  }
-  function measureFetch(url, timeout, mode) {
+  function measureFetch(url, timeout) {
     var ctrl = new AbortController();
     var to = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, timeout);
     var t0 = performance.now();
-    return fetch(url, { method: 'GET', cache: 'no-store', mode: mode || 'cors', credentials: 'omit', signal: ctrl.signal })
+    return fetch(url, { method: 'GET', cache: 'no-store', credentials: 'omit', signal: ctrl.signal })
       .then(function () { return Math.round(performance.now() - t0); })
       .catch(function () {
         var dt = Math.round(performance.now() - t0);
@@ -393,31 +379,38 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     if (pinging) return;
     pinging = true;
     setPingBtn('در حال تست…', true);
+    servers.forEach(function (s) {
+      var el = document.querySelector('[data-ping-id="' + s.id + '"]');
+      if (el) { el.textContent = '…'; el.className = 'ping-val'; }
+    });
 
     var samples = [];
-    var chain = Promise.resolve();
-    for (var i = 0; i < 3; i++) {
-      chain = chain.then(function () {
-        return measureFetch('/api/ping?t=' + Date.now(), 4000, 'cors').then(function (ms) { samples.push(ms); });
+    var siteP = measureFetch('/api/ping?t=' + Date.now(), 4000)
+      .then(function (ms) { samples.push(ms); return measureFetch('/api/ping?t=' + Date.now(), 4000); })
+      .then(function (ms) { samples.push(ms); return measureFetch('/api/ping?t=' + Date.now(), 4000); })
+      .then(function (ms) {
+        samples.push(ms);
+        sitePing = median(samples);
+        if (sitePing >= 0) setPingBtn('📡 پینگ شما: <span class="ms">' + sitePing + ' ms</span>', true);
+        else setPingBtn('📡 پینگ سایت ناموفق', true);
       });
-    }
 
-    chain.then(function () {
-      sitePing = median(samples);
-      if (sitePing >= 0) setPingBtn('📡 پینگ شما: <span class="ms">' + sitePing + ' ms</span>', true);
-      else setPingBtn('📡 پینگ سایت ناموفق', true);
-
-      var jobs = servers.map(function (s) {
-        var host = hostFromLink(s.link);
-        if (!host) { updatePingEl(s.id, -1); return Promise.resolve(); }
-        updatePingEl(s.id, null);
-        var el = document.querySelector('[data-ping-id="' + s.id + '"]');
-        if (el) el.textContent = '…';
-        var url = 'https://' + host + '/?_=' + Date.now();
-        return measureFetch(url, 3500, 'no-cors').then(function (ms) { updatePingEl(s.id, ms); });
+    var srvP = fetch('/api/ping?all=1', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok || !d.pings) throw new Error(d && d.error ? d.error : 'ping');
+        servers.forEach(function (s) {
+          var v = d.pings[s.id];
+          if (v == null) v = d.pings[String(s.id)];
+          updatePingEl(s.id, v == null ? -1 : v);
+        });
+      })
+      .catch(function () {
+        servers.forEach(function (s) { updatePingEl(s.id, -1); });
+        toast('پینگ سرورها انجام نشد');
       });
-      return Promise.all(jobs);
-    }).then(function () {
+
+    Promise.all([siteP, srvP]).then(function () {
       pinging = false;
       if (sitePing != null && sitePing >= 0) setPingBtn('📡 پینگ شما: <span class="ms">' + sitePing + ' ms</span>', false);
       else setPingBtn('📡 تست پینگ', false);
