@@ -21,13 +21,27 @@ export async function readyDB(env) {
   try {
     await db.exec('CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers (enabled)');
   } catch (e) {}
-  const vip = [
+
+  const vipSql = [
     'CREATE TABLE IF NOT EXISTS vip_settings (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
-    'CREATE TABLE IF NOT EXISTS vip_configs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, link TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime(\'now\')))',
-    'CREATE TABLE IF NOT EXISTS vip_orders (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, plan TEXT NOT NULL, status TEXT NOT NULL, receipt TEXT DEFAULT \'\', reject_reason TEXT DEFAULT \'\', assigned TEXT DEFAULT \'\', created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)',
+    "CREATE TABLE IF NOT EXISTS vip_configs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, country TEXT DEFAULT '', protocol TEXT DEFAULT 'vless', link TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, category TEXT DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')))",
+    "CREATE TABLE IF NOT EXISTS vip_orders (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, plan TEXT NOT NULL, status TEXT NOT NULL, receipt TEXT DEFAULT '', reject_reason TEXT DEFAULT '', assigned TEXT DEFAULT '', created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)",
     'CREATE INDEX IF NOT EXISTS idx_vip_orders_code ON vip_orders (code)',
+    "CREATE TABLE IF NOT EXISTS site_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, caption TEXT DEFAULT '', image TEXT NOT NULL, sort INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')))",
   ];
-  for (const sql of vip) {
+  for (const sql of vipSql) {
+    try {
+      await db.exec(sql);
+    } catch (e) {}
+  }
+  const alters = [
+    "ALTER TABLE vip_configs ADD COLUMN country TEXT DEFAULT ''",
+    "ALTER TABLE vip_configs ADD COLUMN protocol TEXT DEFAULT 'vless'",
+    "ALTER TABLE vip_configs ADD COLUMN category TEXT DEFAULT ''",
+    'ALTER TABLE vip_configs ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE vip_configs ADD COLUMN featured INTEGER NOT NULL DEFAULT 0',
+  ];
+  for (const sql of alters) {
     try {
       await db.exec(sql);
     } catch (e) {}

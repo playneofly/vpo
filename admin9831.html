@@ -169,6 +169,7 @@
       <button type="button" class="atab on" data-tab="servers">سرورها</button>
       <button type="button" class="atab" data-tab="receipts">فیش‌ها <span class="tab-n" id="receiptBadge"></span></button>
       <button type="button" class="atab" data-tab="vipcf">کانفیگ اختصاصی</button>
+      <button type="button" class="atab" data-tab="site">پایین سایت</button>
     </div>
 
     <div id="tab-servers">
@@ -253,6 +254,28 @@
           </div>
         </div>
       </div>
+
+      <div class="card">
+        <h3>متن پلن‌های خرید</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">عنوان، توضیح کوتاه و بولت‌ها (هر خط یکی). قیمت و تعداد کانفیگ ثابت است.</p>
+        <div class="form-row">
+          <div class="field"><label>برنز — عنوان</label><input id="pc-bronze-title"></div>
+          <div class="field"><label>برنز — توضیح</label><input id="pc-bronze-sub"></div>
+        </div>
+        <div class="form-row full"><div class="field"><label>برنز — ویژگی‌ها (هر خط یکی)</label><textarea id="pc-bronze-bullets" style="min-height:90px;direction:rtl;text-align:right;font-family:inherit"></textarea></div></div>
+        <div class="form-row">
+          <div class="field"><label>نقره — عنوان</label><input id="pc-silver-title"></div>
+          <div class="field"><label>نقره — توضیح</label><input id="pc-silver-sub"></div>
+        </div>
+        <div class="form-row full"><div class="field"><label>نقره — ویژگی‌ها (هر خط یکی)</label><textarea id="pc-silver-bullets" style="min-height:90px;direction:rtl;text-align:right;font-family:inherit"></textarea></div></div>
+        <div class="form-row">
+          <div class="field"><label>طلایی — عنوان</label><input id="pc-gold-title"></div>
+          <div class="field"><label>طلایی — توضیح</label><input id="pc-gold-sub"></div>
+        </div>
+        <div class="form-row full"><div class="field"><label>طلایی — ویژگی‌ها (هر خط یکی)</label><textarea id="pc-gold-bullets" style="min-height:90px;direction:rtl;text-align:right;font-family:inherit"></textarea></div></div>
+        <div class="form-actions"><button type="button" class="btn btn-primary" id="vipSavePlans">ذخیره متن پلن‌ها</button></div>
+      </div>
+
       <div class="card">
         <h3>فیش‌ها و سفارش‌ها</h3>
         <div style="overflow-x:auto">
@@ -265,24 +288,94 @@
     </div>
 
     <div id="tab-vipcf" style="display:none">
-      <div class="card">
-        <h3>افزودن کانفیگ اختصاصی</h3>
+      <div class="card" id="vipFormCard">
+        <h3 id="vipFormTitle">➕ افزودن کانفیگ اختصاصی</h3>
         <div class="form-row">
-          <div class="field"><label>نام</label><input id="vipCfName" placeholder="مثلاً آلمان ۱"></div>
-          <div class="field"><label>لینک</label><input id="vipCfLink" placeholder="vless://..." dir="ltr"></div>
+          <div class="field"><label>نام سرور *</label><input id="vipFName" placeholder="مثلاً: آلمان - فرانکفورت"></div>
+          <div class="field"><label>لوکیشن (کد ۲ حرفی یا ایموجی)</label><input id="vipFCountry" placeholder="DE یا 🇩🇪"></div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>پروتکل</label>
+            <select id="vipFProtocol">
+              <option value="vless">VLESS</option>
+              <option value="vmess">VMess</option>
+              <option value="trojan">Trojan</option>
+              <option value="ss">Shadowsocks</option>
+              <option value="ssr">SSR</option>
+              <option value="hysteria2">Hysteria2</option>
+              <option value="tuic">TUIC</option>
+            </select>
+          </div>
+          <div class="field"><label>وضعیت</label>
+            <select id="vipFEnabled"><option value="1">فعال</option><option value="0">غیرفعال</option></select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>دسته‌بندی</label>
+            <input id="vipFCategory" list="vipCatList" placeholder="مثلاً گیم — از لیست انتخاب کن یا اسم جدید بنویس" autocomplete="off">
+            <datalist id="vipCatList"></datalist>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>پیشنهادی</label>
+            <select id="vipFFeatured"><option value="0">خیر</option><option value="1">بله — بج پیشنهادی</option></select>
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end">
+            <button type="button" class="btn btn-ghost" id="vipDisableCatBtn" style="width:100%">غیرفعال کردن همهٔ این دسته</button>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>لینک کانفیگ * — چند لینک؟ هر خط یکی</label>
+            <textarea id="vipFLink" placeholder="یک لینک، یا چندتا زیر هم:&#10;vless://...&#10;trojan://..."></textarea>
+          </div>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn btn-primary" id="vipCfAdd">افزودن</button>
+          <button type="button" class="btn btn-primary" id="vipSaveBtn">افزودن کانفیگ</button>
+          <button type="button" class="btn btn-ghost" id="vipParseBtn">🪄 تشخیص خودکار از لینک</button>
+          <button type="button" class="btn btn-ghost" id="vipCancelBtn" style="display:none">انصراف</button>
         </div>
       </div>
       <div class="card">
-        <h3>استخر کانفیگ اختصاصی</h3>
+        <h3>📡 کانفیگ‌های اختصاصی</h3>
         <div style="overflow-x:auto">
           <table>
-            <thead><tr><th>نام</th><th>لینک</th><th></th></tr></thead>
+            <thead>
+              <tr>
+                <th></th><th>نام</th><th>دسته</th><th>پروتکل</th><th>لینک</th><th>وضعیت</th><th>عملیات</th>
+              </tr>
+            </thead>
             <tbody id="vipCfRows"></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <div id="tab-site" style="display:none">
+      <div class="card">
+        <h3>متن پایین سایت</h3>
+        <div class="form-row full">
+          <div class="field">
+            <label>اول این متن می‌آید، بعد عکس‌ها</label>
+            <textarea id="siteText" style="min-height:120px;direction:rtl;text-align:right;font-family:inherit" placeholder="مثلاً همکاری با ما، یا هر متنی که می‌خوای پایین صفحه باشد"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="siteSaveText">ذخیره متن</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>عکس‌های بزرگ پایین صفحه</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">عکس بزرگ و واضح آپلود کن. زیر هر عکس می‌توانی متن بگذاری (همکاری و غیره). حداکثر ۱۲ عکس.</p>
+        <div class="form-row">
+          <div class="field"><label>عکس</label><input type="file" id="siteFile" accept="image/*"></div>
+          <div class="field"><label>متن زیر عکس (اختیاری)</label><input id="siteCaption" placeholder="مثلاً همکار تجاری"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="siteAddPhoto">افزودن عکس</button>
+        </div>
+        <div id="sitePhotoList" style="margin-top:18px"></div>
       </div>
     </div>
   </div>
@@ -558,10 +651,11 @@
     var b=e.target.closest('[data-tab]'); if(!b) return;
     var tab=b.getAttribute('data-tab');
     document.querySelectorAll('.atab').forEach(function(x){ x.classList.toggle('on', x===b); });
-    document.getElementById('tab-servers').style.display = tab==='servers'?'block':'none';
-    document.getElementById('tab-receipts').style.display = tab==='receipts'?'block':'none';
-    document.getElementById('tab-vipcf').style.display = tab==='vipcf'?'block':'none';
-    if(tab!=='servers') loadVipAll();
+    ['servers','receipts','vipcf','site'].forEach(function(id){
+      var el=document.getElementById('tab-'+id); if(el) el.style.display = tab===id?'block':'none';
+    });
+    if(tab==='site') loadSiteAdmin();
+    else if(tab!=='servers') loadVipAll();
   });
   document.getElementById('vipOvClose').addEventListener('click', function(){ document.getElementById('vipOv').classList.remove('open'); });
 
@@ -571,6 +665,14 @@
       document.getElementById('vipEnabled').value = d.enabled ? '1' : '0';
       document.getElementById('vipCardNumber').value = d.cardNumber||'';
       document.getElementById('vipCardName').value = d.cardName||'';
+      if(d.planCopy){
+        ['bronze','silver','gold'].forEach(function(id){
+          var p=d.planCopy[id]||{};
+          var ti=document.getElementById('pc-'+id+'-title'); if(ti) ti.value=p.title||'';
+          var su=document.getElementById('pc-'+id+'-sub'); if(su) su.value=p.subtitle||'';
+          var bu=document.getElementById('pc-'+id+'-bullets'); if(bu) bu.value=(p.bullets||[]).join('\n');
+        });
+      }
     });
     api('/api/admin/vip/orders').then(function(d){
       if(!d.ok) return;
@@ -606,12 +708,64 @@
       '</tr>';
     }).join('');
   }
+
+  var vipEditingId = null, vipStickyCategory = '';
+  function vipSyncCatList(){
+    var seen={}, cats=[];
+    vipConfigs.forEach(function(s){
+      var c=String(s.category||'').trim();
+      if(c && !seen[c]){ seen[c]=1; cats.push(c); }
+    });
+    if(vipStickyCategory && !seen[vipStickyCategory]) cats.push(vipStickyCategory);
+    cats.sort(function(a,b){ return a.localeCompare(b,'fa'); });
+    var dl=document.getElementById('vipCatList');
+    if(dl) dl.innerHTML=cats.map(function(c){ return '<option value="'+esc(c)+'">'; }).join('');
+  }
+  function vipResetForm(){
+    vipEditingId=null;
+    document.getElementById('vipFormTitle').textContent='➕ افزودن کانفیگ اختصاصی';
+    document.getElementById('vipSaveBtn').textContent='افزودن کانفیگ';
+    document.getElementById('vipCancelBtn').style.display='none';
+    document.getElementById('vipFName').value=''; document.getElementById('vipFCountry').value='';
+    document.getElementById('vipFProtocol').value='vless'; document.getElementById('vipFEnabled').value='1';
+    document.getElementById('vipFFeatured').value='0';
+    document.getElementById('vipFLink').value='';
+    document.getElementById('vipFCategory').value=vipStickyCategory;
+    vipSyncCatList();
+  }
+  function vipStartEdit(id){
+    var s=vipConfigs.find(function(x){return x.id===id;}); if(!s) return;
+    vipEditingId=id;
+    document.getElementById('vipFormTitle').textContent='✏️ ویرایش کانفیگ اختصاصی';
+    document.getElementById('vipSaveBtn').textContent='ذخیره تغییرات';
+    document.getElementById('vipCancelBtn').style.display='inline-flex';
+    document.getElementById('vipFName').value=s.name;
+    document.getElementById('vipFCountry').value=s.country||'';
+    document.getElementById('vipFProtocol').value=s.protocol||'vless';
+    document.getElementById('vipFEnabled').value=s.enabled?'1':'0';
+    document.getElementById('vipFLink').value=s.link;
+    document.getElementById('vipFCategory').value=s.category||'';
+    document.getElementById('vipFFeatured').value=s.featured?'1':'0';
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
   function renderVipConfigs(){
+    vipSyncCatList();
     var rows=document.getElementById('vipCfRows');
-    if(!vipConfigs.length){ rows.innerHTML='<tr><td colspan="3"><div class="empty">کانفیگ اختصاصی ثبت نشده</div></td></tr>'; return; }
-    rows.innerHTML = vipConfigs.map(function(c){
-      return '<tr><td class="t-name">'+esc(c.name)+'</td><td><span class="t-link">'+esc(c.link)+'</span></td>'+
-        '<td><button class="mini del" data-vcfdel="'+c.id+'">حذف</button></td></tr>';
+    if(!vipConfigs.length){ rows.innerHTML='<tr><td colspan="7"><div class="empty">کانفیگ اختصاصی ثبت نشده — از فرم بالا اضافه کن</div></td></tr>'; return; }
+    rows.innerHTML=vipConfigs.map(function(s){
+      return '<tr class="'+(s.enabled?'':'off')+'">'+
+        '<td class="t-flag">'+flagEmoji(s.country)+'</td>'+
+        '<td class="t-name">'+esc(s.name)+'</td>'+
+        '<td>'+(s.category?'<span class="badge" style="color:#cbd5e1;background:rgba(148,163,184,.14)">'+esc(s.category)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td>'+badge(s.protocol)+'</td>'+
+        '<td><span class="t-link">'+esc(s.link)+'</span></td>'+
+        '<td><label class="switch"><input type="checkbox" '+(s.enabled?'checked':'')+' data-vtoggle="'+s.id+'"><span class="slider"></span></label></td>'+
+        '<td><div class="row-actions">'+
+          '<button class="mini" data-vfeat="'+s.id+'">'+(s.featured?'★ پیشنهادی':'☆ پیشنهادی')+'</button>'+
+          '<button class="mini" data-vedit="'+s.id+'">✏️ ویرایش</button>'+
+          '<button class="mini del" data-vcfdel="'+s.id+'">🗑 حذف</button>'+
+        '</div></td>'+
+      '</tr>';
     }).join('');
   }
   document.getElementById('vipSaveSettings').addEventListener('click', function(){
@@ -621,20 +775,185 @@
       cardName: document.getElementById('vipCardName').value
     })}).then(function(d){ toast(d.ok?'تنظیمات ذخیره شد':(d.error||'خطا')); });
   });
-  document.getElementById('vipCfAdd').addEventListener('click', function(){
-    var name=document.getElementById('vipCfName').value.trim();
-    var link=document.getElementById('vipCfLink').value.trim();
-    if(!name||!link){ toast('نام و لینک لازم است'); return; }
-    api('/api/admin/vip/configs', { method:'POST', body: JSON.stringify({ name:name, link:link }) }).then(function(d){
-      if(d.ok){ document.getElementById('vipCfName').value=''; document.getElementById('vipCfLink').value=''; loadVipAll(); toast('اضافه شد'); }
+  document.getElementById('vipSavePlans').addEventListener('click', function(){
+    var planCopy={};
+    ['bronze','silver','gold'].forEach(function(id){
+      planCopy[id]={
+        title: document.getElementById('pc-'+id+'-title').value,
+        subtitle: document.getElementById('pc-'+id+'-sub').value,
+        bullets: document.getElementById('pc-'+id+'-bullets').value.split(/\r?\n/)
+      };
+    });
+    api('/api/admin/vip/settings', { method:'POST', body: JSON.stringify({ planCopy: planCopy }) }).then(function(d){
+      toast(d.ok?'متن پلن‌ها ذخیره شد':(d.error||'خطا'));
+    });
+  });
+  document.getElementById('vipCancelBtn').addEventListener('click', vipResetForm);
+  document.getElementById('vipFCategory').addEventListener('input', function(){ if(!vipEditingId) vipStickyCategory=this.value.trim(); });
+  document.getElementById('vipFCategory').addEventListener('change', function(){ if(!vipEditingId) vipStickyCategory=this.value.trim(); });
+  document.getElementById('vipDisableCatBtn').addEventListener('click', function(){
+    var cat=document.getElementById('vipFCategory').value.trim();
+    if(!cat){ toast('اول اسم دسته را بنویس یا انتخاب کن'); return; }
+    if(!confirm('همه کانفیگ‌های اختصاصی دسته «'+cat+'» غیرفعال شوند؟')) return;
+    api('/api/admin/vip/configs', {method:'POST', body:JSON.stringify({ disableCategory: cat })}).then(function(d){
+      if(d.ok){ vipConfigs.forEach(function(s){ if(String(s.category||'')===cat) s.enabled=0; }); renderVipConfigs(); toast('دسته خاموش شد'); loadVipAll(); }
       else toast(d.error||'خطا');
     });
   });
-  document.getElementById('vipCfRows').addEventListener('click', function(e){
-    var b=e.target.closest('[data-vcfdel]'); if(!b) return;
-    if(!confirm('حذف شود؟')) return;
-    api('/api/admin/vip/configs/'+b.getAttribute('data-vcfdel'), { method:'DELETE' }).then(function(){ loadVipAll(); });
+  document.getElementById('vipParseBtn').addEventListener('click', function(){
+    var link=document.getElementById('vipFLink').value.trim();
+    if(!link){ toast('اول لینک را وارد کن'); return; }
+    var p=detectProtocol(link);
+    if(p) document.getElementById('vipFProtocol').value=p;
+    var n=parseName(link);
+    if(n) document.getElementById('vipFName').value=n;
+    toast(p?'پروتکل '+p.toUpperCase()+' تشخیص داده شد':'پروتکل تشخیص داده نشد');
   });
+  document.getElementById('vipSaveBtn').addEventListener('click', function(){
+    var payload={
+      name: document.getElementById('vipFName').value.trim(),
+      country: document.getElementById('vipFCountry').value.trim(),
+      protocol: document.getElementById('vipFProtocol').value,
+      link: document.getElementById('vipFLink').value.trim(),
+      category: document.getElementById('vipFCategory').value.trim(),
+      enabled: document.getElementById('vipFEnabled').value==='1',
+      featured: document.getElementById('vipFFeatured').value==='1'
+    };
+    var rawLines=payload.link.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
+    var linkLines=rawLines.filter(function(x){return /^[a-z0-9][a-z0-9+.\-]*:\/\//i.test(x);});
+    if(vipEditingId){
+      if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
+      api('/api/admin/vip/configs/'+vipEditingId, {method:'POST', body:JSON.stringify(payload)}).then(function(d){
+        if(d.ok){
+          var i=vipConfigs.findIndex(function(x){return x.id===vipEditingId;});
+          if(i>=0) vipConfigs[i]=Object.assign({}, vipConfigs[i], payload);
+          renderVipConfigs(); toast('ذخیره شد'); vipResetForm(); loadVipAll();
+        } else toast(d.error||'خطا');
+      });
+      return;
+    }
+    if(linkLines.length>1){
+      var bulk=linkLines.map(function(link, idx){
+        var proto=detectProtocol(link)||payload.protocol;
+        var nm=parseName(link)||(payload.name? payload.name+' '+(idx+1) : proto.toUpperCase()+' '+(idx+1));
+        return { name:nm, link:link, protocol:proto, country:payload.country, category:payload.category, enabled:payload.enabled, featured:payload.featured };
+      });
+      api('/api/admin/vip/configs', {method:'POST', body:JSON.stringify({ bulk: bulk })}).then(function(d){
+        if(d.ok){
+          vipStickyCategory=payload.category;
+          toast(bulk.length+' کانفیگ افزوده شد');
+          vipResetForm(); loadVipAll();
+        } else toast(d.error||'خطا');
+      });
+      return;
+    }
+    if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
+    api('/api/admin/vip/configs', {method:'POST', body:JSON.stringify(payload)}).then(function(d){
+      if(d.ok){
+        vipStickyCategory = payload.category;
+        toast('افزوده شد');
+        vipResetForm();
+        loadVipAll();
+      } else toast(d.error||'خطا');
+    });
+  });
+  document.getElementById('vipCfRows').addEventListener('click', function(e){
+    var t=e.target.closest('[data-vtoggle]');
+    if(t){
+      var tid=parseInt(t.getAttribute('data-vtoggle'),10);
+      var s=vipConfigs.find(function(x){return x.id===tid;});
+      if(s){ s.enabled = s.enabled ? 0 : 1; renderVipConfigs(); }
+      api('/api/admin/vip/configs/'+tid, {method:'POST', body:JSON.stringify({toggle:true})});
+      return;
+    }
+    var ft=e.target.closest('[data-vfeat]');
+    if(ft){
+      var fid=parseInt(ft.getAttribute('data-vfeat'),10);
+      var fs=vipConfigs.find(function(x){return x.id===fid;});
+      if(fs){ fs.featured = fs.featured ? 0 : 1; renderVipConfigs(); }
+      api('/api/admin/vip/configs/'+fid, {method:'POST', body:JSON.stringify({toggleFeatured:true})});
+      return;
+    }
+    var ed=e.target.closest('[data-vedit]');
+    if(ed){ vipStartEdit(parseInt(ed.getAttribute('data-vedit'),10)); return; }
+    var dl=e.target.closest('[data-vcfdel]');
+    if(dl){
+      var id=parseInt(dl.getAttribute('data-vcfdel'),10);
+      if(!confirm('این کانفیگ حذف شود؟')) return;
+      vipConfigs = vipConfigs.filter(function(x){return x.id!==id;}); renderVipConfigs();
+      api('/api/admin/vip/configs/'+id, {method:'DELETE'}).then(function(d){ if(d.ok) toast('حذف شد'); });
+    }
+  });
+
+  function compressPhoto(file, max, q){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function(){
+        try{
+          var w=img.width, h=img.height;
+          if(w>max || h>max){ if(w>h){ h=Math.round(h*max/w); w=max; } else { w=Math.round(w*max/h); h=max; } }
+          var c=document.createElement('canvas'); c.width=w; c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg', q));
+        }catch(e){ reject(e); }
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+  function loadSiteAdmin(){
+    api('/api/admin/site').then(function(d){
+      if(!d.ok) return;
+      document.getElementById('siteText').value = d.text||'';
+      var box=document.getElementById('sitePhotoList');
+      var photos=d.photos||[];
+      if(!photos.length){ box.innerHTML='<div class="empty">عکسی نیست</div>'; return; }
+      box.innerHTML = photos.map(function(p){
+        return '<div class="card" style="padding:12px;margin-bottom:10px">'+
+          '<img class="vip-thumb" src="/api/site/photo/'+p.id+'" alt="">'+
+          '<div class="field"><label>متن زیر عکس</label><input data-cap="'+p.id+'" value="'+esc(p.caption||'')+'"></div>'+
+          '<div class="form-actions">'+
+            '<button type="button" class="btn btn-ghost" data-capsave="'+p.id+'">ذخیره متن</button>'+
+            '<button type="button" class="btn btn-danger" data-phdel="'+p.id+'">حذف عکس</button>'+
+          '</div></div>';
+      }).join('');
+    });
+  }
+  document.getElementById('siteSaveText').addEventListener('click', function(){
+    api('/api/admin/site', { method:'POST', body: JSON.stringify({ text: document.getElementById('siteText').value }) }).then(function(d){
+      toast(d.ok?'متن ذخیره شد':(d.error||'خطا'));
+    });
+  });
+  document.getElementById('siteAddPhoto').addEventListener('click', function(){
+    var f=document.getElementById('siteFile').files[0];
+    if(!f){ toast('اول عکس را انتخاب کن'); return; }
+    compressPhoto(f, 1400, 0.72).then(function(data){
+      if(data.length>900000){ toast('عکس هنوز بزرگ است'); return null; }
+      return api('/api/admin/site/photos', { method:'POST', body: JSON.stringify({ image: data, caption: document.getElementById('siteCaption').value }) });
+    }).then(function(d){
+      if(!d) return;
+      if(d.ok){ document.getElementById('siteFile').value=''; document.getElementById('siteCaption').value=''; toast('عکس اضافه شد'); loadSiteAdmin(); }
+      else toast(d.error||'خطا');
+    }).catch(function(){ toast('آپلود نشد'); });
+  });
+  document.getElementById('sitePhotoList').addEventListener('click', function(e){
+    var sv=e.target.closest('[data-capsave]');
+    if(sv){
+      var id=sv.getAttribute('data-capsave');
+      var inp=document.querySelector('[data-cap="'+id+'"]');
+      api('/api/admin/site/photos/'+id, { method:'POST', body: JSON.stringify({ caption: inp?inp.value:'' }) }).then(function(d){ toast(d.ok?'ذخیره شد':(d.error||'خطا')); });
+      return;
+    }
+    var dl=e.target.closest('[data-phdel]');
+    if(dl){
+      if(!confirm('این عکس حذف شود؟')) return;
+      api('/api/admin/site/photos/'+dl.getAttribute('data-phdel'), { method:'DELETE' }).then(function(){ loadSiteAdmin(); });
+    }
+  });
+
+
   document.getElementById('vipOrderRows').addEventListener('click', function(e){
     var photo=e.target.closest('[data-vphoto]');
     if(photo){
@@ -673,7 +992,7 @@
       var max = ord && ord.plan==='gold' ? 30 : (ord && ord.plan==='silver' ? 20 : 10);
       var html = '<p>حداکثر '+max+' کانفیگ برای این پلن. از استخر انتخاب کن.</p><div class="assign-list">';
       vipConfigs.forEach(function(c){
-        html += '<label><input type="checkbox" value="'+c.id+'"> '+esc(c.name)+'</label>';
+        html += '<label><input type="checkbox" value="'+c.id+'"> '+esc(c.name)+(c.category?' — '+esc(c.category):'')+(c.enabled?'':' (خاموش)')+'</label>';
       });
       html += '</div><button type="button" class="btn btn-primary" id="vipDoComplete">ثبت و انجام شد</button>';
       document.getElementById('vipOvTitle').textContent='تخصیص به '+ (ord?ord.code:'');

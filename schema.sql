@@ -23,7 +23,12 @@ CREATE TABLE IF NOT EXISTS vip_settings (
 CREATE TABLE IF NOT EXISTS vip_configs (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   name       TEXT NOT NULL,
+  country    TEXT DEFAULT '',
+  protocol   TEXT DEFAULT 'vless',
   link       TEXT NOT NULL,
+  enabled    INTEGER NOT NULL DEFAULT 1,
+  category   TEXT DEFAULT '',
+  featured   INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -40,6 +45,14 @@ CREATE TABLE IF NOT EXISTS vip_orders (
 );
 
 CREATE INDEX IF NOT EXISTS idx_vip_orders_code ON vip_orders (code);
+
+CREATE TABLE IF NOT EXISTS site_photos (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  caption    TEXT DEFAULT '',
+  image      TEXT NOT NULL,
+  sort       INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
 -- اگر جدول از قبل بدون ستون دسته ساخته شده:
 -- ALTER TABLE servers ADD COLUMN category TEXT DEFAULT '';

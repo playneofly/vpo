@@ -4,6 +4,61 @@ export const PLANS = {
   gold: { id: 'gold', title: 'طلایی', price: 360000, configs: 30 },
 };
 
+export const DEFAULT_PLAN_COPY = {
+  bronze: {
+    title: 'برنز',
+    subtitle: 'شروع اقتصادی',
+    bullets: ['۱۰ کانفیگ اختصاصی', 'پشتیبانی ۱ هفته', 'سرعت بالا'],
+  },
+  silver: {
+    title: 'نقره',
+    subtitle: 'انتخاب متعادل',
+    bullets: ['۲۰ کانفیگ اختصاصی', 'پشتیبانی ۲ هفته', 'بدون قطعی، مناسب اینترنت سیم‌کارت'],
+  },
+  gold: {
+    title: 'طلایی',
+    subtitle: 'بهترین تجربه',
+    bullets: [
+      '۳۰ کانفیگ اختصاصی',
+      'پشتیبانی ۳ هفته',
+      'بدون قطعی، سرعت بالا، تست‌شده روی اینترنت‌های مختلف و انتخاب بهترین پینگ',
+    ],
+  },
+};
+
+export function mergePlanCopy(raw) {
+  let parsed = null;
+  if (raw) {
+    try {
+      parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch (e) {
+      parsed = null;
+    }
+  }
+  const out = {};
+  for (const id of ['bronze', 'silver', 'gold']) {
+    const d = DEFAULT_PLAN_COPY[id];
+    const p = (parsed && parsed[id]) || {};
+    const title = p.title != null ? String(p.title).trim() : '';
+    const subtitle = p.subtitle != null ? String(p.subtitle) : d.subtitle;
+    let bullets = Array.isArray(p.bullets)
+      ? p.bullets.map((x) => String(x).trim()).filter(Boolean)
+      : typeof p.bullets === 'string'
+        ? String(p.bullets)
+            .split(/\r?\n/)
+            .map((x) => x.trim())
+            .filter(Boolean)
+        : d.bullets.slice();
+    if (!bullets.length) bullets = d.bullets.slice();
+    out[id] = {
+      title: title || d.title,
+      subtitle,
+      bullets,
+    };
+  }
+  return out;
+}
+
 export function newCode() {
   const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let s = 'FL-';
@@ -25,4 +80,40 @@ export async function setSetting(db, k, v) {
     .prepare('INSERT INTO vip_settings (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v')
     .bind(k, String(v))
     .run();
+}
+
+export async function getPlanCopy(db) {
+  const raw = await getSetting(db, 'plan_copy', '');
+  return mergePlanCopy(raw);
+}
+
+export function parseAssigned(raw) {
+  if (!raw) return [];
+  let data = raw;
+  if (typeof raw === 'string') {
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      return [];
+    }
+  }
+  if (!Array.isArray(data)) return [];
+  return data
+    .map((item) => {
+      if (typeof item === 'string') {
+        const link = item.trim();
+        return link ? { name: 'کانفیگ اختصاصی', country: '', protocol: 'vless', link, category: '', featured: 0 } : null;
+      }
+      const link = String((item && item.link) || '').trim();
+      if (!link) return null;
+      return {
+        name: String((item && item.name) || 'کانفیگ اختصاصی'),
+        country: String((item && item.country) || ''),
+        protocol: String((item && item.protocol) || 'vless'),
+        link,
+        category: String((item && item.category) || ''),
+        featured: item && item.featured ? 1 : 0,
+      };
+    })
+    .filter(Boolean);
 }

@@ -1,5 +1,5 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
-import { PLANS, newCode, getSetting } from '../../lib/vip.js';
+import { PLANS, newCode, getSetting, parseAssigned } from '../../lib/vip.js';
 
 export async function onRequestPost({ request, env }) {
   const db = await readyDB(env);
@@ -53,14 +53,7 @@ export async function onRequestGet({ request, env }) {
       await db.prepare("UPDATE vip_orders SET status = 'expired' WHERE code = ?").bind(row.code).run();
       row.status = 'expired';
     }
-    let links = [];
-    if (row.status === 'done' && row.assigned) {
-      try {
-        links = JSON.parse(row.assigned) || [];
-      } catch (e) {
-        links = [];
-      }
-    }
+    const configs = row.status === 'done' ? parseAssigned(row.assigned) : [];
     return Response.json({
       ok: true,
       code: row.code,
@@ -68,7 +61,8 @@ export async function onRequestGet({ request, env }) {
       status: row.status,
       rejectReason: row.reject_reason || '',
       expiresAt: row.expires_at,
-      links,
+      configs,
+      links: configs.map((c) => c.link),
     });
   } catch (e) {
     return dbError(e);

@@ -121,6 +121,27 @@
   .btn-close:hover{border-color:#7f1d1d; color:#fca5a5}
 
   .head-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+
+  .my-sv{
+    display:none; align-items:center; padding:8px 14px; border-radius:4px;
+    border:1px solid rgba(251,191,36,.5); background:#16140e; cursor:pointer; font-family:inherit;
+  }
+  .my-sv-txt{
+    font-size:13px; font-weight:800; white-space:nowrap;
+    background:linear-gradient(90deg,#b45309,#fbbf24,#fde68a,#fbbf24,#b45309);
+    background-size:200% auto; -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    animation:goldshine 3s linear infinite;
+    filter:drop-shadow(0 0 8px rgba(251,191,36,.55));
+  }
+  .site-extra{padding:40px 0 24px}
+  .site-extra-text{font-size:16px; line-height:2; text-align:center; margin-bottom:28px; white-space:pre-wrap; color:var(--text)}
+  .site-photo{margin:0 auto 40px; max-width:920px}
+  .site-photo img{width:100%; display:block; border-radius:4px; border:1px solid var(--border); background:var(--surface2)}
+  .site-photo figcaption{text-align:center; margin-top:10px; font-size:14.5px; color:var(--muted); white-space:pre-wrap; line-height:1.8}
+  #mineGrid{margin-top:12px}
+  #mineCopyBar{text-align:center; margin:8px 0 12px}
+
   @media (max-width:640px){
     .head{flex-wrap:wrap}
     .head-actions{width:100%; justify-content:flex-start}
@@ -236,6 +257,7 @@
           <div class="vip-chip-hint" id="vipChipHint">برای اطلاع از وضعیت سفارش کلیک کنید</div>
         </div>
       </button>
+      <button type="button" class="my-sv" id="myServersBtn"><span class="my-sv-txt">سرور های من</span></button>
       <div class="count-pill"><b id="count">–</b> سرور فعال</div>
     </div>
   </div>
@@ -255,6 +277,13 @@
   </div>
 </div>
 
+<section class="site-extra" id="siteExtra" style="display:none">
+  <div class="wrap">
+    <div class="site-extra-text" id="siteExtraText"></div>
+    <div id="siteExtraPhotos"></div>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">FILTERNET © ۲۰۲۶ — تمامی حقوق محفوظ است.</div>
 </footer>
@@ -265,7 +294,7 @@
     <button type="button" class="vip-x" data-vip-close="vipPlans">×</button>
     <h3>خرید کانفیگ اختصاصی</h3>
     <p class="vip-sub">پله را انتخاب کن. زمان نوشته‌شده فقط مدت پشتیبانی است، نه قطع خودکار.</p>
-    <div class="plan-grid">
+    <div class="plan-grid" id="planGrid">
       <div class="plan-card bronze">
         <div class="plan-bar"></div>
         <div class="plan-body">
@@ -336,6 +365,17 @@
     <button type="button" class="vip-x" data-vip-close="vipStatus">×</button>
     <h3>وضعیت سفارش</h3>
     <div id="vipStatusBox"></div>
+  </div>
+</div>
+
+<div class="vip-ov" id="vipMine">
+  <div class="vip-box" style="max-width:980px">
+    <button type="button" class="vip-x" data-vip-close="vipMine">×</button>
+    <h3>سرور های من</h3>
+    <p class="vip-sub">کانفیگ‌های اختصاصی که خریدی. روی همین مرورگر می‌ماند.</p>
+    <div class="cats" id="mineCats"></div>
+    <div id="mineCopyBar"></div>
+    <div class="grid" id="mineGrid"></div>
   </div>
 </div>
 
@@ -445,6 +485,23 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       toast(ok ? '✅ ' + n + ' کانفیگ ' + label + ' کپی شد — تو v2rayNG از کلیپ‌بورد وارد کن' : '❌ کپی نشد');
     });
   }
+  function serverCard(s) {
+    var loc = s.country && /^[A-Z]{2}$/i.test(s.country) ? flagEmoji(s.country) + ' ' + s.country.toUpperCase() : (s.country || '');
+    var cat = String(s.category || '').trim();
+    return '' +
+      '<div class="card">' +
+        '<div class="card-top">' +
+          '<div><div class="flag">' + flagEmoji(s.country) + '</div>' +
+          '<h3>' + esc(s.name) + '</h3>' +
+          '<div class="loc">' + esc(loc) + (cat ? ' · ' + esc(cat) : '') + '</div></div>' +
+          '<div class="card-top-badges">' + (s.featured ? '<span class="feat">پیشنهادی</span>' : '') + badge(s.protocol) + '</div>' +
+        '</div>' +
+        '<div class="card-actions">' +
+          '<button class="btn btn-primary" data-copy="' + esc(s.link) + '">📋 کپی کانفیگ</button>' +
+          '<button class="btn btn-ghost" data-qr="' + esc(s.link) + '" data-name="' + esc(s.name) + '" data-loc="' + esc(loc) + '">▦ QR</button>' +
+        '</div>' +
+      '</div>';
+  }
   function renderCats() {
     var box = document.getElementById('cats');
     var bar = document.getElementById('catCopyBar');
@@ -479,23 +536,7 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       return;
     }
     countEl.textContent = list.length.toLocaleString('fa-IR');
-    grid.innerHTML = list.map(function (s) {
-      var loc = s.country && /^[A-Z]{2}$/i.test(s.country) ? flagEmoji(s.country) + ' ' + s.country.toUpperCase() : (s.country || '');
-      var cat = String(s.category || '').trim();
-      return '' +
-      '<div class="card">' +
-        '<div class="card-top">' +
-          '<div><div class="flag">' + flagEmoji(s.country) + '</div>' +
-          '<h3>' + esc(s.name) + '</h3>' +
-          '<div class="loc">' + esc(loc) + (cat ? ' · ' + esc(cat) : '') + '</div></div>' +
-          '<div class="card-top-badges">' + (s.featured ? '<span class="feat">پیشنهادی</span>' : '') + badge(s.protocol) + '</div>' +
-        '</div>' +
-        '<div class="card-actions">' +
-          '<button class="btn btn-primary" data-copy="' + esc(s.link) + '">📋 کپی کانفیگ</button>' +
-          '<button class="btn btn-ghost" data-qr="' + esc(s.link) + '" data-name="' + esc(s.name) + '" data-loc="' + esc(loc) + '">▦ QR</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+    grid.innerHTML = list.map(serverCard).join('');
   }
 
   function openQR(link, name, loc) {
@@ -578,7 +619,7 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   function setChip(order){
     var chip = document.getElementById('vipChip');
     if(!order || !order.code){ chip.style.display='none'; return; }
-    if(order.status==='expired'){ chip.style.display='none'; return; }
+    if(order.status==='expired' || order.status==='done'){ chip.style.display='none'; return; }
     chip.style.display='block';
     document.getElementById('vipChipCode').textContent = order.code;
     var dot = document.getElementById('vipDot');
@@ -590,6 +631,33 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     else { dot.classList.add('pending'); hint.textContent='برای اطلاع از وضعیت سفارش کلیک کنید'; }
   }
 
+  function faNum(n){
+    try { return Number(n).toLocaleString('fa-IR'); } catch(e){ return String(n); }
+  }
+  function planCheck(color){
+    return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  }
+  function renderPlans(plans){
+    var box = document.getElementById('planGrid');
+    if(!box || !plans) return;
+    var colors = { bronze:'#e67e22', silver:'#e8e8e8', gold:'#d4af37' };
+    box.innerHTML = ['bronze','silver','gold'].map(function(id){
+      var p = plans[id] || {};
+      var stroke = colors[id];
+      var bullets = (p.bullets||[]).map(function(b){ return '<li>'+planCheck(stroke)+esc(b)+'</li>'; }).join('');
+      var price = p.price != null ? faNum(p.price) : '';
+      return '<div class="plan-card '+id+'">'+
+        '<div class="plan-bar"></div>'+
+        '<div class="plan-body">'+
+          '<h4>'+esc(p.title||id)+'</h4>'+
+          '<p class="plan-desc">'+esc(p.subtitle||'')+'</p>'+
+          '<p class="plan-price">'+price+' <small>تومان</small></p>'+
+          '<ul>'+bullets+'</ul>'+
+        '</div>'+
+        '<div class="plan-foot"><button type="button" class="btn" data-plan="'+id+'">Select Plan</button></div>'+
+      '</div>';
+    }).join('');
+  }
   function loadVipSettings(){
     fetch('/api/vip/settings').then(function(r){ return r.json(); }).then(function(d){
       if(!d || !d.ok) return;
@@ -601,17 +669,107 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       else btn.style.display='none';
       document.getElementById('cardNum').textContent = formatCard(vipState.cardNumber);
       document.getElementById('cardHolder').textContent = (vipState.cardName||'—').toUpperCase();
+      if(d.plans) renderPlans(d.plans);
     }).catch(function(){});
   }
 
+  var VIP_MINE = 'fn_vip_mine';
+  var mineServers = [];
+  var mineActiveCat = '';
+  function mineCodes(){
+    try { var a = JSON.parse(localStorage.getItem(VIP_MINE)||'[]'); return Array.isArray(a)?a:[]; } catch(e){ return []; }
+  }
+  function addMine(code){
+    if(!code) return;
+    var a = mineCodes();
+    if(a.indexOf(code)<0){ a.push(code); localStorage.setItem(VIP_MINE, JSON.stringify(a)); }
+  }
+  function updateMineBtn(){
+    var b = document.getElementById('myServersBtn');
+    if(!b) return;
+    b.style.display = mineServers.length ? 'inline-flex' : 'none';
+  }
+  function renderMine(){
+    var box = document.getElementById('mineGrid');
+    var catsBox = document.getElementById('mineCats');
+    var bar = document.getElementById('mineCopyBar');
+    if(!box) return;
+    var cats=[], seen={};
+    mineServers.forEach(function(s){
+      var c=String(s.category||'').trim();
+      if(c && !seen[c]){ seen[c]=1; cats.push(c); }
+    });
+    if(mineActiveCat && cats.indexOf(mineActiveCat)<0) mineActiveCat='';
+    var html = '<button type="button" class="cat-btn'+(mineActiveCat?'':' on')+'" data-mine-cat="">همه</button>';
+    cats.forEach(function(c){
+      html += '<button type="button" class="cat-btn'+(mineActiveCat===c?' on':'')+'" data-mine-cat="'+esc(c)+'">'+esc(c)+'</button>';
+    });
+    catsBox.innerHTML = cats.length ? html : '';
+    var list = mineServers;
+    if(mineActiveCat) list = mineServers.filter(function(s){ return String(s.category||'').trim()===mineActiveCat; });
+    if(!mineServers.length){
+      box.innerHTML = '<div class="empty"><div class="big">⭐</div>هنوز کانفیگ اختصاصی نداری.</div>';
+      bar.innerHTML = '';
+      return;
+    }
+    var n = list.length.toLocaleString('fa-IR');
+    var label = mineActiveCat ? ('کپی همه «'+mineActiveCat+'» ('+n+')') : ('کپی همه سرورهای من ('+n+')');
+    bar.innerHTML = '<button type="button" class="btn btn-primary" id="mineCopyAll">📋 '+esc(label)+'</button>';
+    box.innerHTML = list.map(serverCard).join('');
+  }
+  function loadMine(cb){
+    var codes = mineCodes().slice();
+    var cur = localStorage.getItem(VIP_LS);
+    if(cur && codes.indexOf(cur)<0) codes.push(cur);
+    if(!codes.length){ mineServers=[]; updateMineBtn(); if(cb) cb(); return; }
+    Promise.all(codes.map(function(c){
+      return fetch('/api/vip/order?code='+encodeURIComponent(c)).then(function(r){ return r.json(); }).catch(function(){ return null; });
+    })).then(function(arr){
+      var seen={};
+      mineServers=[];
+      (arr||[]).forEach(function(d){
+        if(!d || !d.ok) return;
+        if(d.status==='done'){
+          addMine(d.code);
+          (d.configs||[]).forEach(function(s){
+            if(!s || !s.link || seen[s.link]) return;
+            seen[s.link]=1;
+            mineServers.push(s);
+          });
+        }
+      });
+      updateMineBtn();
+      if(cb) cb();
+    });
+  }
+  function loadSite(){
+    fetch('/api/site').then(function(r){ return r.json(); }).then(function(d){
+      if(!d || !d.ok) return;
+      var sec = document.getElementById('siteExtra');
+      var tx = document.getElementById('siteExtraText');
+      var ph = document.getElementById('siteExtraPhotos');
+      var text = String(d.text||'').trim();
+      var photos = d.photos||[];
+      if(!text && !photos.length){ sec.style.display='none'; return; }
+      sec.style.display='block';
+      tx.textContent = text;
+      tx.style.display = text ? 'block' : 'none';
+      ph.innerHTML = photos.map(function(p){
+        var cap = String(p.caption||'').trim();
+        return '<figure class="site-photo"><img alt="" src="/api/site/photo/'+encodeURIComponent(p.id)+'">'+(cap?'<figcaption>'+esc(cap)+'</figcaption>':'')+'</figure>';
+      }).join('');
+    }).catch(function(){});
+  }
   function refreshVipOrder(cb){
     var code = localStorage.getItem(VIP_LS);
-    if(!code){ vipState.order=null; setChip(null); if(cb) cb(null); return; }
+    if(!code){ vipState.order=null; setChip(null); loadMine(); if(cb) cb(null); return; }
     fetch('/api/vip/order?code='+encodeURIComponent(code)).then(function(r){ return r.json(); }).then(function(d){
       if(!d || !d.ok){ if(cb) cb(null); return; }
       vipState.order = d;
       vipState.code = d.code;
+      if(d.status==='done') addMine(d.code);
       setChip(d);
+      loadMine();
       if(cb) cb(d);
     }).catch(function(){ if(cb) cb(null); });
   }
@@ -669,8 +827,9 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     } else if(d.status==='in_progress'){
       html += '<div class="st-light work"></div><p>در حال انجام</p><p class="vip-sub">سفارش قبول شده. کانفیگ‌ها در حال آماده‌سازی است.</p>';
     } else if(d.status==='done'){
-      html += '<div class="st-light ok"></div><p>سفارش شما قبول شد</p><p class="vip-sub">برای کپی کانفیگ‌ها کلیک کنید</p>';
+      html += '<div class="st-light ok"></div><p>سفارش شما قبول شد</p><p class="vip-sub">از این به بعد از دکمه طلایی «سرور های من» بالای صفحه بردار.</p>';
       html += '<button type="button" class="btn btn-primary" id="vipCopyAll" style="margin-top:12px;width:100%">کپی کانفیگ‌ها</button>';
+      html += '<button type="button" class="btn btn-ghost" id="vipOpenMine" style="margin-top:8px;width:100%">سرور های من</button>';
     } else if(d.status==='expired'){
       html += '<div class="st-light wait"></div><p>زمان ارسال فیش تمام شد</p>';
       html += '<button type="button" class="btn btn-ghost" id="vipAckReject" style="margin-top:12px">بستن</button>';
@@ -684,8 +843,14 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     var cp = document.getElementById('vipCopyAll');
     if(cp) cp.addEventListener('click', function(){
       var links = d.links||[];
+      if(!links.length && d.configs) links = d.configs.map(function(s){ return s.link; });
       if(!links.length){ toast('هنوز کانفیگی نیست'); return; }
       copyText(links.join('\n')).then(function(ok){ toast(ok?'✅ کانفیگ‌ها کپی شد':'❌ کپی نشد'); });
+    });
+    var om = document.getElementById('vipOpenMine');
+    if(om) om.addEventListener('click', function(){
+      vipClose('vipStatus');
+      loadMine(function(){ renderMine(); vipOpen('vipMine'); });
     });
   }
 
@@ -719,23 +884,35 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       vipClose(id);
     });
   });
-  document.querySelectorAll('#vipPlans [data-plan]').forEach(function(b){
-    b.addEventListener('click', function(){
-      var plan = b.getAttribute('data-plan');
-      fetch('/api/vip/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan: plan }) })
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-          if(!d.ok){ toast(d.error||'خطا'); return; }
-          localStorage.setItem(VIP_LS, d.code);
-          vipState.code = d.code;
-          vipState.order = d;
-          setChip({ code:d.code, status:'awaiting_receipt' });
-          document.getElementById('payPlanLabel').textContent = 'پلن '+plan+' — مبلغ طبق کارت';
-          document.getElementById('vipPayCodeHint').innerHTML = 'کد اشتراک: <b dir="ltr">'+esc(d.code)+'</b><br>این کد برای اینکه اشتراک شما ثابت شود نیاز است. لطفا این کد را به کسی ندهید.';
-          startTimer(d.expiresAt);
-          vipClose('vipPlans'); vipOpen('vipPay');
-        });
-    });
+  document.getElementById('vipPlans').addEventListener('click', function(e){
+    var b = e.target.closest('[data-plan]');
+    if(!b) return;
+    var plan = b.getAttribute('data-plan');
+    fetch('/api/vip/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan: plan }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.ok){ toast(d.error||'خطا'); return; }
+        localStorage.setItem(VIP_LS, d.code);
+        vipState.code = d.code;
+        vipState.order = d;
+        setChip({ code:d.code, status:'awaiting_receipt' });
+        document.getElementById('payPlanLabel').textContent = 'پلن '+plan+' — مبلغ طبق کارت';
+        document.getElementById('vipPayCodeHint').innerHTML = 'کد اشتراک: <b dir="ltr">'+esc(d.code)+'</b><br>این کد برای اینکه اشتراک شما ثابت شود نیاز است. لطفا این کد را به کسی ندهید.';
+        startTimer(d.expiresAt);
+        vipClose('vipPlans'); vipOpen('vipPay');
+      });
+  });
+  document.getElementById('myServersBtn').addEventListener('click', function(){
+    loadMine(function(){ renderMine(); vipOpen('vipMine'); });
+  });
+  document.getElementById('vipMine').addEventListener('click', function(e){
+    var cat = e.target.closest('[data-mine-cat]');
+    if(cat){ mineActiveCat = cat.getAttribute('data-mine-cat')||''; renderMine(); return; }
+    if(e.target.closest('#mineCopyAll')){
+      var list = mineServers;
+      if(mineActiveCat) list = mineServers.filter(function(s){ return String(s.category||'').trim()===mineActiveCat; });
+      copyText(list.map(function(s){ return s.link; }).join('\n')).then(function(ok){ toast(ok?'✅ کپی شد':'❌ کپی نشد'); });
+    }
   });
   document.getElementById('vipSendReceipt').addEventListener('click', function(){
     var f = document.getElementById('vipReceiptFile').files[0];
@@ -754,7 +931,9 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
 
   loadVipSettings();
   refreshVipOrder();
-  setInterval(function(){ loadVipSettings(); refreshVipOrder(); }, 20000);
+  loadMine();
+  loadSite();
+  setInterval(function(){ loadVipSettings(); refreshVipOrder(); loadMine(); }, 20000);
 
   load();
 

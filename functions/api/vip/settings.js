@@ -1,5 +1,5 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
-import { getSetting } from '../../lib/vip.js';
+import { getSetting, getPlanCopy, PLANS } from '../../lib/vip.js';
 
 export async function onRequestGet({ env }) {
   const db = await readyDB(env);
@@ -8,7 +8,12 @@ export async function onRequestGet({ env }) {
     const enabled = (await getSetting(db, 'vip_enabled', '0')) === '1';
     const cardNumber = await getSetting(db, 'card_number', '');
     const cardName = await getSetting(db, 'card_name', '');
-    return Response.json({ ok: true, enabled, cardNumber, cardName });
+    const planCopy = await getPlanCopy(db);
+    const plans = {};
+    for (const id of ['bronze', 'silver', 'gold']) {
+      plans[id] = Object.assign({}, PLANS[id], planCopy[id]);
+    }
+    return Response.json({ ok: true, enabled, cardNumber, cardName, plans });
   } catch (e) {
     return dbError(e);
   }

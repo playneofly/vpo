@@ -57,18 +57,27 @@ export async function onRequestPost({ request, env, params }) {
       if (ids.length > plan.configs) {
         return Response.json({ ok: false, error: 'برای این پلن حداکثر ' + plan.configs + ' کانفیگ' }, { status: 400 });
       }
-      const { results } = await db.prepare('SELECT id, link FROM vip_configs').all();
+      const { results } = await db
+        .prepare('SELECT id, name, country, protocol, link, category, featured FROM vip_configs')
+        .all();
       const map = {};
       (results || []).forEach((c) => {
-        map[c.id] = c.link;
+        map[c.id] = {
+          name: c.name,
+          country: c.country || '',
+          protocol: c.protocol || 'vless',
+          link: c.link,
+          category: c.category || '',
+          featured: c.featured ? 1 : 0,
+        };
       });
-      const links = ids.map((i) => map[i]).filter(Boolean);
-      if (links.length !== ids.length) {
+      const assigned = ids.map((i) => map[i]).filter(Boolean);
+      if (assigned.length !== ids.length) {
         return Response.json({ ok: false, error: 'بعضی کانفیگ‌ها پیدا نشد' }, { status: 400 });
       }
       await db
         .prepare("UPDATE vip_orders SET status = 'done', assigned = ? WHERE id = ?")
-        .bind(JSON.stringify(links), id)
+        .bind(JSON.stringify(assigned), id)
         .run();
       return Response.json({ ok: true });
     }
