@@ -1,5 +1,5 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
-import { validVisitor, hoursInfo, supportName } from '../../lib/support.js';
+import { validVisitor, hoursInfo, supportName, getAI } from '../../lib/support.js';
 
 export async function onRequestPost({ request, env }) {
   const db = await readyDB(env);
@@ -11,7 +11,7 @@ export async function onRequestPost({ request, env }) {
     body = {};
   }
   const visitorId = String(body.visitorId || '').trim();
-  const channel = body.channel === 'ai' ? 'ai' : 'admin';
+  const channel = 'ai';
   const vipCode = String(body.vipCode || '').trim().slice(0, 32);
   if (!validVisitor(visitorId)) {
     return Response.json({ ok: false, error: 'شناسه نامعتبر' }, { status: 400 });
@@ -52,6 +52,7 @@ export async function onRequestPost({ request, env }) {
       thread: { id: row.id, channel: row.channel, status: row.status, vipCode: row.vip_code || '' },
       hours: hoursInfo(),
       supportName: await supportName(db),
+      aiReady: !!getAI(env),
     });
   } catch (e) {
     return dbError(e);
@@ -69,12 +70,18 @@ export async function onRequestGet({ request, env }) {
   try {
     const { results } = await db
       .prepare(
-        'SELECT id, channel, status, last_at, last_preview, unread_user FROM support_threads WHERE visitor_id = ? ORDER BY last_at DESC'
+        "SELECT id, channel, status, last_at, last_preview, unread_user FROM support_threads WHERE visitor_id = ? AND channel = 'ai' ORDER BY last_at DESC"
       )
       .bind(visitorId)
       .all();
     const unread = (results || []).reduce((n, t) => n + (t.unread_user || 0), 0);
-    return Response.json({ ok: true, threads: results || [], unread, hours: hoursInfo() });
+    return Response.json({
+      ok: true,
+      threads: results || [],
+      unread,
+      hours: hoursInfo(),
+      aiReady: !!getAI(env),
+    });
   } catch (e) {
     return dbError(e);
   }

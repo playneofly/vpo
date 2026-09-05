@@ -1,5 +1,5 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
-import { validVisitor, clip, hoursInfo, runAI, supportName } from '../../lib/support.js';
+import { validVisitor, clip, hoursInfo, generateAiReply, supportName, getAI } from '../../lib/support.js';
 
 async function ownThread(db, visitorId, threadId) {
   return db
@@ -34,13 +34,15 @@ export async function onRequestGet({ request, env }) {
       messages: results || [],
       hours: hoursInfo(),
       supportName: await supportName(db),
+      aiReady: !!getAI(env),
     });
   } catch (e) {
     return dbError(e);
   }
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost(context) {
+  const { request, env, waitUntil } = context;
   const db = await readyDB(env);
   if (!db) return noDb();
   let body = {};
@@ -58,7 +60,7 @@ export async function onRequestPost({ request, env }) {
     return Response.json({ ok: false, error: 'پارامتر ناقص' }, { status: 400 });
   }
   if (!text && !hasImg) {
-    return Response.json({ ok: false, error: 'متن یا عکس لازم است' }, { status: 400 });
+    return Response.json({ ok: false, error: 'متن لازم است' }, { status: 400 });
   }
   const now = Math.floor(Date.now() / 1000);
   try {
@@ -68,17 +70,15 @@ export async function onRequestPost({ request, env }) {
       await db.prepare("UPDATE support_threads SET status = 'open' WHERE id = ?").bind(threadId).run();
     }
 
-    if (th.channel === 'ai') {
-      const since = now - 86400;
-      const cnt = await db
-        .prepare(
-          "SELECT COUNT(*) AS n FROM support_messages WHERE thread_id = ? AND sender = 'user' AND created_at >= ?"
-        )
-        .bind(threadId, since)
-        .first();
-      if (cnt && cnt.n >= 20) {
-        return Response.json({ ok: false, error: 'سهمیه پیام هوش مصنوعی امروز تمام شد. با ادمین حرف بزن.' }, { status: 429 });
-      }
+    const since = now - 86400;
+    const cnt = await db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM support_messages WHERE thread_id = ? AND sender = 'user' AND created_at >= ?"
+      )
+      .bind(threadId, since)
+      .first();
+    if (cnt && cnt.n >= 20) {
+      return Response.json({ ok: false, error: 'سهمیه پیام امروز تمام شد. فردا دوباره بیا.' }, { status: 429 });
     }
 
     const img = hasImg ? image : '';
@@ -94,51 +94,32 @@ export async function onRequestPost({ request, env }) {
       .bind(now, clip(text || '📷 عکس', 80), 'open', threadId)
       .run();
 
-    const extra = [];
-    if (th.channel === 'ai') {
-      const { results } = await db
-        .prepare('SELECT sender, body FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 12')
-        .bind(threadId)
-        .all();
-      const hist = (results || [])
-        .reverse()
-        .filter((m) => m.body)
-        .map((m) => ({
-          role: m.sender === 'user' ? 'user' : 'assistant',
-          content: String(m.body).slice(0, 800),
-        }));
-      try {
-        const ai = await runAI(env, hist);
-        const aiNow = Math.floor(Date.now() / 1000);
-        const aiInfo = await db
-          .prepare('INSERT INTO support_messages (thread_id, sender, body, image, created_at) VALUES (?, ?, ?, ?, ?)')
-          .bind(threadId, 'ai', ai.text, '', aiNow)
-          .run();
-        extra.push({ id: aiInfo.meta.last_row_id, sender: 'ai', body: ai.text, image: '', created_at: aiNow });
-        await db
-          .prepare('UPDATE support_threads SET last_at = ?, last_preview = ?, unread_user = unread_user + 1 WHERE id = ?')
-          .bind(aiNow, clip(ai.text, 80), threadId)
-          .run();
-      } catch (e) {
-        const msg =
-          e && e.code === 'NO_AI'
-            ? 'هوش مصنوعی هنوز وصل نیست. در کلادفلر: Settings → Bindings → Workers AI با اسم دقیقاً AI، بعد Retry deployment. فعلاً از چت با ادمین استفاده کن.'
-            : 'هوش مصنوعی الان جواب نداد. دوباره بفرست یا با ادمین حرف بزن.';
-        const aiNow = Math.floor(Date.now() / 1000);
-        const aiInfo = await db
-          .prepare('INSERT INTO support_messages (thread_id, sender, body, image, created_at) VALUES (?, ?, ?, ?, ?)')
-          .bind(threadId, 'ai', msg, '', aiNow)
-          .run();
-        extra.push({ id: aiInfo.meta.last_row_id, sender: 'ai', body: msg, image: '', created_at: aiNow });
+    const aiPromise = generateAiReply(env, db, threadId);
+    if (typeof waitUntil === 'function') waitUntil(aiPromise);
+
+    let extra = [];
+    let pending = true;
+    try {
+      const raced = await Promise.race([
+        aiPromise.then((r) => ({ done: true, r })),
+        new Promise((res) => setTimeout(() => res({ done: false }), 9000)),
+      ]);
+      if (raced.done && raced.r) {
+        extra = [raced.r];
+        pending = false;
       }
+    } catch (e) {
+      pending = true;
     }
 
     return Response.json({
       ok: true,
       message: userMsg,
       replies: extra,
+      pending,
       hours: hoursInfo(),
       supportName: await supportName(db),
+      aiReady: !!getAI(env),
     });
   } catch (e) {
     return dbError(e);
