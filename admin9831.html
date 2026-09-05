@@ -171,6 +171,7 @@
       <button type="button" class="atab" data-tab="receipts">فیش‌ها <span class="tab-n" id="receiptBadge"></span></button>
       <button type="button" class="atab" data-tab="vipcf">کانفیگ اختصاصی</button>
       <button type="button" class="atab" data-tab="site">پایین سایت</button>
+      <button type="button" class="atab" data-tab="support">پشتیبانی <span class="tab-n" id="supTabBadge"></span></button>
     </div>
 
     <div id="tab-servers">
@@ -379,6 +380,41 @@
         <div id="sitePhotoList" style="margin-top:18px"></div>
       </div>
     </div>
+
+    <div id="tab-support" style="display:none">
+      <div class="card">
+        <h3>تنظیمات پشتیبانی</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">ساعت کاری ثابت است: هر روز ۱۲ ظهر تا ۱۲ شب به وقت ایران، جمعه‌ها تعطیل. هوش مصنوعی ۲۴ ساعته است.</p>
+        <div class="form-row">
+          <div class="field"><label>نام نمایشی پشتیبان</label><input id="supName" placeholder="پشتیبان FILTERNET"></div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>جواب‌های آماده (هر خط یکی)</label>
+            <textarea id="supCannedText" style="min-height:110px;direction:rtl;text-align:right;font-family:inherit"></textarea>
+          </div>
+        </div>
+        <div class="form-actions"><button type="button" class="btn btn-primary" id="supSaveSet">ذخیره تنظیمات</button></div>
+      </div>
+      <div class="card">
+        <h3>گفتگوها</h3>
+        <div style="display:grid;grid-template-columns:minmax(220px,280px) 1fr;gap:12px">
+          <div id="supAdList" style="max-height:520px;overflow:auto;border:1px solid var(--border);padding:8px"></div>
+          <div>
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px">
+              <b id="supAdTitle">یک گفتگو را انتخاب کن</b>
+              <button type="button" class="btn btn-ghost" id="supAdClose" style="display:none">بستن گفتگو</button>
+            </div>
+            <div id="supAdMsgs" style="height:340px;overflow:auto;border:1px solid var(--border);padding:10px;margin-bottom:10px;background:var(--surface2)"></div>
+            <select id="supCannedSel" style="margin-bottom:8px"><option value="">جواب آماده…</option></select>
+            <textarea id="supAdReply" placeholder="پاسخ…" style="min-height:70px;direction:rtl;text-align:right;font-family:inherit"></textarea>
+            <div class="form-actions">
+              <input type="file" id="supAdFile" accept="image/*">
+              <button type="button" class="btn btn-primary" id="supAdSend">ارسال</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -436,7 +472,7 @@
   function doLogin(){
     api('/api/admin/login', { method:'POST', body:JSON.stringify({ password: document.getElementById('passInput').value }) })
       .then(function(d){
-        if(d.ok){ showDash(); loadServers(); loadVipAll(); document.getElementById('passInput').value=''; }
+        if(d.ok){ showDash(); loadServers(); loadVipAll(); loadSupportAdmin(); document.getElementById('passInput').value=''; }
         else { document.getElementById('loginErr').textContent=d.error||'رمز اشتباه است'; document.getElementById('loginErr').classList.add('show'); }
       });
   }
@@ -652,10 +688,11 @@
     var b=e.target.closest('[data-tab]'); if(!b) return;
     var tab=b.getAttribute('data-tab');
     document.querySelectorAll('.atab').forEach(function(x){ x.classList.toggle('on', x===b); });
-    ['servers','receipts','vipcf','site'].forEach(function(id){
+    ['servers','receipts','vipcf','site','support'].forEach(function(id){
       var el=document.getElementById('tab-'+id); if(el) el.style.display = tab===id?'block':'none';
     });
     if(tab==='site') loadSiteAdmin();
+    else if(tab==='support') loadSupportAdmin();
     else if(tab!=='servers') loadVipAll();
   });
   document.getElementById('vipOvClose').addEventListener('click', function(){ document.getElementById('vipOv').classList.remove('open'); });
@@ -1010,10 +1047,119 @@
     }
   });
 
+
+  var supAd = { id: 0, lastId: 0, timer: null };
+  function supAdBubble(m){
+    var who = m.sender==='user'?'کاربر':(m.sender==='ai'?'هوش مصنوعی':'شما');
+    var html = '<div class="sup-ad-msg" style="margin-bottom:10px"><div style="font-size:11px;color:var(--muted)">'+esc(who)+'</div>';
+    if (m.body) html += '<div style="white-space:pre-wrap">'+esc(m.body)+'</div>';
+    if (m.image && String(m.image).indexOf('data:image/')===0) html += '<img class="vip-thumb" src="'+m.image+'">';
+    html += '</div>';
+    return html;
+  }
+  function loadSupportAdmin(){
+    api('/api/admin/support/threads').then(function(d){
+      if (!d.ok) return;
+      var badge = document.getElementById('supTabBadge');
+      var n = d.unread || 0;
+      badge.textContent = n || '';
+      badge.classList.toggle('show', n>0);
+      var name = document.getElementById('supName');
+      if (name && d.supportName) name.value = d.supportName;
+      var can = document.getElementById('supCannedText');
+      if (can && d.canned) can.value = (d.canned||[]).join('\n');
+      var sel = document.getElementById('supCannedSel');
+      if (sel) {
+        sel.innerHTML = '<option value="">جواب آماده…</option>' + (d.canned||[]).map(function(c){
+          return '<option>'+esc(c)+'</option>';
+        }).join('');
+      }
+      var box = document.getElementById('supAdList');
+      if (!box) return;
+      var list = d.threads || [];
+      if (!list.length) { box.innerHTML = '<div class="empty">گفتگویی نیست</div>'; return; }
+      box.innerHTML = list.map(function(th){
+        var ch = th.channel==='ai'?'AI':'ادمین';
+        var st = th.status==='closed'?'بسته':'باز';
+        var un = th.unread_admin ? '<b style="color:#fca5a5">'+th.unread_admin+'</b> ' : '';
+        return '<button type="button" class="atab" data-sth="'+th.id+'" style="width:100%;margin-bottom:6px;text-align:right">'+
+          un+esc(ch)+' · '+esc(st)+(th.vip_code?' · '+esc(th.vip_code):'')+
+          '<div style="font-weight:600;color:var(--muted);font-size:12px">'+esc(th.last_preview||'')+'</div></button>';
+      }).join('');
+    });
+  }
+  function openSupThread(id){
+    supAd.id = id; supAd.lastId = 0;
+    api('/api/admin/support/threads/'+id).then(function(d){
+      if (!d.ok) { toast(d.error||'خطا'); return; }
+      var th = d.thread;
+      document.getElementById('supAdTitle').textContent = (th.channel==='ai'?'AI':'ادمین')+' · '+(th.vip_code||th.visitor_id)+' · '+(th.status==='closed'?'بسته':'باز');
+      document.getElementById('supAdClose').style.display = 'inline-flex';
+      document.getElementById('supAdClose').textContent = th.status==='closed'?'باز کردن':'بستن گفتگو';
+      var box = document.getElementById('supAdMsgs');
+      box.innerHTML = (d.messages||[]).map(supAdBubble).join('') || '<div class="empty">پیامی نیست</div>';
+      box.scrollTop = box.scrollHeight;
+      (d.messages||[]).forEach(function(m){ if(m.id) supAd.lastId=Math.max(supAd.lastId,m.id); });
+      loadSupportAdmin();
+    });
+  }
+  document.getElementById('supAdList').addEventListener('click', function(e){
+    var b = e.target.closest('[data-sth]'); if (!b) return;
+    openSupThread(parseInt(b.getAttribute('data-sth'),10));
+  });
+  document.getElementById('supAdClose').addEventListener('click', function(){
+    if (!supAd.id) return;
+    var act = this.textContent.indexOf('باز')>=0 && this.textContent.indexOf('بستن')<0 ? 'open' : 'close';
+    if (this.textContent.indexOf('بستن')>=0) act = 'close';
+    if (this.textContent === 'باز کردن') act = 'open';
+    api('/api/admin/support/threads/'+supAd.id, { method:'POST', body: JSON.stringify({ action: act }) }).then(function(){
+      openSupThread(supAd.id);
+    });
+  });
+  document.getElementById('supCannedSel').addEventListener('change', function(){
+    if (this.value) document.getElementById('supAdReply').value = this.value;
+    this.value = '';
+  });
+  document.getElementById('supAdSend').addEventListener('click', function(){
+    if (!supAd.id) { toast('اول گفتگو را انتخاب کن'); return; }
+    var text = document.getElementById('supAdReply').value.trim();
+    var f = document.getElementById('supAdFile').files[0];
+    var send = function(img){
+      api('/api/admin/support/threads/'+supAd.id, { method:'POST', body: JSON.stringify({ action:'reply', body:text, image: img||'' }) }).then(function(d){
+        if (!d.ok) { toast(d.error||'خطا'); return; }
+        document.getElementById('supAdReply').value='';
+        document.getElementById('supAdFile').value='';
+        openSupThread(supAd.id);
+      });
+    };
+    if (f && typeof compressPhoto === 'function') compressPhoto(f, 800, 0.68).then(send);
+    else if (f) {
+      var r = new FileReader(); r.onload=function(){ send(r.result); }; r.readAsDataURL(f);
+    } else send('');
+  });
+  document.getElementById('supSaveSet').addEventListener('click', function(){
+    api('/api/admin/support/settings', { method:'POST', body: JSON.stringify({
+      supportName: document.getElementById('supName').value,
+      canned: document.getElementById('supCannedText').value
+    })}).then(function(d){ toast(d.ok?'ذخیره شد':(d.error||'خطا')); if(d.ok) loadSupportAdmin(); });
+  });
+  setInterval(function(){
+    if (document.getElementById('dashView').style.display === 'none') return;
+    var tab = document.getElementById('tab-support');
+    if (tab && tab.style.display !== 'none') loadSupportAdmin();
+    else api('/api/admin/support/threads').then(function(d){
+      if (!d || !d.ok) return;
+      var badge = document.getElementById('supTabBadge');
+      if (!badge) return;
+      var n = d.unread || 0;
+      badge.textContent = n || '';
+      badge.classList.toggle('show', n>0);
+    });
+  }, 5000);
+
   // ---- شروع ----
-  api('/api/admin/check').then(function(d){ if(d.ok){ showDash(); loadServers(); loadVipAll(); } else showLogin(); });
+  api('/api/admin/check').then(function(d){ if(d.ok){ showDash(); loadServers(); loadVipAll(); loadSupportAdmin(); } else showLogin(); });
 })();
 </script>
 </body>
 </html>
-ml>

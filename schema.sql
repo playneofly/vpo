@@ -54,5 +54,30 @@ CREATE TABLE IF NOT EXISTS site_photos (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS support_threads (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  visitor_id    TEXT NOT NULL,
+  vip_code      TEXT DEFAULT '',
+  channel       TEXT NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'open',
+  last_at       INTEGER NOT NULL DEFAULT 0,
+  last_preview  TEXT DEFAULT '',
+  unread_admin  INTEGER NOT NULL DEFAULT 0,
+  unread_user   INTEGER NOT NULL DEFAULT 0,
+  created_at    INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS support_messages (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  thread_id  INTEGER NOT NULL,
+  sender     TEXT NOT NULL,
+  body       TEXT DEFAULT '',
+  image      TEXT DEFAULT '',
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_vis ON support_threads (visitor_id, channel);
+CREATE INDEX IF NOT EXISTS idx_support_msg ON support_messages (thread_id, id);
+
 -- اگر جدول از قبل بدون ستون دسته ساخته شده:
 -- ALTER TABLE servers ADD COLUMN category TEXT DEFAULT '';

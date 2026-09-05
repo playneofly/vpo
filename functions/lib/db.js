@@ -28,6 +28,10 @@ export async function readyDB(env) {
     "CREATE TABLE IF NOT EXISTS vip_orders (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, plan TEXT NOT NULL, status TEXT NOT NULL, receipt TEXT DEFAULT '', reject_reason TEXT DEFAULT '', assigned TEXT DEFAULT '', created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)",
     'CREATE INDEX IF NOT EXISTS idx_vip_orders_code ON vip_orders (code)',
     "CREATE TABLE IF NOT EXISTS site_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, caption TEXT DEFAULT '', image TEXT NOT NULL, sort INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')))",
+    "CREATE TABLE IF NOT EXISTS support_threads (id INTEGER PRIMARY KEY AUTOINCREMENT, visitor_id TEXT NOT NULL, vip_code TEXT DEFAULT '', channel TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'open', last_at INTEGER NOT NULL DEFAULT 0, last_preview TEXT DEFAULT '', unread_admin INTEGER NOT NULL DEFAULT 0, unread_user INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS support_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, thread_id INTEGER NOT NULL, sender TEXT NOT NULL, body TEXT DEFAULT '', image TEXT DEFAULT '', created_at INTEGER NOT NULL)",
+    'CREATE INDEX IF NOT EXISTS idx_support_vis ON support_threads (visitor_id, channel)',
+    'CREATE INDEX IF NOT EXISTS idx_support_msg ON support_messages (thread_id, id)',
   ];
   for (const sql of vipSql) {
     try {

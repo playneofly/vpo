@@ -146,6 +146,67 @@
   #mineGrid{margin-top:12px}
   #mineCopyBar{text-align:center; margin:8px 0 12px}
 
+  .sup-fab{
+    position:fixed; left:16px; bottom:16px; z-index:46;
+    width:54px; height:54px; border-radius:50%; border:none; cursor:pointer;
+    background:#1d4ed8; color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.45);
+    display:flex; align-items:center; justify-content:center;
+    touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  }
+  .sup-fab:hover{background:#1e40af}
+  .sup-fab .n{
+    position:absolute; top:-3px; right:-3px; min-width:18px; height:18px; padding:0 5px;
+    border-radius:99px; background:#ef4444; color:#fff; font-size:11px; font-weight:800;
+    display:none; align-items:center; justify-content:center;
+  }
+  .sup-fab .n.show{display:flex}
+  .sup-panel{
+    position:fixed; left:16px; bottom:78px; z-index:47;
+    width:360px; max-width:calc(100vw - 24px); height:540px; max-height:calc(100vh - 100px);
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    display:none; flex-direction:column; overflow:hidden;
+    box-shadow:0 16px 40px rgba(0,0,0,.5);
+  }
+  .sup-panel.open{display:flex}
+  .sup-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:10px 12px; border-bottom:1px solid var(--border); background:var(--surface2);
+  }
+  .sup-head b{font-size:14px}
+  .sup-head .mini-x{
+    width:32px; height:32px; border-radius:4px; border:1px solid var(--border);
+    background:transparent; color:var(--text); cursor:pointer; font-size:18px;
+    touch-action:manipulation;
+  }
+  .sup-home{flex:1; display:flex; flex-direction:column; justify-content:center; gap:12px; padding:22px}
+  .sup-choice{
+    width:100%; padding:16px 14px; border-radius:6px; border:1px solid var(--border);
+    background:var(--surface2); color:var(--text); cursor:pointer; font-family:inherit;
+    font-size:15px; font-weight:800; text-align:center; touch-action:manipulation;
+  }
+  .sup-choice:hover{border-color:var(--accent)}
+  .sup-choice small{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-top:4px}
+  .sup-hours{padding:8px 12px; font-size:12px; color:var(--muted); background:#12151b; border-bottom:1px solid var(--border)}
+  .sup-hours.on{color:#86efac}
+  .sup-msgs{flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px}
+  .sup-bubble{max-width:85%; padding:8px 10px; border-radius:8px; font-size:13.5px; line-height:1.7; white-space:pre-wrap; word-break:break-word}
+  .sup-bubble.user{align-self:flex-start; background:var(--accent); color:#fff}
+  .sup-bubble.admin,.sup-bubble.ai{align-self:flex-end; background:var(--surface2); border:1px solid var(--border)}
+  .sup-bubble img{max-width:180px; max-height:140px; display:block; border-radius:4px; margin-top:6px}
+  .sup-who{font-size:11px; color:var(--muted); margin-bottom:2px}
+  .sup-form{display:flex; gap:6px; padding:10px; border-top:1px solid var(--border); align-items:flex-end}
+  .sup-form textarea{
+    flex:1; min-height:40px; max-height:90px; resize:none; direction:rtl; text-align:right;
+    font-family:inherit; font-size:13px;
+  }
+  .sup-form .btn{flex:0 0 auto; width:auto; padding:10px 12px}
+  .sup-tools{display:flex; gap:6px; padding:0 10px 8px; flex-wrap:wrap}
+  .sup-tools .btn{width:auto; padding:7px 10px; font-size:12px}
+  @media (max-width:520px){
+    .sup-panel{left:8px; right:8px; width:auto; bottom:76px; height:70vh}
+  }
+
+
   @media (max-width:640px){
     .head{flex-wrap:wrap}
     .head-actions{width:100%; justify-content:flex-start}
@@ -375,6 +436,34 @@
     <div class="cats" id="mineCats"></div>
     <div id="mineCopyBar"></div>
     <div class="grid" id="mineGrid"></div>
+  </div>
+</div>
+
+
+<button type="button" class="sup-fab" id="supFab" aria-label="پشتیبانی">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" stroke-linejoin="round"/></svg>
+  <span class="n" id="supFabN"></span>
+</button>
+<div class="sup-panel" id="supPanel">
+  <div class="sup-head">
+    <button type="button" class="mini-x" id="supBack" style="display:none">‹</button>
+    <b id="supTitle">پشتیبانی</b>
+    <button type="button" class="mini-x" id="supClose">×</button>
+  </div>
+  <div class="sup-home" id="supHome">
+    <button type="button" class="sup-choice" id="supGoAdmin">چت با ادمین<small>پشتیبان انسان — ساعت کاری مشخص</small></button>
+    <button type="button" class="sup-choice" id="supGoAi">چت با هوش مصنوعی<small>۲۴ ساعته، پاسخ سریع فارسی</small></button>
+  </div>
+  <div id="supChat" style="display:none;flex:1;flex-direction:column;min-height:0">
+    <div class="sup-hours" id="supHours"></div>
+    <div class="sup-msgs" id="supMsgs"></div>
+    <div class="sup-tools" id="supTools"></div>
+    <div class="sup-form">
+      <textarea id="supInput" rows="1" placeholder="پیام…"></textarea>
+      <input type="file" id="supFile" accept="image/*" style="display:none">
+      <button type="button" class="btn btn-ghost" id="supPhoto">📷</button>
+      <button type="button" class="btn btn-primary" id="supSend">ارسال</button>
+    </div>
   </div>
 </div>
 
@@ -937,6 +1026,217 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       refreshVipOrder(function(ord){ renderStatus(ord); vipOpen('vipStatus'); });
     }).catch(function(){ toast('ارسال فیش نشد'); });
   });
+
+
+  var SUP_VIS = 'fn_support_id';
+  var sup = { threadId: 0, channel: '', lastId: 0, poll: null, hours: null, name: 'پشتیبان', typing: false };
+
+  function visId(){
+    var v = localStorage.getItem(SUP_VIS);
+    if (v && /^[A-Za-z0-9_-]{8,64}$/.test(v)) return v;
+    v = 'SP' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(SUP_VIS, v);
+    return v;
+  }
+  function vipCodeForSupport(){
+    return localStorage.getItem('fn_vip_code') || '';
+  }
+  function supJson(url, opt){
+    opt = opt || {};
+    opt.headers = Object.assign({ 'Content-Type': 'application/json' }, opt.headers || {});
+    return fetch(url, opt).then(function(r){ return r.json(); });
+  }
+  function supOpenPanel(){ document.getElementById('supPanel').classList.add('open'); }
+  function supClosePanel(){ document.getElementById('supPanel').classList.remove('open'); }
+  function showSupHome(){
+    document.getElementById('supHome').style.display = 'flex';
+    document.getElementById('supChat').style.display = 'none';
+    document.getElementById('supBack').style.display = 'none';
+    document.getElementById('supTitle').textContent = 'پشتیبانی';
+    sup.threadId = 0; sup.channel = '';
+  }
+  function showSupChat(title){
+    document.getElementById('supHome').style.display = 'none';
+    var ch = document.getElementById('supChat');
+    ch.style.display = 'flex';
+    document.getElementById('supBack').style.display = 'inline-flex';
+    document.getElementById('supTitle').textContent = title;
+  }
+  function setHoursBar(h){
+    var el = document.getElementById('supHours');
+    if (!h) { el.textContent = ''; return; }
+    if (sup.channel === 'ai') {
+      el.textContent = h.open ? 'هوش مصنوعی ۲۴ ساعته است.' : ('هوش مصنوعی ۲۴ ساعته است. ' + (h.message || ''));
+      el.classList.add('on');
+    } else {
+      el.textContent = h.message || '';
+      el.classList.toggle('on', !!h.open);
+    }
+  }
+  function bubble(m){
+    var who = m.sender === 'user' ? 'شما' : (m.sender === 'ai' ? 'هوش مصنوعی' : (sup.name || 'پشتیبان'));
+    var div = document.createElement('div');
+    div.className = 'sup-bubble ' + (m.sender || '');
+    var w = document.createElement('div');
+    w.className = 'sup-who';
+    w.textContent = who;
+    div.appendChild(w);
+    if (m.body) {
+      var p = document.createElement('div');
+      p.textContent = m.body;
+      div.appendChild(p);
+    }
+    if (m.image && String(m.image).indexOf('data:image/') === 0) {
+      var im = document.createElement('img');
+      im.src = m.image;
+      im.alt = '';
+      div.appendChild(im);
+    }
+    return div;
+  }
+  function appendMsgs(list, reset){
+    var box = document.getElementById('supMsgs');
+    if (reset) box.innerHTML = '';
+    (list || []).forEach(function(m){
+      if (m.id && m.id <= sup.lastId) return;
+      box.appendChild(bubble(m));
+      if (m.id) sup.lastId = Math.max(sup.lastId, m.id);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+  function renderTools(){
+    var t = document.getElementById('supTools');
+    if (sup.channel === 'ai') {
+      t.innerHTML = '<button type="button" class="btn btn-ghost" id="supHandoff">وصلم کن به ادمین</button>';
+    } else t.innerHTML = '';
+  }
+  function openChannel(channel){
+    var title = channel === 'ai' ? 'هوش مصنوعی' : 'چت با ادمین';
+    showSupChat(title);
+    document.getElementById('supMsgs').innerHTML = '<div class="empty" style="padding:20px">در حال اتصال…</div>';
+    sup.channel = channel; sup.lastId = 0;
+    renderTools();
+    supJson('/api/support/thread', {
+      method: 'POST',
+      body: JSON.stringify({ visitorId: visId(), channel: channel, vipCode: vipCodeForSupport() })
+    }).then(function(d){
+      if (!d.ok) { toast(d.error || 'خطا'); return; }
+      sup.threadId = d.thread.id;
+      sup.name = d.supportName || 'پشتیبان';
+      setHoursBar(d.hours);
+      return supJson('/api/support/messages?visitorId=' + encodeURIComponent(visId()) + '&threadId=' + sup.threadId);
+    }).then(function(d){
+      if (!d || !d.ok) return;
+      sup.lastId = 0;
+      appendMsgs(d.messages, true);
+      if (d.hours) setHoursBar(d.hours);
+      pingBadge();
+    }).catch(function(){ toast('اتصال پشتیبانی نشد'); });
+  }
+  function sendSup(){
+    var ta = document.getElementById('supInput');
+    var text = ta.value.trim();
+    var f = document.getElementById('supFile').files[0];
+    if (!sup.threadId) return;
+    if (!text && !f) return;
+    var go = function(img){
+      ta.value = '';
+      document.getElementById('supFile').value = '';
+      if (text) appendMsgs([{ id: 0, sender: 'user', body: text, image: img || '' }], false);
+      supJson('/api/support/message', {
+        method: 'POST',
+        body: JSON.stringify({ visitorId: visId(), threadId: sup.threadId, body: text, image: img || '' })
+      }).then(function(d){
+        if (!d.ok) { toast(d.error || 'ارسال نشد'); return; }
+        if (d.message && d.message.id) sup.lastId = Math.max(sup.lastId, d.message.id);
+        if (d.hours) setHoursBar(d.hours);
+        appendMsgs(d.replies || [], false);
+        pingBadge();
+      }).catch(function(){ toast('ارسال نشد'); });
+    };
+    if (f) {
+      var fn = (typeof compressImage === 'function') ? compressImage : null;
+      if (fn) fn(f).then(go).catch(function(){ go(''); });
+      else {
+        var r = new FileReader();
+        r.onload = function(){ go(r.result); };
+        r.readAsDataURL(f);
+      }
+    } else go('');
+  }
+  function pingBadge(){
+    supJson('/api/support/thread?visitorId=' + encodeURIComponent(visId())).then(function(d){
+      if (!d || !d.ok) return;
+      var n = d.unread || 0;
+      var b = document.getElementById('supFabN');
+      b.textContent = n > 9 ? '۹+' : String(n);
+      b.classList.toggle('show', n > 0);
+      if (d.hours) sup.hours = d.hours;
+    }).catch(function(){});
+  }
+  function pollSup(){
+    if (!sup.threadId || !document.getElementById('supPanel').classList.contains('open')) { pingBadge(); return; }
+    supJson('/api/support/messages?visitorId=' + encodeURIComponent(visId()) + '&threadId=' + sup.threadId + '&afterId=' + sup.lastId)
+      .then(function(d){
+        if (!d || !d.ok) return;
+        if (d.hours) setHoursBar(d.hours);
+        var news = (d.messages || []).filter(function(m){ return m.id > sup.lastId && m.sender !== 'user'; });
+        if (news.length) {
+          appendMsgs(d.messages, false);
+          tryNotify(news[news.length - 1]);
+        } else if (d.messages && d.messages.length) {
+          appendMsgs(d.messages, false);
+        }
+      }).catch(function(){});
+  }
+  function tryNotify(m){
+    if (!m || m.sender === 'user') return;
+    beep();
+    if (document.hidden && window.Notification && Notification.permission === 'granted') {
+      try { new Notification('FILTERNET', { body: String(m.body || 'پیام جدید پشتیبانی').slice(0, 80) }); } catch (e) {}
+    }
+  }
+  function beep(){
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var o = ctx.createOscillator(); var g = ctx.createGain();
+      o.frequency.value = 880; g.gain.value = 0.04;
+      o.connect(g); g.connect(ctx.destination); o.start();
+      setTimeout(function(){ o.stop(); ctx.close(); }, 120);
+    } catch (e) {}
+  }
+
+  document.getElementById('supFab').addEventListener('click', function(){
+    var p = document.getElementById('supPanel');
+    if (p.classList.contains('open')) supClosePanel();
+    else { supOpenPanel(); showSupHome(); pingBadge(); }
+  });
+  document.getElementById('supClose').addEventListener('click', supClosePanel);
+  document.getElementById('supBack').addEventListener('click', showSupHome);
+  document.getElementById('supGoAdmin').addEventListener('click', function(){ openChannel('admin'); });
+  document.getElementById('supGoAi').addEventListener('click', function(){ openChannel('ai'); });
+  document.getElementById('supSend').addEventListener('click', sendSup);
+  document.getElementById('supInput').addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendSup(); }
+  });
+  document.getElementById('supPhoto').addEventListener('click', function(){ document.getElementById('supFile').click(); });
+  document.getElementById('supTools').addEventListener('click', function(e){
+    if (!e.target.closest('#supHandoff')) return;
+    if (!sup.threadId) return;
+    supJson('/api/support/handoff', { method: 'POST', body: JSON.stringify({ visitorId: visId(), threadId: sup.threadId }) })
+      .then(function(d){
+        if (!d.ok) { toast(d.error || 'خطا'); return; }
+        toast('به ادمین وصل شد');
+        openChannel('admin');
+      });
+  });
+  if (window.Notification && Notification.permission === 'default') {
+    document.getElementById('supFab').addEventListener('click', function once(){
+      Notification.requestPermission();
+    }, { once: true });
+  }
+  pingBadge();
+  setInterval(pollSup, 4000);
 
   loadVipSettings();
   refreshVipOrder();
