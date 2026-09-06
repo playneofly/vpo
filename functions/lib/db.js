@@ -46,6 +46,8 @@ export async function readyDB(env) {
     "ALTER TABLE vip_configs ADD COLUMN category TEXT DEFAULT ''",
     'ALTER TABLE vip_configs ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE vip_configs ADD COLUMN featured INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE vip_orders ADD COLUMN support_until INTEGER DEFAULT 0',
+    'ALTER TABLE vip_orders ADD COLUMN replace_used INTEGER DEFAULT 0',
   ];
   for (const sql of alters) {
     try {

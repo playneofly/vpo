@@ -1,19 +1,21 @@
 import { getSetting } from './vip.js';
 
 export const AI_MODELS = [
-  '@cf/meta/llama-3.2-3b-instruct',
   '@cf/meta/llama-3.1-8b-instruct-fast',
   '@cf/zai-org/glm-4.7-flash',
   '@cf/meta/llama-3.1-8b-instruct',
+  '@cf/meta/llama-3.2-3b-instruct',
 ];
 
 export const AI_SYS =
-  'تو پشتیبان فارسی سایت FILTERNET هستی. کوتاه، مودب و خودمانی جواب بده. فقط فارسی بنویس. ' +
-  'سایت کانفیگ V2Ray می‌دهد: کاربر کپی یا QR می‌کند و در v2rayNG یا Hiddify از کلیپ‌بورد وارد می‌کند. لینک خام روی کارت عمومی نشان داده نمی‌شود. ' +
-  'خرید اختصاصی کارت‌به‌کارت است. زمان پلن‌ها فقط مدت پشتیبانی است، نه قطع خودکار کانفیگ. ' +
-  'اگر سفارش انجام شده، از دکمه طلایی «سرور های من» بالای صفحه بردارد. ' +
-  'روی سایت پینگ نیست. کانفیگ نساز، UUID یا رمز نخواه، نگو فیلتر را برمی‌داری یا سرور را روشن می‌کنی. ' +
-  'اگر نفهمیدی یا کار به تأیید فیش/سفارش کشید بگو جزئیات را همین‌جا بنویسد.';
+  'تو پشتیبان فارسی FILTERNET هستی. فقط فارسی بنویس. کوتاه باش: حداکثر ۴ جمله. ' +
+  'انگلیسی، شعر، لیست طولانی و حرف اضافه ننویس. مستقیم جواب بده. ' +
+  'سایت کانفیگ V2Ray می‌دهد: کپی یا QR، بعد در v2rayNG یا Hiddify از کلیپ‌بورد وارد می‌شود. ' +
+  'لینک خام روی کارت عمومی نیست. خرید اختصاصی کارت‌به‌کارت است. ' +
+  'مدت پلن فقط پشتیبانی است، کانفیگ خودکار قطع نمی‌شود. ' +
+  'اگر سفارش انجام شده از دکمه طلایی «سرور های من» بالای صفحه بردارد. ' +
+  'پینگ روی سایت نیست. کانفیگ نساز، UUID و رمز نخواه، ادعا نکن فیلتر را برمی‌داری. ' +
+  'اگر نفهمیدی یک سوال کوتاه بپرس.';
 
 export function getAI(env) {
   if (env && env.AI && typeof env.AI.run === 'function') return env.AI;
@@ -67,25 +69,36 @@ export function clip(s, n) {
   return s.slice(0, n - 1) + '…';
 }
 
+function looksPersian(s) {
+  const fa = (String(s).match(/[\u0600-\u06FF]/g) || []).length;
+  return fa >= 6;
+}
+
 export function aiText(out) {
   if (!out) return '';
-  if (typeof out === 'string') return out.trim();
-  if (out.response) return String(out.response).trim();
-  if (out.result) {
-    if (typeof out.result === 'string') return out.result.trim();
-    if (out.result.response) return String(out.result.response).trim();
+  let t = '';
+  if (typeof out === 'string') t = out;
+  else if (out.response) t = String(out.response);
+  else if (out.result) {
+    if (typeof out.result === 'string') t = out.result;
+    else if (out.result.response) t = String(out.result.response);
+  } else {
+    const choice = out.choices && out.choices[0];
+    if (choice) {
+      if (choice.message && choice.message.content) t = String(choice.message.content);
+      else if (choice.text) t = String(choice.text);
+      else if (choice.delta && choice.delta.content) t = String(choice.delta.content);
+    } else if (Array.isArray(out) && out[0]) {
+      if (typeof out[0] === 'string') t = out[0];
+      else if (out[0].response) t = String(out[0].response);
+    }
   }
-  const choice = out.choices && out.choices[0];
-  if (choice) {
-    if (choice.message && choice.message.content) return String(choice.message.content).trim();
-    if (choice.text) return String(choice.text).trim();
-    if (choice.delta && choice.delta.content) return String(choice.delta.content).trim();
-  }
-  if (Array.isArray(out) && out[0]) {
-    if (typeof out[0] === 'string') return out[0].trim();
-    if (out[0].response) return String(out[0].response).trim();
-  }
-  return '';
+  t = String(t || '')
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return t;
 }
 
 export async function runAI(env, history) {
@@ -99,10 +112,11 @@ export async function runAI(env, history) {
   let last = null;
   for (const model of AI_MODELS) {
     try {
-      const out = await ai.run(model, { messages, max_tokens: 320 });
+      const out = await ai.run(model, { messages, max_tokens: 220, temperature: 0.3 });
       const text = aiText(out);
-      if (text) return { text, model };
-      last = new Error('empty:' + model);
+      if (text && looksPersian(text)) return { text, model };
+      if (text) last = new Error('not-fa:' + model);
+      else last = new Error('empty:' + model);
     } catch (e) {
       last = e;
     }
@@ -113,16 +127,17 @@ export async function runAI(env, history) {
 export async function generateAiReply(env, db, threadId) {
   const now = Math.floor(Date.now() / 1000);
   const { results } = await db
-    .prepare('SELECT sender, body FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 12')
+    .prepare('SELECT sender, body FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 8')
     .bind(threadId)
     .all();
   const hist = (results || [])
     .reverse()
-    .filter((m) => m.body)
+    .filter((m) => m.body && !/جواب ندادم|وصل نیست|Retry deployment/i.test(String(m.body)))
     .map((m) => ({
       role: m.sender === 'user' ? 'user' : 'assistant',
-      content: String(m.body).slice(0, 800),
-    }));
+      content: String(m.body).slice(0, 500),
+    }))
+    .slice(-6);
   let text;
   try {
     const ai = await runAI(env, hist);
@@ -131,7 +146,7 @@ export async function generateAiReply(env, db, threadId) {
     text =
       e && e.code === 'NO_AI'
         ? 'هوش مصنوعی هنوز وصل نیست. در کلادفلر: Settings → Bindings → Workers AI با اسم دقیقاً AI، بعد Retry deployment.'
-        : 'الان جواب ندادم. یک‌بار دیگر بفرست.';
+        : 'الان نتونستم درست جواب بدم. یک‌بار دیگه کوتاه بپرس.';
   }
   const info = await db
     .prepare('INSERT INTO support_messages (thread_id, sender, body, image, created_at) VALUES (?, ?, ?, ?, ?)')

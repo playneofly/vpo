@@ -25,11 +25,12 @@
   textarea, #supAdList, #supAdMsgs{scrollbar-width:thin; scrollbar-color:#3d4452 #1a1d24}
   .file-btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    padding:10px 14px; border:1px solid var(--border); background:var(--surface2);
-    color:var(--text); border-radius:6px; cursor:pointer; font-family:inherit;
-    font-size:13px; font-weight:700; position:relative; overflow:hidden;
+    padding:11px 16px; border:1px dashed #3d4452; background:#1a1d24;
+    color:var(--text); border-radius:8px; cursor:pointer; font-family:inherit;
+    font-size:13.5px; font-weight:700; width:100%; box-sizing:border-box;
   }
-  .file-btn input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer; font-size:0}
+  .file-btn:hover{border-color:var(--accent); background:var(--surface2)}
+  input[type=file]{display:none !important}
   .file-name{font-size:12px; color:var(--muted); margin:0 8px}
   .sup-ad-msg{
     max-width:85%; padding:8px 10px; border:1px solid var(--border); border-radius:10px;
@@ -190,7 +191,7 @@
     <div class="admin-tabs" id="adminTabs">
       <button type="button" class="atab on" data-tab="servers">سرورها</button>
       <button type="button" class="atab" data-tab="receipts">فیش‌ها <span class="tab-n" id="receiptBadge"></span></button>
-      <button type="button" class="atab" data-tab="repl">جایگزینی <span class="tab-n" id="replBadge"></span></button>
+      <button type="button" class="atab" data-tab="repl">جایگزینی سرور <span class="tab-n" id="replBadge"></span></button>
       <button type="button" class="atab" data-tab="vipcf">کانفیگ اختصاصی</button>
       <button type="button" class="atab" data-tab="site">پایین سایت</button>
       <button type="button" class="atab" data-tab="support">پشتیبانی <span class="tab-n" id="supTabBadge"></span></button>
@@ -407,9 +408,8 @@
         <p style="color:var(--muted);font-size:13px;margin-bottom:12px">عکس بزرگ و واضح آپلود کن. زیر هر عکس می‌توانی متن بگذاری (همکاری و غیره). حداکثر ۱۲ عکس.</p>
         <div class="form-row">
           <div class="field"><label>عکس</label>
-            <label class="file-btn">انتخاب عکس
-              <input type="file" id="siteFile" accept="image/*">
-            </label>
+            <button type="button" class="file-btn" id="siteFileBtn">📁 انتخاب عکس</button>
+            <input type="file" id="siteFile" accept="image/*" hidden>
             <span class="file-name" id="siteFileName"></span>
           </div>
           <div class="field"><label>متن زیر عکس (اختیاری)</label><input id="siteCaption" placeholder="مثلاً همکار تجاری"></div>
@@ -448,9 +448,8 @@
             <select id="supCannedSel" style="margin-bottom:8px"><option value="">جواب آماده…</option></select>
             <textarea id="supAdReply" placeholder="پاسخ…" style="min-height:70px;direction:rtl;text-align:right;font-family:inherit"></textarea>
             <div class="form-actions">
-              <label class="file-btn">انتخاب عکس
-                <input type="file" id="supAdFile" accept="image/*">
-              </label>
+              <button type="button" class="file-btn" id="supAdFileBtn" style="width:auto">📁 عکس</button>
+              <input type="file" id="supAdFile" accept="image/*" hidden>
               <span class="file-name" id="supAdFileName"></span>
               <button type="button" class="btn btn-primary" id="supAdSend">ارسال</button>
             </div>
@@ -1158,13 +1157,19 @@
   });
 
 
+  var sfb = document.getElementById('siteFileBtn');
+  if (sfb) sfb.addEventListener('click', function(){ document.getElementById('siteFile').click(); });
   var sf = document.getElementById('siteFile');
   if (sf) sf.addEventListener('change', function(){
-    var f=this.files&&this.files[0]; var el=document.getElementById('siteFileName'); if(el) el.textContent=f?f.name:'';
+    var f=this.files&&this.files[0]; var el=document.getElementById('siteFileName'); if(el) el.textContent=f?('انتخاب شد: '+f.name):'';
+    if (sfb && f) sfb.textContent = '📁 '+f.name;
   });
+  var safb = document.getElementById('supAdFileBtn');
+  if (safb) safb.addEventListener('click', function(){ document.getElementById('supAdFile').click(); });
   var saf = document.getElementById('supAdFile');
   if (saf) saf.addEventListener('change', function(){
     var f=this.files&&this.files[0]; var el=document.getElementById('supAdFileName'); if(el) el.textContent=f?f.name:'';
+    if (safb && f) safb.textContent = '📁 عکس';
   });
 
   var supAd = { id: 0, lastId: 0, timer: null };

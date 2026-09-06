@@ -24,14 +24,12 @@
   textarea{scrollbar-width:thin; scrollbar-color:#3d4452 #1a1d24}
   .file-btn{
     display:flex; align-items:center; justify-content:center; gap:8px;
-    width:100%; padding:11px 14px; margin-bottom:12px; box-sizing:border-box;
-    border:1px solid var(--border); background:var(--surface2); color:var(--text);
-    border-radius:6px; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:700;
-    position:relative; overflow:hidden;
+    width:100%; padding:12px 14px; margin-bottom:8px; box-sizing:border-box;
+    border:1px dashed #3d4452; background:#1a1d24; color:var(--text);
+    border-radius:8px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:700;
   }
-  .file-btn input[type=file]{
-    position:absolute; inset:0; opacity:0; cursor:pointer; font-size:0;
-  }
+  .file-btn:hover{border-color:var(--accent); background:var(--surface2)}
+  .file-btn input[type=file]{display:none !important}
   .file-name{display:block; font-size:12px; color:var(--muted); margin:-6px 0 10px; text-align:center}
   body{
     font-family:'Vazirmatn',Tahoma,'Segoe UI',sans-serif;
@@ -163,7 +161,7 @@
   #mineCopyBar{text-align:center; margin:8px 0 12px}
 
   .sup-fab{
-    position:fixed; left:16px; bottom:16px; z-index:46;
+    position:fixed; left:16px; bottom:16px; z-index:80;
     width:54px; height:54px; border-radius:50%; border:none; cursor:pointer;
     background:#40414F; color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.45);
     display:flex; align-items:center; justify-content:center;
@@ -177,73 +175,81 @@
   }
   .sup-fab .n.show{display:flex}
   .sup-panel{
-    position:fixed; left:16px; bottom:78px; z-index:47;
-    width:300px; max-width:calc(100vw - 24px); height:320px; max-height:calc(100vh - 100px);
-    background:#343541; border-radius:8px;
+    position:fixed; left:16px; bottom:78px; z-index:81;
+    width:380px; max-width:calc(100vw - 24px); height:520px; max-height:calc(100vh - 100px);
+    background:#343541; border-radius:10px;
     display:none; flex-direction:column; overflow:hidden;
-    box-shadow:0 16px 40px rgba(0,0,0,.5);
+    box-shadow:0 16px 40px rgba(0,0,0,.55);
   }
   .sup-panel.open{display:flex}
   .sup-nav{
-    width:100%; height:40px; flex:0 0 40px;
+    width:100%; height:44px; flex:0 0 44px;
     display:flex; align-items:center; justify-content:space-between;
-    direction:rtl;
+    direction:rtl; border-bottom:1px solid #2E2F3A;
   }
   .sup-nav-title{
-    color:#6B6C7B; white-space:nowrap; margin:0 10px; user-select:none;
-    font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis;
+    color:#c5c6d0; white-space:nowrap; margin:0 12px; user-select:none;
+    font-size:12.5px; font-weight:800; overflow:hidden; text-overflow:ellipsis;
   }
   .sup-x{
-    width:40px; height:40px; flex:0 0 40px; border:none; background:transparent;
+    width:44px; height:44px; flex:0 0 44px; border:none; background:transparent;
     display:flex; justify-content:center; align-items:center; position:relative; cursor:pointer;
     touch-action:manipulation;
   }
   .sup-x-line{
-    position:absolute; width:20px; height:3px; background-color:#6B6C7B; border-radius:30px;
+    position:absolute; width:18px; height:2px; background-color:#9aa0ae; border-radius:30px;
   }
   .sup-x-line.one{transform:rotate(45deg)}
   .sup-x-line.two{transform:rotate(135deg)}
   .sup-msgs{
-    flex:1; min-height:0; overflow:auto; width:100%;
-    background:#343541; padding:10px 8px;
+    flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; width:100%;
+    background:#343541; padding:12px 10px;
     display:flex; flex-direction:column; gap:8px;
+    overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
   }
   .sup-bubble{
-    max-width:82%; width:fit-content; padding:8px 10px; border-radius:10px;
-    font-size:13px; line-height:1.7; white-space:pre-wrap; word-break:break-word;
+    max-width:78%; width:auto; padding:8px 11px; border-radius:12px;
+    font-size:13.5px; line-height:1.7; white-space:pre-wrap; word-break:break-word;
     color:#ececf1; box-sizing:border-box; border:1px solid #4a4b5c;
   }
   .sup-bubble.user{
-    align-self:flex-start; background:#40414F; border-color:#5b5c6e;
+    align-self:flex-start; background:#40414F; border-color:#6b6c7b;
+    border-bottom-right-radius:4px;
   }
   .sup-bubble.ai,.sup-bubble.admin{
-    align-self:flex-end; background:#2E2F3A; border-color:#3f4050;
+    align-self:flex-end; background:#2E2F3A; border-color:#565869;
+    border-bottom-left-radius:4px;
   }
-  .sup-bubble#supTyping{align-self:flex-end; background:#2E2F3A; color:#828E9E; border-style:dashed}
-  .sup-who{font-size:11px; color:#6B6C7B; margin-bottom:2px}
+  .sup-bubble#supTyping{align-self:flex-end; color:#828E9E; border-style:dashed}
+  .sup-who{font-size:11px; color:#8b8c99; margin-bottom:3px}
   .sup-sender{
-    background:#343541; width:100%; height:70px; flex:0 0 70px;
-    display:flex; border-radius:8px;
+    background:#2b2c36; width:100%; flex:0 0 auto;
+    display:flex; border-top:1px solid #2E2F3A; padding:10px;
+    box-sizing:border-box;
   }
   .sup-input-place{
-    display:flex; flex-direction:row; margin:15px 10px 0; align-items:center;
-    background-color:#40414F; border-radius:7px; height:40px; width:calc(100% - 20px);
-    gap:5px; border:1px solid #2E2F3A; direction:rtl;
+    display:flex; flex-direction:row; align-items:center;
+    background-color:#40414F; border-radius:8px; min-height:44px; width:100%;
+    gap:4px; border:1px solid #2E2F3A; direction:rtl;
   }
   .sup-send-input{
-    outline:none; border:none; background:none; height:40px; flex:1; min-width:0;
-    border-radius:7px; color:#fff; text-overflow:ellipsis; white-space:nowrap; overflow:hidden;
-    margin:0 8px; font-family:inherit; font-size:13px; direction:rtl; text-align:right;
+    outline:none; border:none; background:none; height:44px; flex:1; min-width:0;
+    border-radius:8px; color:#fff; font-family:inherit; font-size:16px;
+    direction:rtl; text-align:right; margin:0 10px;
   }
-  .sup-send-input::placeholder{color:#828E9E}
+  .sup-send-input::placeholder{color:#828E9E; font-size:14px}
   .sup-send{
-    width:30px; height:30px; flex:0 0 30px; margin-left:6px;
+    width:40px; height:40px; flex:0 0 40px; margin:0 6px 0 4px;
     background:none; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
     touch-action:manipulation;
   }
-  .sup-send-icon{width:17px; height:17px; display:block}
+  .sup-send-icon{width:18px; height:18px; display:block}
   @media (max-width:520px){
-    .sup-panel{left:8px; bottom:76px; width:300px; max-width:calc(100vw - 16px); height:320px}
+    .sup-panel{
+      left:0; right:0; bottom:0; width:100%; max-width:100%;
+      height:min(78vh, 580px); max-height:78vh; border-radius:14px 14px 0 0;
+    }
+    .sup-fab{left:12px; bottom:12px}
   }
 
 
@@ -454,9 +460,8 @@
     </div>
     <div class="pay-timer" id="payTimer">۶۰:۰۰</div>
     <p class="pay-note">یک ساعت فرصت داری عکس فیش واریزی را بفرستی.</p>
-    <label class="file-btn">انتخاب عکس فیش
-      <input type="file" id="vipReceiptFile" accept="image/*">
-    </label>
+    <button type="button" class="file-btn" id="vipFileBtn">📁 انتخاب عکس فیش</button>
+    <input type="file" id="vipReceiptFile" accept="image/*" hidden>
     <span class="file-name" id="vipFileName"></span>
     <button type="button" class="btn btn-primary" id="vipSendReceipt" style="width:100%">ارسال فیش</button>
     <p class="pay-note" id="vipPayCodeHint" style="margin-top:14px"></p>
@@ -824,7 +829,14 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   function updateMineBtn(){
     var b = document.getElementById('myServersBtn');
     if(!b) return;
-    b.style.display = mineServers.length ? 'inline-flex' : 'none';
+    var show = mineServers.length > 0;
+    if (!show) {
+      try {
+        var codes = mineCodes();
+        if (codes && codes.length) show = true;
+      } catch (e) {}
+    }
+    b.style.display = show ? 'inline-flex' : 'none';
   }
   function renderMine(){
     var box = document.getElementById('mineGrid');
@@ -860,7 +872,7 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     if(cur && codes.indexOf(cur)<0) codes.push(cur);
     if(!codes.length){ mineServers=[]; updateMineBtn(); if(cb) cb(); return; }
     Promise.all(codes.map(function(c){
-      return fetch('/api/vip/order?code='+encodeURIComponent(c)).then(function(r){ return r.json(); }).catch(function(){ return null; });
+      return fetch('/api/vip/order?code='+encodeURIComponent(c)).then(function(r){ return r.text().then(function(tx){ try { return JSON.parse(tx); } catch(e){ return null; } }); }).catch(function(){ return null; });
     })).then(function(arr){
       var seen={};
       mineServers=[];
@@ -1086,10 +1098,15 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       }).catch(function(){ toast('ارسال نشد'); rp.disabled=false; });
     }
   });
+  document.getElementById('vipFileBtn').addEventListener('click', function(){
+    document.getElementById('vipReceiptFile').click();
+  });
   document.getElementById('vipReceiptFile').addEventListener('change', function(){
     var f = this.files && this.files[0];
     var el = document.getElementById('vipFileName');
-    if (el) el.textContent = f ? f.name : '';
+    if (el) el.textContent = f ? ('انتخاب شد: ' + f.name) : '';
+    var b = document.getElementById('vipFileBtn');
+    if (b && f) b.textContent = '📁 ' + f.name;
   });
   document.getElementById('vipSendReceipt').addEventListener('click', function(){
     var f = document.getElementById('vipReceiptFile').files[0];
@@ -1130,8 +1147,14 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       });
     });
   }
-  function supOpenPanel(){ document.getElementById('supPanel').classList.add('open'); }
-  function supClosePanel(){ document.getElementById('supPanel').classList.remove('open'); }
+  function supOpenPanel(){
+    document.getElementById('supPanel').classList.add('open');
+    if (window.innerWidth < 640) document.body.style.overflow = 'hidden';
+  }
+  function supClosePanel(){
+    document.getElementById('supPanel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
   function setHoursBar(h){ }
   function setTyping(on){
     var box = document.getElementById('supMsgs');

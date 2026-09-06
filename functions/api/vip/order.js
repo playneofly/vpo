@@ -41,12 +41,7 @@ export async function onRequestGet({ request, env }) {
   const code = new URL(request.url).searchParams.get('code') || '';
   if (!code) return Response.json({ ok: false, error: 'کد لازم است' }, { status: 400 });
   try {
-    const row = await db
-      .prepare(
-        'SELECT id, code, plan, status, reject_reason, assigned, created_at, expires_at, support_until, replace_used FROM vip_orders WHERE code = ?'
-      )
-      .bind(code.trim())
-      .first();
+    const row = await db.prepare('SELECT * FROM vip_orders WHERE code = ?').bind(code.trim()).first();
     if (!row) return Response.json({ ok: false, error: 'سفارش پیدا نشد' }, { status: 404 });
     const now = Math.floor(Date.now() / 1000);
     if (row.status === 'awaiting_receipt' && row.expires_at < now) {
