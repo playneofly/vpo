@@ -19,6 +19,54 @@ export function replaceCapOf(plan) {
   return REPLACE_CAPS[plan] || 3;
 }
 
+export function findOrderCode(text) {
+  const m = String(text || '')
+    .toUpperCase()
+    .match(/FL-[A-Z0-9]{6}/);
+  return m ? m[0] : '';
+}
+
+export function isDownAsk(text) {
+  const t = String(text || '');
+  return /وصل\s*نمی|وصل\s*نم[یي]ش|کار\s*نمی[\s\u200c]*کن|فیلتر\s*شد|جایگزین|سرور\s*(قطع|خراب|مرده)|قطع\s+شده|نمیاد\s*بالا/i.test(
+    t
+  );
+}
+
+export function orderPublicBlurb(row) {
+  if (!row) return 'سفارشی با این کد پیدا نشد.';
+  const titles = { bronze: 'برنز', silver: 'نقره', gold: 'طلایی' };
+  const st = {
+    awaiting_receipt: 'در انتظار ارسال فیش',
+    pending: 'فیش رسیده، منتظر تأیید ادمین',
+    in_progress: 'در حال آماده‌سازی کانفیگ',
+    done: 'انجام شده',
+    rejected: 'رد شده',
+    expired: 'زمان فیش تمام شده',
+  };
+  const now = Math.floor(Date.now() / 1000);
+  let s =
+    'کد ' +
+    row.code +
+    ' — پلن ' +
+    (titles[row.plan] || row.plan) +
+    ' — وضعیت: ' +
+    (st[row.status] || row.status) +
+    '.';
+  if (row.status === 'done') {
+    const until = supportUntilOf(row);
+    const left = until - now;
+    if (left > 0) s += ' حدود ' + Math.ceil(left / 86400) + ' روز از پشتیبانی مانده.';
+    else s += ' مدت پشتیبانی تمام شده.';
+    s += ' کانفیگ را از دکمه طلایی «سرور های من» بالای صفحه بردار.';
+  } else if (row.status === 'awaiting_receipt') {
+    s += ' از همان مرورگر فیش را بفرست.';
+  } else if (row.status === 'rejected') {
+    s += row.reject_reason ? ' دلیل: ' + String(row.reject_reason).slice(0, 120) : '';
+  }
+  return s;
+}
+
 export function withSlots(list) {
   const arr = Array.isArray(list) ? list : parseAssigned(list);
   return arr.map((c, i) => ({

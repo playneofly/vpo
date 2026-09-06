@@ -50,13 +50,17 @@ export async function onRequestGet({ request, env }) {
     }
     const configs = row.status === 'done' ? withSlots(parseAssigned(row.assigned)) : [];
     let pendingSlots = [];
+    const slotStatus = {};
     if (row.status === 'done') {
       try {
         const { results } = await db
-          .prepare("SELECT slot FROM vip_replacements WHERE code = ? AND status = 'pending'")
+          .prepare('SELECT slot, status FROM vip_replacements WHERE code = ? ORDER BY id ASC')
           .bind(row.code)
           .all();
-        pendingSlots = (results || []).map((r) => String(r.slot));
+        (results || []).forEach((r) => {
+          slotStatus[String(r.slot)] = r.status;
+        });
+        pendingSlots = Object.keys(slotStatus).filter((s) => slotStatus[s] === 'pending');
       } catch (e) {}
     }
     const supportUntil = supportUntilOf(row);

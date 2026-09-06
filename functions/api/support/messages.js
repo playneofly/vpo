@@ -1,5 +1,6 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
 import { validVisitor, clip, hoursInfo, generateAiReply, supportName, getAI } from '../../lib/support.js';
+import { findOrderCode, isDownAsk, orderPublicBlurb } from '../../lib/vip.js';
 
 async function ownThread(db, visitorId, threadId) {
   return db
