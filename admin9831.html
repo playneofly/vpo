@@ -18,6 +18,27 @@
     --danger:#ef4444;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  html{scrollbar-width:thin; scrollbar-color:#3d4452 #12151b}
+  *::-webkit-scrollbar{width:8px;height:8px}
+  *::-webkit-scrollbar-track{background:#12151b}
+  *::-webkit-scrollbar-thumb{background:#3d4452;border-radius:8px}
+  textarea, #supAdList, #supAdMsgs{scrollbar-width:thin; scrollbar-color:#3d4452 #1a1d24}
+  .file-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 14px; border:1px solid var(--border); background:var(--surface2);
+    color:var(--text); border-radius:6px; cursor:pointer; font-family:inherit;
+    font-size:13px; font-weight:700; position:relative; overflow:hidden;
+  }
+  .file-btn input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer; font-size:0}
+  .file-name{font-size:12px; color:var(--muted); margin:0 8px}
+  .sup-ad-msg{
+    max-width:85%; padding:8px 10px; border:1px solid var(--border); border-radius:10px;
+    white-space:pre-wrap; word-break:break-word; margin-bottom:0;
+  }
+  .sup-ad-msg .who{font-size:11px; color:var(--muted); margin-bottom:2px}
+  .sup-ad-msg.user{align-self:flex-start; background:var(--surface)}
+  .sup-ad-msg.ai, .sup-ad-msg.admin{align-self:flex-end; background:var(--surface2)}
+  #supAdMsgs{display:flex; flex-direction:column; gap:8px}
   body{
     font-family:'Vazirmatn',Tahoma,'Segoe UI',sans-serif;
     background:var(--bg); color:var(--text); min-height:100vh; line-height:1.7;
@@ -169,6 +190,7 @@
     <div class="admin-tabs" id="adminTabs">
       <button type="button" class="atab on" data-tab="servers">سرورها</button>
       <button type="button" class="atab" data-tab="receipts">فیش‌ها <span class="tab-n" id="receiptBadge"></span></button>
+      <button type="button" class="atab" data-tab="repl">جایگزینی <span class="tab-n" id="replBadge"></span></button>
       <button type="button" class="atab" data-tab="vipcf">کانفیگ اختصاصی</button>
       <button type="button" class="atab" data-tab="site">پایین سایت</button>
       <button type="button" class="atab" data-tab="support">پشتیبانی <span class="tab-n" id="supTabBadge"></span></button>
@@ -289,6 +311,19 @@
       </div>
     </div>
 
+    <div id="tab-repl" style="display:none">
+      <div class="card">
+        <h3>درخواست جایگزینی سرور</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">کاربر از «سرور های من» برای یک سرور مشخص درخواست داده. با کد سفارش می‌فهمی پشتیبانی‌اش مانده یا نه. کانفیگ جدید جای همان سرور می‌نشیند.</p>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>کد سفارش</th><th>پلن</th><th>سرور قبلی</th><th>پشتیبانی</th><th>سقف</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <tbody id="replRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-vipcf" style="display:none">
       <div class="card" id="vipFormCard">
         <h3 id="vipFormTitle">➕ افزودن کانفیگ اختصاصی</h3>
@@ -371,7 +406,12 @@
         <h3>عکس‌های بزرگ پایین صفحه</h3>
         <p style="color:var(--muted);font-size:13px;margin-bottom:12px">عکس بزرگ و واضح آپلود کن. زیر هر عکس می‌توانی متن بگذاری (همکاری و غیره). حداکثر ۱۲ عکس.</p>
         <div class="form-row">
-          <div class="field"><label>عکس</label><input type="file" id="siteFile" accept="image/*"></div>
+          <div class="field"><label>عکس</label>
+            <label class="file-btn">انتخاب عکس
+              <input type="file" id="siteFile" accept="image/*">
+            </label>
+            <span class="file-name" id="siteFileName"></span>
+          </div>
           <div class="field"><label>متن زیر عکس (اختیاری)</label><input id="siteCaption" placeholder="مثلاً همکار تجاری"></div>
         </div>
         <div class="form-actions">
@@ -408,7 +448,10 @@
             <select id="supCannedSel" style="margin-bottom:8px"><option value="">جواب آماده…</option></select>
             <textarea id="supAdReply" placeholder="پاسخ…" style="min-height:70px;direction:rtl;text-align:right;font-family:inherit"></textarea>
             <div class="form-actions">
-              <input type="file" id="supAdFile" accept="image/*">
+              <label class="file-btn">انتخاب عکس
+                <input type="file" id="supAdFile" accept="image/*">
+              </label>
+              <span class="file-name" id="supAdFileName"></span>
               <button type="button" class="btn btn-primary" id="supAdSend">ارسال</button>
             </div>
           </div>
@@ -688,7 +731,7 @@
     var b=e.target.closest('[data-tab]'); if(!b) return;
     var tab=b.getAttribute('data-tab');
     document.querySelectorAll('.atab').forEach(function(x){ x.classList.toggle('on', x===b); });
-    ['servers','receipts','vipcf','site','support'].forEach(function(id){
+    ['servers','receipts','repl','vipcf','site','support'].forEach(function(id){
       var el=document.getElementById('tab-'+id); if(el) el.style.display = tab===id?'block':'none';
     });
     if(tab==='site') loadSiteAdmin();
@@ -721,6 +764,44 @@
       if(!d.ok) return;
       vipConfigs = d.configs||[];
       renderVipConfigs();
+    });
+    loadRepl();
+  }
+  function faLeft(sec){
+    if (sec <= 0) return 'تمام شده';
+    var d = Math.floor(sec/86400), h = Math.floor((sec%86400)/3600);
+    if (d > 0) return d+' روز و '+h+' ساعت مانده';
+    if (h > 0) return h+' ساعت مانده';
+    return 'کمتر از یک ساعت';
+  }
+  function loadRepl(){
+    api('/api/admin/vip/replacements').then(function(d){
+      if(!d.ok) return;
+      var n = d.pending||0;
+      var badge=document.getElementById('replBadge');
+      if(badge){ badge.textContent = n||''; badge.classList.toggle('show', n>0); }
+      var rows=document.getElementById('replRows');
+      if(!rows) return;
+      var list=d.replacements||[];
+      if(!list.length){ rows.innerHTML='<tr><td colspan="7"><div class="empty">درخواستی نیست</div></td></tr>'; return; }
+      rows.innerHTML = list.map(function(r){
+        var acts='';
+        if(r.status==='pending'){
+          acts += '<button class="mini" data-repl-ok="'+r.id+'">جایگزین کن</button>';
+          acts += '<button class="mini del" data-repl-no="'+r.id+'">رد</button>';
+        }
+        var st = r.status==='pending'?'در انتظار':(r.status==='done'?'انجام شد':'رد شد');
+        var old = esc(r.oldName||'سرور')+(r.oldCountry?' · '+esc(r.oldCountry):'')+(r.oldCategory?' · '+esc(r.oldCategory):'');
+        return '<tr>'+
+          '<td class="t-name" dir="ltr">'+esc(r.code)+'</td>'+
+          '<td>'+esc(PLAN_FA[r.plan]||r.plan)+'</td>'+
+          '<td>'+old+(r.newName?' → '+esc(r.newName):'')+'</td>'+
+          '<td>'+esc(faLeft(r.supportLeft||0))+'</td>'+
+          '<td>'+(r.replaceUsed||0)+' / '+(r.replaceMax||0)+'</td>'+
+          '<td>'+esc(st)+'</td>'+
+          '<td><div class="row-actions">'+acts+'</div></td>'+
+        '</tr>';
+      }).join('');
     });
   }
   function renderVipOrders(){
@@ -992,7 +1073,7 @@
   });
 
 
-  document.getElementById('vipOrderRows').addEventListener('click', function(e){
+  document.getElementById('dashView').addEventListener('click', function(e){
     var photo=e.target.closest('[data-vphoto]');
     if(photo){
       api('/api/admin/vip/orders/'+photo.getAttribute('data-vphoto')).then(function(d){
@@ -1044,16 +1125,54 @@
           else toast(d.error||'خطا');
         });
       });
+      return;
+    }
+    var rok=e.target.closest('[data-repl-ok]');
+    if(rok){
+      var rid=parseInt(rok.getAttribute('data-repl-ok'),10);
+      var html = '<p>یک کانفیگ از استخر انتخاب کن. جای همان سرور این کاربر می‌نشیند.</p><div class="assign-list">';
+      vipConfigs.forEach(function(c){
+        html += '<label><input type="radio" name="replPick" value="'+c.id+'"> '+esc(c.name)+(c.category?' — '+esc(c.category):'')+(c.enabled?'':' (خاموش)')+'</label>';
+      });
+      html += '</div><button type="button" class="btn btn-primary" id="vipDoRepl">ثبت جایگزینی</button>';
+      document.getElementById('vipOvTitle').textContent='جایگزینی #'+rid;
+      document.getElementById('vipOvBody').innerHTML = html;
+      document.getElementById('vipOv').classList.add('open');
+      document.getElementById('vipDoRepl').addEventListener('click', function(){
+        var pick=document.querySelector('#vipOvBody input[name=replPick]:checked');
+        if(!pick){ toast('یکی را انتخاب کن'); return; }
+        api('/api/admin/vip/replacements/'+rid, { method:'POST', body: JSON.stringify({ action:'fulfill', configId: parseInt(pick.value,10) }) }).then(function(d){
+          if(d.ok){ toast('جایگزین شد'); document.getElementById('vipOv').classList.remove('open'); loadVipAll(); }
+          else toast(d.error||'خطا');
+        });
+      });
+      return;
+    }
+    var rno=e.target.closest('[data-repl-no]');
+    if(rno){
+      var nid=parseInt(rno.getAttribute('data-repl-no'),10);
+      api('/api/admin/vip/replacements/'+nid, { method:'POST', body: JSON.stringify({ action:'reject' }) }).then(function(d){
+        toast(d.ok?'رد شد':(d.error||'خطا')); loadVipAll();
+      });
     }
   });
 
 
+  var sf = document.getElementById('siteFile');
+  if (sf) sf.addEventListener('change', function(){
+    var f=this.files&&this.files[0]; var el=document.getElementById('siteFileName'); if(el) el.textContent=f?f.name:'';
+  });
+  var saf = document.getElementById('supAdFile');
+  if (saf) saf.addEventListener('change', function(){
+    var f=this.files&&this.files[0]; var el=document.getElementById('supAdFileName'); if(el) el.textContent=f?f.name:'';
+  });
+
   var supAd = { id: 0, lastId: 0, timer: null };
   function supAdBubble(m){
     var who = m.sender==='user'?'کاربر':(m.sender==='ai'?'هوش مصنوعی':'شما');
-    var html = '<div class="sup-ad-msg" style="margin-bottom:10px"><div style="font-size:11px;color:var(--muted)">'+esc(who)+'</div>';
-    if (m.body) html += '<div style="white-space:pre-wrap">'+esc(m.body)+'</div>';
-    if (m.image && String(m.image).indexOf('data:image/')===0) html += '<img class="vip-thumb" src="'+m.image+'">';
+    var cls = 'sup-ad-msg '+(m.sender||'');
+    var html = '<div class="'+cls+'"><div class="who">'+esc(who)+'</div>';
+    if (m.body) html += '<div>'+esc(m.body)+'</div>';
     html += '</div>';
     return html;
   }
@@ -1155,6 +1274,7 @@
       badge.textContent = n || '';
       badge.classList.toggle('show', n>0);
     });
+    loadRepl();
   }, 5000);
 
   // ---- شروع ----

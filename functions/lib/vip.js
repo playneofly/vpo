@@ -4,6 +4,29 @@ export const PLANS = {
   gold: { id: 'gold', title: 'طلایی', price: 360000, configs: 30 },
 };
 
+export const SUPPORT_WEEKS = { bronze: 1, silver: 2, gold: 3 };
+export const REPLACE_CAPS = { bronze: 3, silver: 5, gold: 10 };
+
+export function supportUntilOf(row) {
+  const n = Number(row && row.support_until) || 0;
+  if (n > 0) return n;
+  if (!row || row.status !== 'done') return 0;
+  const w = SUPPORT_WEEKS[row.plan] || 1;
+  return (Number(row.created_at) || 0) + w * 7 * 86400;
+}
+
+export function replaceCapOf(plan) {
+  return REPLACE_CAPS[plan] || 3;
+}
+
+export function withSlots(list) {
+  const arr = Array.isArray(list) ? list : parseAssigned(list);
+  return arr.map((c, i) => ({
+    ...c,
+    slot: c.slot != null && String(c.slot) !== '' ? String(c.slot) : String(i),
+  }));
+}
+
 export const DEFAULT_PLAN_COPY = {
   bronze: {
     title: 'برنز',
@@ -106,6 +129,7 @@ export function parseAssigned(raw) {
       }
       const link = String((item && item.link) || '').trim();
       if (!link) return null;
+      const slot = item && item.slot != null && String(item.slot) !== '' ? String(item.slot) : undefined;
       return {
         name: String((item && item.name) || 'کانفیگ اختصاصی'),
         country: String((item && item.country) || ''),
@@ -113,6 +137,7 @@ export function parseAssigned(raw) {
         link,
         category: String((item && item.category) || ''),
         featured: item && item.featured ? 1 : 0,
+        slot,
       };
     })
     .filter(Boolean);

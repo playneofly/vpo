@@ -11,9 +11,12 @@ export async function onRequestGet({ request, env, params }) {
     const th = await db.prepare('SELECT * FROM support_threads WHERE id = ?').bind(id).first();
     if (!th) return Response.json({ ok: false, error: 'گفتگو پیدا نشد' }, { status: 404 });
     const { results } = await db
-      .prepare('SELECT id, sender, body, image, created_at FROM support_messages WHERE thread_id = ? ORDER BY id ASC')
+      .prepare(
+        'SELECT id, sender, body, created_at FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 80'
+      )
       .bind(id)
       .all();
+    if (results) results.reverse();
     await db.prepare('UPDATE support_threads SET unread_admin = 0 WHERE id = ?').bind(id).run();
     return Response.json({ ok: true, thread: th, messages: results || [] });
   } catch (e) {

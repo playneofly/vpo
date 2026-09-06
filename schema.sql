@@ -41,7 +41,9 @@ CREATE TABLE IF NOT EXISTS vip_orders (
   reject_reason TEXT DEFAULT '',
   assigned      TEXT DEFAULT '',
   created_at    INTEGER NOT NULL,
-  expires_at    INTEGER NOT NULL
+  expires_at    INTEGER NOT NULL,
+  support_until INTEGER DEFAULT 0,
+  replace_used  INTEGER DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_vip_orders_code ON vip_orders (code);

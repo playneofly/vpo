@@ -17,6 +17,22 @@
     --accent-hover:#2f6fe0;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  html{scrollbar-width:thin; scrollbar-color:#3d4452 #12151b}
+  *::-webkit-scrollbar{width:8px;height:8px}
+  *::-webkit-scrollbar-track{background:#12151b}
+  *::-webkit-scrollbar-thumb{background:#3d4452;border-radius:8px}
+  textarea{scrollbar-width:thin; scrollbar-color:#3d4452 #1a1d24}
+  .file-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:11px 14px; margin-bottom:12px; box-sizing:border-box;
+    border:1px solid var(--border); background:var(--surface2); color:var(--text);
+    border-radius:6px; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:700;
+    position:relative; overflow:hidden;
+  }
+  .file-btn input[type=file]{
+    position:absolute; inset:0; opacity:0; cursor:pointer; font-size:0;
+  }
+  .file-name{display:block; font-size:12px; color:var(--muted); margin:-6px 0 10px; text-align:center}
   body{
     font-family:'Vazirmatn',Tahoma,'Segoe UI',sans-serif;
     background:var(--bg); color:var(--text);
@@ -72,7 +88,7 @@
   .card-top-badges{display:flex; flex-direction:column; align-items:flex-end; gap:6px}
   .card h3{font-size:16px; margin-top:2px}
   .card .loc{font-size:12.5px; color:var(--muted)}
-  .card-actions{display:flex; gap:10px}
+  .card-actions{display:flex; gap:10px; flex-wrap:wrap}
   .btn{
     flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
     padding:11px 14px; border-radius:4px; border:1px solid transparent; cursor:pointer; font-family:inherit;
@@ -189,16 +205,21 @@
   .sup-x-line.two{transform:rotate(135deg)}
   .sup-msgs{
     flex:1; min-height:0; overflow:auto; width:100%;
-    background:#343541; padding:8px 0;
-    display:flex; flex-direction:column; gap:0;
+    background:#343541; padding:10px 8px;
+    display:flex; flex-direction:column; gap:8px;
   }
   .sup-bubble{
-    width:100%; padding:8px 12px; border-radius:0; font-size:13px; line-height:1.7;
-    white-space:pre-wrap; word-break:break-word; color:#ececf1; box-sizing:border-box;
+    max-width:82%; width:fit-content; padding:8px 10px; border-radius:10px;
+    font-size:13px; line-height:1.7; white-space:pre-wrap; word-break:break-word;
+    color:#ececf1; box-sizing:border-box; border:1px solid #4a4b5c;
   }
-  .sup-bubble.user{background:#2E2F3A; align-self:stretch}
-  .sup-bubble.ai,.sup-bubble.admin{background:#343541; align-self:stretch}
-  .sup-bubble#supTyping{background:#343541; color:#828E9E}
+  .sup-bubble.user{
+    align-self:flex-start; background:#40414F; border-color:#5b5c6e;
+  }
+  .sup-bubble.ai,.sup-bubble.admin{
+    align-self:flex-end; background:#2E2F3A; border-color:#3f4050;
+  }
+  .sup-bubble#supTyping{align-self:flex-end; background:#2E2F3A; color:#828E9E; border-style:dashed}
   .sup-who{font-size:11px; color:#6B6C7B; margin-bottom:2px}
   .sup-sender{
     background:#343541; width:100%; height:70px; flex:0 0 70px;
@@ -433,7 +454,10 @@
     </div>
     <div class="pay-timer" id="payTimer">۶۰:۰۰</div>
     <p class="pay-note">یک ساعت فرصت داری عکس فیش واریزی را بفرستی.</p>
-    <input type="file" id="vipReceiptFile" accept="image/*" style="margin-bottom:12px">
+    <label class="file-btn">انتخاب عکس فیش
+      <input type="file" id="vipReceiptFile" accept="image/*">
+    </label>
+    <span class="file-name" id="vipFileName"></span>
     <button type="button" class="btn btn-primary" id="vipSendReceipt" style="width:100%">ارسال فیش</button>
     <p class="pay-note" id="vipPayCodeHint" style="margin-top:14px"></p>
   </div>
@@ -452,6 +476,7 @@
     <button type="button" class="vip-x" data-vip-close="vipMine">×</button>
     <h3>سرور های من</h3>
     <p class="vip-sub">کانفیگ‌های اختصاصی که خریدی. روی همین مرورگر می‌ماند.</p>
+    <p class="vip-sub">اگر سرور FILTERNET قطع شده و هنوز از مدت پشتیبانی مانده، روی همان سرور «درخواست جایگزینی» بزن. با کد سفارش می‌رود برای ادمین؛ بعد از تأیید، همان سرور با جدید عوض می‌شود.</p>
     <div class="cats" id="mineCats"></div>
     <div id="mineCopyBar"></div>
     <div class="grid" id="mineGrid"></div>
@@ -588,6 +613,14 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       toast(ok ? '✅ ' + n + ' کانفیگ ' + label + ' کپی شد — تو v2rayNG از کلیپ‌بورد وارد کن' : '❌ کپی نشد');
     });
   }
+  function replaceBtn(s){
+    if (!s || !s.orderCode) return '';
+    var now = Math.floor(Date.now()/1000);
+    if (s.replacePending) return '<button type="button" class="btn btn-ghost" disabled>در انتظار جایگزینی</button>';
+    if (!s.supportUntil || s.supportUntil <= now) return '';
+    if ((s.replaceUsed||0) >= (s.replaceMax||0)) return '';
+    return '<button type="button" class="btn btn-ghost" data-replace-code="'+esc(s.orderCode)+'" data-replace-slot="'+esc(s.slot)+'">درخواست جایگزینی</button>';
+  }
   function serverCard(s) {
     var loc = s.country && /^[A-Z]{2}$/i.test(s.country) ? flagEmoji(s.country) + ' ' + s.country.toUpperCase() : (s.country || '');
     var cat = String(s.category || '').trim();
@@ -602,6 +635,7 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
         '<div class="card-actions">' +
           '<button class="btn btn-primary" data-copy="' + esc(s.link) + '">📋 کپی کانفیگ</button>' +
           '<button class="btn btn-ghost" data-qr="' + esc(s.link) + '" data-name="' + esc(s.name) + '" data-loc="' + esc(loc) + '">▦ QR</button>' +
+          replaceBtn(s) +
         '</div>' +
       '</div>';
   }
@@ -834,10 +868,18 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
         if(!d || !d.ok) return;
         if(d.status==='done'){
           addMine(d.code);
-          (d.configs||[]).forEach(function(s){
+          (d.configs||[]).forEach(function(s, idx){
             if(!s || !s.link || seen[s.link]) return;
             seen[s.link]=1;
-            mineServers.push(s);
+            var slot = s.slot != null ? String(s.slot) : String(idx);
+            mineServers.push(Object.assign({}, s, {
+              orderCode: d.code,
+              slot: slot,
+              supportUntil: d.supportUntil || 0,
+              replaceUsed: d.replaceUsed || 0,
+              replaceMax: d.replaceMax || 0,
+              replacePending: (d.pendingSlots||[]).indexOf(slot) >= 0
+            }));
           });
         }
       });
@@ -1025,7 +1067,29 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       var list = mineServers;
       if(mineActiveCat) list = mineServers.filter(function(s){ return String(s.category||'').trim()===mineActiveCat; });
       copyText(list.map(function(s){ return s.link; }).join('\n')).then(function(ok){ toast(ok?'✅ کپی شد':'❌ کپی نشد'); });
+      return;
     }
+    var rp = e.target.closest('[data-replace-code]');
+    if(rp){
+      if(!confirm('درخواست جایگزینی این سرور برود برای ادمین؟ همان سرور بعد از تأیید عوض می‌شود.')) return;
+      var code = rp.getAttribute('data-replace-code');
+      var slot = rp.getAttribute('data-replace-slot');
+      rp.disabled = true;
+      fetch('/api/vip/replace', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ code: code, slot: slot })
+      }).then(function(r){ return r.json(); }).then(function(d){
+        if(!d.ok){ toast(d.error||'ارسال نشد'); rp.disabled=false; return; }
+        toast('درخواست جایگزینی ثبت شد');
+        loadMine(function(){ renderMine(); });
+      }).catch(function(){ toast('ارسال نشد'); rp.disabled=false; });
+    }
+  });
+  document.getElementById('vipReceiptFile').addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    var el = document.getElementById('vipFileName');
+    if (el) el.textContent = f ? f.name : '';
   });
   document.getElementById('vipSendReceipt').addEventListener('click', function(){
     var f = document.getElementById('vipReceiptFile').files[0];

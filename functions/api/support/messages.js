@@ -21,17 +21,29 @@ export async function onRequestGet({ request, env }) {
   try {
     const th = await ownThread(db, visitorId, threadId);
     if (!th) return Response.json({ ok: false, error: 'گفتگو پیدا نشد' }, { status: 404 });
-    const { results } = await db
-      .prepare(
-        'SELECT id, sender, body, image, created_at FROM support_messages WHERE thread_id = ? AND id > ? ORDER BY id ASC'
-      )
-      .bind(threadId, afterId)
-      .all();
+    let results = [];
+    if (!afterId) {
+      const q = await db
+        .prepare(
+          'SELECT id, sender, body, created_at FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 50'
+        )
+        .bind(threadId)
+        .all();
+      results = (q.results || []).slice().reverse();
+    } else {
+      const q = await db
+        .prepare(
+          'SELECT id, sender, body, created_at FROM support_messages WHERE thread_id = ? AND id > ? ORDER BY id ASC LIMIT 50'
+        )
+        .bind(threadId, afterId)
+        .all();
+      results = q.results || [];
+    }
     await db.prepare('UPDATE support_threads SET unread_user = 0 WHERE id = ?').bind(threadId).run();
     return Response.json({
       ok: true,
       thread: { id: th.id, channel: th.channel, status: th.status },
-      messages: results || [],
+      messages: results,
       hours: hoursInfo(),
       supportName: await supportName(db),
       aiReady: !!getAI(env),

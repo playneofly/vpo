@@ -1,6 +1,6 @@
 import { readyDB, noDb, dbError } from '../../../../lib/db.js';
 import { verify, deny } from '../../../../lib/auth.js';
-import { PLANS } from '../../../../lib/vip.js';
+import { PLANS, SUPPORT_WEEKS } from '../../../../lib/vip.js';
 
 export async function onRequestGet({ request, env, params }) {
   if (!(await verify(request, env))) return deny();
@@ -71,13 +71,19 @@ export async function onRequestPost({ request, env, params }) {
           featured: c.featured ? 1 : 0,
         };
       });
-      const assigned = ids.map((i) => map[i]).filter(Boolean);
+      const assigned = ids
+        .map((i) => map[i])
+        .filter(Boolean)
+        .map((c, idx) => ({ ...c, slot: String(idx) }));
       if (assigned.length !== ids.length) {
         return Response.json({ ok: false, error: 'بعضی کانفیگ‌ها پیدا نشد' }, { status: 400 });
       }
+      const now = Math.floor(Date.now() / 1000);
+      const weeks = SUPPORT_WEEKS[row.plan] || 1;
+      const supportUntil = now + weeks * 7 * 86400;
       await db
-        .prepare("UPDATE vip_orders SET status = 'done', assigned = ? WHERE id = ?")
-        .bind(JSON.stringify(assigned), id)
+        .prepare("UPDATE vip_orders SET status = 'done', assigned = ?, support_until = ?, replace_used = 0 WHERE id = ?")
+        .bind(JSON.stringify(assigned), supportUntil, id)
         .run();
       return Response.json({ ok: true });
     }

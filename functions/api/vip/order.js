@@ -1,5 +1,5 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
-import { PLANS, newCode, getSetting, parseAssigned } from '../../lib/vip.js';
+import { PLANS, newCode, getSetting, parseAssigned, withSlots, supportUntilOf, replaceCapOf } from '../../lib/vip.js';
 
 export async function onRequestPost({ request, env }) {
   const db = await readyDB(env);
@@ -43,7 +43,7 @@ export async function onRequestGet({ request, env }) {
   try {
     const row = await db
       .prepare(
-        'SELECT code, plan, status, reject_reason, assigned, created_at, expires_at FROM vip_orders WHERE code = ?'
+        'SELECT id, code, plan, status, reject_reason, assigned, created_at, expires_at, support_until, replace_used FROM vip_orders WHERE code = ?'
       )
       .bind(code.trim())
       .first();
@@ -53,7 +53,18 @@ export async function onRequestGet({ request, env }) {
       await db.prepare("UPDATE vip_orders SET status = 'expired' WHERE code = ?").bind(row.code).run();
       row.status = 'expired';
     }
-    const configs = row.status === 'done' ? parseAssigned(row.assigned) : [];
+    const configs = row.status === 'done' ? withSlots(parseAssigned(row.assigned)) : [];
+    let pendingSlots = [];
+    if (row.status === 'done') {
+      try {
+        const { results } = await db
+          .prepare("SELECT slot FROM vip_replacements WHERE code = ? AND status = 'pending'")
+          .bind(row.code)
+          .all();
+        pendingSlots = (results || []).map((r) => String(r.slot));
+      } catch (e) {}
+    }
+    const supportUntil = supportUntilOf(row);
     return Response.json({
       ok: true,
       code: row.code,
@@ -61,6 +72,11 @@ export async function onRequestGet({ request, env }) {
       status: row.status,
       rejectReason: row.reject_reason || '',
       expiresAt: row.expires_at,
+      supportUntil,
+      supportLeft: Math.max(0, supportUntil - now),
+      replaceUsed: Number(row.replace_used) || 0,
+      replaceMax: replaceCapOf(row.plan),
+      pendingSlots,
       configs,
       links: configs.map((c) => c.link),
     });
