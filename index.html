@@ -149,11 +149,11 @@
   .sup-fab{
     position:fixed; left:16px; bottom:16px; z-index:46;
     width:54px; height:54px; border-radius:50%; border:none; cursor:pointer;
-    background:#1d4ed8; color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.45);
+    background:#40414F; color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.45);
     display:flex; align-items:center; justify-content:center;
     touch-action:manipulation; -webkit-tap-highlight-color:transparent;
   }
-  .sup-fab:hover{background:#1e40af}
+  .sup-fab:hover{background:#4a4b5a}
   .sup-fab .n{
     position:absolute; top:-3px; right:-3px; min-width:18px; height:18px; padding:0 5px;
     border-radius:99px; background:#ef4444; color:#fff; font-size:11px; font-weight:800;
@@ -162,48 +162,67 @@
   .sup-fab .n.show{display:flex}
   .sup-panel{
     position:fixed; left:16px; bottom:78px; z-index:47;
-    width:360px; max-width:calc(100vw - 24px); height:540px; max-height:calc(100vh - 100px);
-    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    width:300px; max-width:calc(100vw - 24px); height:320px; max-height:calc(100vh - 100px);
+    background:#343541; border-radius:8px;
     display:none; flex-direction:column; overflow:hidden;
     box-shadow:0 16px 40px rgba(0,0,0,.5);
   }
   .sup-panel.open{display:flex}
-  .sup-head{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:10px 12px; border-bottom:1px solid var(--border); background:var(--surface2);
+  .sup-nav{
+    width:100%; height:40px; flex:0 0 40px;
+    display:flex; align-items:center; justify-content:space-between;
+    direction:rtl;
   }
-  .sup-head b{font-size:14px}
-  .sup-head .mini-x{
-    width:32px; height:32px; border-radius:4px; border:1px solid var(--border);
-    background:transparent; color:var(--text); cursor:pointer; font-size:18px;
+  .sup-nav-title{
+    color:#6B6C7B; white-space:nowrap; margin:0 10px; user-select:none;
+    font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis;
+  }
+  .sup-x{
+    width:40px; height:40px; flex:0 0 40px; border:none; background:transparent;
+    display:flex; justify-content:center; align-items:center; position:relative; cursor:pointer;
     touch-action:manipulation;
   }
-  .sup-home{flex:1; display:flex; flex-direction:column; justify-content:center; gap:12px; padding:22px}
-  .sup-choice{
-    width:100%; padding:16px 14px; border-radius:6px; border:1px solid var(--border);
-    background:var(--surface2); color:var(--text); cursor:pointer; font-family:inherit;
-    font-size:15px; font-weight:800; text-align:center; touch-action:manipulation;
+  .sup-x-line{
+    position:absolute; width:20px; height:3px; background-color:#6B6C7B; border-radius:30px;
   }
-  .sup-choice:hover{border-color:var(--accent)}
-  .sup-choice small{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-top:4px}
-  .sup-hours{padding:8px 12px; font-size:12px; color:var(--muted); background:#12151b; border-bottom:1px solid var(--border)}
-  .sup-hours.on{color:#86efac}
-  .sup-msgs{flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px}
-  .sup-bubble{max-width:85%; padding:8px 10px; border-radius:8px; font-size:13.5px; line-height:1.7; white-space:pre-wrap; word-break:break-word}
-  .sup-bubble.user{align-self:flex-start; background:var(--accent); color:#fff}
-  .sup-bubble.admin,.sup-bubble.ai{align-self:flex-end; background:var(--surface2); border:1px solid var(--border)}
-  .sup-bubble img{max-width:180px; max-height:140px; display:block; border-radius:4px; margin-top:6px}
-  .sup-who{font-size:11px; color:var(--muted); margin-bottom:2px}
-  .sup-form{display:flex; gap:6px; padding:10px; border-top:1px solid var(--border); align-items:flex-end}
-  .sup-form textarea{
-    flex:1; min-height:40px; max-height:90px; resize:none; direction:rtl; text-align:right;
-    font-family:inherit; font-size:13px;
+  .sup-x-line.one{transform:rotate(45deg)}
+  .sup-x-line.two{transform:rotate(135deg)}
+  .sup-msgs{
+    flex:1; min-height:0; overflow:auto; width:100%;
+    background:#343541; padding:8px 0;
+    display:flex; flex-direction:column; gap:0;
   }
-  .sup-form .btn{flex:0 0 auto; width:auto; padding:10px 12px}
-  .sup-tools{display:flex; gap:6px; padding:0 10px 8px; flex-wrap:wrap}
-  .sup-tools .btn{width:auto; padding:7px 10px; font-size:12px}
+  .sup-bubble{
+    width:100%; padding:8px 12px; border-radius:0; font-size:13px; line-height:1.7;
+    white-space:pre-wrap; word-break:break-word; color:#ececf1; box-sizing:border-box;
+  }
+  .sup-bubble.user{background:#2E2F3A; align-self:stretch}
+  .sup-bubble.ai,.sup-bubble.admin{background:#343541; align-self:stretch}
+  .sup-bubble#supTyping{background:#343541; color:#828E9E}
+  .sup-who{font-size:11px; color:#6B6C7B; margin-bottom:2px}
+  .sup-sender{
+    background:#343541; width:100%; height:70px; flex:0 0 70px;
+    display:flex; border-radius:8px;
+  }
+  .sup-input-place{
+    display:flex; flex-direction:row; margin:15px 10px 0; align-items:center;
+    background-color:#40414F; border-radius:7px; height:40px; width:calc(100% - 20px);
+    gap:5px; border:1px solid #2E2F3A; direction:rtl;
+  }
+  .sup-send-input{
+    outline:none; border:none; background:none; height:40px; flex:1; min-width:0;
+    border-radius:7px; color:#fff; text-overflow:ellipsis; white-space:nowrap; overflow:hidden;
+    margin:0 8px; font-family:inherit; font-size:13px; direction:rtl; text-align:right;
+  }
+  .sup-send-input::placeholder{color:#828E9E}
+  .sup-send{
+    width:30px; height:30px; flex:0 0 30px; margin-left:6px;
+    background:none; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    touch-action:manipulation;
+  }
+  .sup-send-icon{width:17px; height:17px; display:block}
   @media (max-width:520px){
-    .sup-panel{left:8px; right:8px; width:auto; bottom:76px; height:70vh}
+    .sup-panel{left:8px; bottom:76px; width:300px; max-width:calc(100vw - 16px); height:320px}
   }
 
 
@@ -445,16 +464,20 @@
   <span class="n" id="supFabN"></span>
 </button>
 <div class="sup-panel" id="supPanel">
-  <div class="sup-head">
-    <b id="supTitle">هوش مصنوعی</b>
-    <button type="button" class="mini-x" id="supClose">×</button>
+  <div class="sup-nav">
+    <span class="sup-nav-title" id="supTitle">هوش مصنوعی پشتیبانی 24 ساعته</span>
+    <button type="button" class="sup-x" id="supClose" aria-label="بستن">
+      <span class="sup-x-line one"></span>
+      <span class="sup-x-line two"></span>
+    </button>
   </div>
-  <div id="supChat" style="display:flex;flex:1;flex-direction:column;min-height:0">
-    <div class="sup-hours on" id="supHours">هوش مصنوعی ۲۴ ساعته است.</div>
-    <div class="sup-msgs" id="supMsgs"></div>
-    <div class="sup-form">
-      <textarea id="supInput" rows="1" placeholder="پیام…"></textarea>
-      <button type="button" class="btn btn-primary" id="supSend">ارسال</button>
+  <div class="sup-msgs" id="supMsgs"></div>
+  <div class="sup-sender">
+    <div class="sup-input-place">
+      <input id="supInput" class="sup-send-input" type="text" placeholder="سوال خود را بپرسید..." autocomplete="off">
+      <button type="button" class="sup-send" id="supSend" aria-label="ارسال">
+        <svg class="sup-send-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="#6B6C7B" d="M481.508,210.336L68.414,38.926c-17.403-7.222-37.064-4.045-51.309,8.287C2.86,59.547-3.098,78.551,1.558,96.808 L38.327,241h180.026c8.284,0,15.001,6.716,15.001,15.001c0,8.284-6.716,15.001-15.001,15.001H38.327L1.558,415.193 c-4.656,18.258,1.301,37.262,15.547,49.595c14.274,12.357,33.937,15.495,51.31,8.287l413.094-171.409 C500.317,293.862,512,276.364,512,256.001C512,235.638,500.317,218.139,481.508,210.336z"></path></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -1045,12 +1068,7 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   }
   function supOpenPanel(){ document.getElementById('supPanel').classList.add('open'); }
   function supClosePanel(){ document.getElementById('supPanel').classList.remove('open'); }
-  function setHoursBar(h){
-    var el = document.getElementById('supHours');
-    if (!el) return;
-    el.textContent = (h && h.message) ? h.message : 'هوش مصنوعی ۲۴ ساعته است.';
-    el.classList.add('on');
-  }
+  function setHoursBar(h){ }
   function setTyping(on){
     var box = document.getElementById('supMsgs');
     var el = document.getElementById('supTyping');
@@ -1090,7 +1108,6 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   }
   function ensureAiChat(){
     if (sup.threadId) return Promise.resolve();
-    document.getElementById('supMsgs').innerHTML = '<div class="empty" style="padding:20px">در حال اتصال…</div>';
     sup.lastId = 0;
     return supJson('/api/support/thread', {
       method: 'POST',
