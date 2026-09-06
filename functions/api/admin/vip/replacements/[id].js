@@ -1,6 +1,6 @@
-import { readyDB, noDb, dbError } from '../../../../../lib/db.js';
-import { verify, deny } from '../../../../../lib/auth.js';
-import { parseAssigned, withSlots, supportUntilOf } from '../../../../../lib/vip.js';
+import { readyDB, noDb, dbError } from '../../../../lib/db.js';
+import { verify, deny } from '../../../../lib/auth.js';
+import { parseAssigned, withSlots, supportUntilOf } from '../../../../lib/vip.js';
 
 export async function onRequestPost({ request, env, params }) {
   if (!(await verify(request, env))) return deny();
