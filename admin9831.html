@@ -229,11 +229,26 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="field"><label>پیشنهادی</label>
-          <select id="fFeatured"><option value="0">خیر</option><option value="1">بله — روی سایت بج پیشنهادی بخورد</option></select>
+        <div class="field"><label>پیشنهادی امروز (فقط یکی)</label>
+          <select id="fFeatured"><option value="0">خیر</option><option value="1">بله — بج «پیشنهادی امروز»</option></select>
         </div>
         <div class="field" style="display:flex;align-items:flex-end">
           <button type="button" class="btn btn-ghost" id="disableCatBtn" style="width:100%">غیرفعال کردن همهٔ این دسته</button>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>برچسب این سرور (با ویرگول — آزاد)</label>
+          <input id="fTags" placeholder="مثلاً ایرانسل، بازی، وای‌فای">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>برچسب‌های این دسته — روی همه سرورهای همین دسته می‌نشیند</label>
+          <input id="fCatTags" placeholder="مثلاً همراه اول، ADSL">
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn btn-ghost" id="saveCatTagsBtn" style="width:100%">ذخیره برچسب دسته</button>
         </div>
       </div>
       <div class="form-row full">
@@ -481,6 +496,18 @@
   };
 
   var servers = [], editingId = null, stickyCategory = '';
+  var categoryTags = {};
+  function tagsToInput(v){
+    if (!v) return '';
+    if (Array.isArray(v)) return v.join('، ');
+    return String(v);
+  }
+  function fillCatTags(){
+    var el = document.getElementById('fCatTags');
+    if (!el) return;
+    var cat = document.getElementById('fCategory').value.trim();
+    el.value = tagsToInput(categoryTags[cat] || []);
+  }
   var toastEl = document.getElementById('toast');
 
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -525,7 +552,7 @@
   // ---- لیست سرورها ----
   function loadServers(){
     api('/api/admin/servers').then(function(d){
-      if(d.ok){ servers=d.servers||[]; renderRows(); }
+      if(d.ok){ servers=d.servers||[]; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows(); }
       else if(d.error==='unauthorized'){ showLogin(); }
     });
   }
@@ -536,13 +563,13 @@
     rows.innerHTML=servers.map(function(s){
       return '<tr class="'+(s.enabled?'':'off')+'">'+
         '<td class="t-flag">'+flagEmoji(s.country)+'</td>'+
-        '<td class="t-name">'+esc(s.name)+'</td>'+
+        '<td class="t-name">'+esc(s.name)+(s.tags&&s.tags.length?'<div style="font-size:11px;color:var(--muted);margin-top:4px">'+esc((s.tags||[]).join('، '))+'</div>':'')+'</td>'+
         '<td>'+(s.category?'<span class="badge" style="color:#cbd5e1;background:rgba(148,163,184,.14)">'+esc(s.category)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
         '<td>'+badge(s.protocol)+'</td>'+
         '<td><span class="t-link">'+esc(s.link)+'</span></td>'+
         '<td><label class="switch"><input type="checkbox" '+(s.enabled?'checked':'')+' data-toggle="'+s.id+'"><span class="slider"></span></label></td>'+
         '<td><div class="row-actions">'+
-          '<button class="mini" data-feat="'+s.id+'">'+(s.featured?'★ پیشنهادی':'☆ پیشنهادی')+'</button>'+
+          '<button class="mini" data-feat="'+s.id+'">'+(s.featured?'★ پیشنهادی امروز':'☆ پیشنهادی امروز')+'</button>'+
           '<button class="mini" data-edit="'+s.id+'">✏️ ویرایش</button>'+
           '<button class="mini del" data-del="'+s.id+'">🗑 حذف</button>'+
         '</div></td>'+
@@ -564,7 +591,11 @@
     if(ft){
       var fid=parseInt(ft.getAttribute('data-feat'),10);
       var fs=servers.find(function(x){return x.id===fid;});
-      if(fs){ fs.featured = fs.featured ? 0 : 1; renderRows(); }
+      if(fs){
+        if(fs.featured) fs.featured = 0;
+        else { servers.forEach(function(x){ x.featured = 0; }); fs.featured = 1; }
+        renderRows();
+      }
       api('/api/admin/servers/'+fid, {method:'POST', body:JSON.stringify({toggleFeatured:true})});
       return;
     }
@@ -598,8 +629,10 @@
     document.getElementById('fName').value=''; document.getElementById('fCountry').value='';
     document.getElementById('fProtocol').value='vless'; document.getElementById('fEnabled').value='1';
     document.getElementById('fFeatured').value='0';
+    document.getElementById('fTags').value='';
     document.getElementById('fLink').value='';
     document.getElementById('fCategory').value=stickyCategory;
+    fillCatTags();
     syncCatList();
   }
   function startEdit(id){
@@ -615,6 +648,8 @@
     document.getElementById('fLink').value=s.link;
     document.getElementById('fCategory').value=s.category||'';
     document.getElementById('fFeatured').value=s.featured?'1':'0';
+    document.getElementById('fTags').value=tagsToInput(s.tags);
+    fillCatTags();
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.getElementById('cancelBtn').addEventListener('click', resetForm);
@@ -633,9 +668,25 @@
   });
   document.getElementById('fCategory').addEventListener('input', function(){
     if(!editingId) stickyCategory = this.value.trim();
+    fillCatTags();
   });
   document.getElementById('fCategory').addEventListener('change', function(){
     if(!editingId) stickyCategory = this.value.trim();
+    fillCatTags();
+  });
+  document.getElementById('saveCatTagsBtn').addEventListener('click', function(){
+    var cat = document.getElementById('fCategory').value.trim();
+    if(!cat){ toast('اول اسم دسته را بنویس'); return; }
+    var raw = document.getElementById('fCatTags').value;
+    var next = {};
+    Object.keys(categoryTags).forEach(function(k){ next[k] = categoryTags[k]; });
+    var parts = String(raw||'').split(/[,،]/).map(function(x){ return x.trim(); }).filter(Boolean);
+    if(parts.length) next[cat] = parts;
+    else delete next[cat];
+    api('/api/admin/servers', {method:'POST', body:JSON.stringify({ categoryTags: next })}).then(function(d){
+      if(d.ok){ categoryTags = next; toast('برچسب دسته ذخیره شد'); }
+      else toast(d.error||'خطا');
+    });
   });
   document.getElementById('saveBtn').addEventListener('click', function(){
     var payload={
@@ -645,7 +696,8 @@
       link: document.getElementById('fLink').value.trim(),
       category: document.getElementById('fCategory').value.trim(),
       enabled: document.getElementById('fEnabled').value==='1',
-      featured: document.getElementById('fFeatured').value==='1'
+      featured: document.getElementById('fFeatured').value==='1',
+      tags: document.getElementById('fTags').value
     };
     var rawLines=payload.link.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
     var linkLines=rawLines.filter(function(x){return /^[a-z0-9][a-z0-9+.\-]*:\/\//i.test(x);});
@@ -664,7 +716,7 @@
       var bulk=linkLines.map(function(link, idx){
         var proto=detectProtocol(link)||payload.protocol;
         var nm=parseName(link)||(payload.name? payload.name+' '+(idx+1) : proto.toUpperCase()+' '+(idx+1));
-        return { name:nm, link:link, protocol:proto, country:payload.country, category:payload.category, enabled:payload.enabled, featured:payload.featured };
+        return { name:nm, link:link, protocol:proto, country:payload.country, category:payload.category, enabled:payload.enabled, featured:payload.featured, tags:payload.tags };
       });
       api('/api/admin/servers', {method:'POST', body:JSON.stringify({ bulk: bulk })}).then(function(d){
         if(d.ok){

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS servers (
   enabled    INTEGER NOT NULL DEFAULT 1,
   category   TEXT DEFAULT '',
   featured   INTEGER NOT NULL DEFAULT 0,
+  tags       TEXT DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -83,3 +84,4 @@ CREATE INDEX IF NOT EXISTS idx_support_msg ON support_messages (thread_id, id);
 
 -- اگر جدول از قبل بدون ستون دسته ساخته شده:
 -- ALTER TABLE servers ADD COLUMN category TEXT DEFAULT '';
+-- ALTER TABLE servers ADD COLUMN tags TEXT DEFAULT '';

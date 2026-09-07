@@ -1,6 +1,6 @@
 // دسترسی به D1 + ساخت خودکار جدول
 const CREATE_TABLE =
-  "CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, country TEXT DEFAULT '', protocol TEXT NOT NULL DEFAULT 'vless', link TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, category TEXT DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')))";
+  "CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, country TEXT DEFAULT '', protocol TEXT NOT NULL DEFAULT 'vless', link TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, category TEXT DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, tags TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now')))";
 
 export function getDB(env) {
   return (env && (env.VPO || env.vpo)) || null;
@@ -48,6 +48,7 @@ export async function readyDB(env) {
     'ALTER TABLE vip_configs ADD COLUMN featured INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE vip_orders ADD COLUMN support_until INTEGER DEFAULT 0',
     'ALTER TABLE vip_orders ADD COLUMN replace_used INTEGER DEFAULT 0',
+    "ALTER TABLE servers ADD COLUMN tags TEXT DEFAULT ''",
   ];
   for (const sql of alters) {
     try {

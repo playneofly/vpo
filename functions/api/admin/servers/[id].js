@@ -1,5 +1,6 @@
 // POST/DELETE /api/admin/servers/:id — ویرایش / تغییر وضعیت / حذف
 import { readyDB, noDb, dbError } from '../../../lib/db.js';
+import { dumpTags } from '../../../lib/vip.js';
 
 async function verify(request, env) {
   const cookie = request.headers.get('Cookie') || '';
@@ -44,10 +45,13 @@ export async function onRequestPost({ request, env, params }) {
       return Response.json({ ok: true });
     }
     if (body.toggleFeatured) {
-      await db
-        .prepare('UPDATE servers SET featured = CASE WHEN featured = 1 THEN 0 ELSE 1 END WHERE id = ?')
-        .bind(id)
-        .run();
+      const cur = await db.prepare('SELECT featured FROM servers WHERE id = ?').bind(id).first();
+      if (cur && cur.featured) {
+        await db.prepare('UPDATE servers SET featured = 0 WHERE id = ?').bind(id).run();
+      } else {
+        await db.prepare('UPDATE servers SET featured = 0').run();
+        await db.prepare('UPDATE servers SET featured = 1 WHERE id = ?').bind(id).run();
+      }
       return Response.json({ ok: true });
     }
 
@@ -56,9 +60,11 @@ export async function onRequestPost({ request, env, params }) {
     if (!name || !link) {
       return Response.json({ ok: false, error: 'نام و لینک کانفیگ الزامی است' }, { status: 400 });
     }
+    const tags = dumpTags(body.tags);
+    const featured = body.featured ? 1 : 0;
     await db
       .prepare(
-        'UPDATE servers SET name = ?, country = ?, protocol = ?, link = ?, enabled = ?, category = ? WHERE id = ?'
+        'UPDATE servers SET name = ?, country = ?, protocol = ?, link = ?, enabled = ?, category = ?, featured = ?, tags = ? WHERE id = ?'
       )
       .bind(
         name,
@@ -67,9 +73,14 @@ export async function onRequestPost({ request, env, params }) {
         link,
         body.enabled === false ? 0 : 1,
         String(body.category || '').trim(),
+        featured,
+        tags,
         id
       )
       .run();
+    if (featured) {
+      await db.prepare('UPDATE servers SET featured = 0 WHERE id != ?').bind(id).run();
+    }
 
     return Response.json({ ok: true });
   } catch (e) {

@@ -19,6 +19,58 @@ export function replaceCapOf(plan) {
   return REPLACE_CAPS[plan] || 3;
 }
 
+export function parseTags(raw) {
+  if (!raw) return [];
+  let arr = [];
+  if (Array.isArray(raw)) arr = raw;
+  else {
+    const s = String(raw).trim();
+    if (!s) return [];
+    try {
+      const p = JSON.parse(s);
+      if (Array.isArray(p)) arr = p;
+      else arr = s.split(/[,،]/);
+    } catch (e) {
+      arr = s.split(/[,،]/);
+    }
+  }
+  const seen = {};
+  const out = [];
+  arr.forEach((x) => {
+    const t = String(x || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 24);
+    if (!t || seen[t]) return;
+    seen[t] = 1;
+    out.push(t);
+  });
+  return out.slice(0, 10);
+}
+
+export function dumpTags(raw) {
+  return JSON.stringify(parseTags(raw));
+}
+
+export function parseCategoryTags(raw) {
+  let obj = {};
+  if (!raw) return obj;
+  try {
+    obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch (e) {
+    return {};
+  }
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+  const out = {};
+  Object.keys(obj).forEach((k) => {
+    const cat = String(k || '').trim();
+    if (!cat) return;
+    const tags = parseTags(obj[k]);
+    if (tags.length) out[cat] = tags;
+  });
+  return out;
+}
+
 export function findOrderCode(text) {
   const m = String(text || '')
     .toUpperCase()

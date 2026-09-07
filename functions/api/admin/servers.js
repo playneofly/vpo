@@ -1,5 +1,6 @@
 // GET/POST /api/admin/servers — لیست کامل + افزودن + دسته‌ای + خاموش‌کردن دسته
 import { readyDB, noDb, dbError } from '../../lib/db.js';
+import { getSetting, setSetting, parseTags, dumpTags, parseCategoryTags } from '../../lib/vip.js';
 
 async function verify(request, env) {
   const cookie = request.headers.get('Cookie') || '';
@@ -31,7 +32,9 @@ export async function onRequestGet({ request, env }) {
   if (!db) return noDb();
   try {
     const { results } = await db.prepare('SELECT * FROM servers ORDER BY featured DESC, id DESC').all();
-    return Response.json({ ok: true, servers: results });
+    const servers = (results || []).map((s) => Object.assign({}, s, { tags: parseTags(s.tags) }));
+    const categoryTags = parseCategoryTags(await getSetting(db, 'category_tags', ''));
+    return Response.json({ ok: true, servers, categoryTags });
   } catch (e) {
     return dbError(e);
   }
@@ -45,7 +48,8 @@ function rowFrom(body) {
   const category = String(body.category || '').trim();
   const enabled = body.enabled === false ? 0 : 1;
   const featured = body.featured ? 1 : 0;
-  return { name, link, country, protocol, category, enabled, featured };
+  const tags = dumpTags(body.tags);
+  return { name, link, country, protocol, category, enabled, featured, tags };
 }
 
 export async function onRequestPost({ request, env }) {
@@ -62,6 +66,15 @@ export async function onRequestPost({ request, env }) {
     body = {};
   }
 
+  if (body.categoryTags != null) {
+    try {
+      await setSetting(db, 'category_tags', JSON.stringify(parseCategoryTags(body.categoryTags)));
+      return Response.json({ ok: true });
+    } catch (e) {
+      return dbError(e);
+    }
+  }
+
   if (body.disableCategory != null) {
     const cat = String(body.disableCategory || '').trim();
     if (!cat) {
@@ -76,7 +89,13 @@ export async function onRequestPost({ request, env }) {
   }
 
   const insertSql =
-    'INSERT INTO servers (name, country, protocol, link, enabled, category, featured) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    'INSERT INTO servers (name, country, protocol, link, enabled, category, featured, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+
+  async function onlyFeatured(id) {
+    if (!id) return;
+    await db.prepare('UPDATE servers SET featured = 0').run();
+    await db.prepare('UPDATE servers SET featured = 1 WHERE id = ?').bind(id).run();
+  }
 
   if (Array.isArray(body.bulk)) {
     const items = body.bulk.slice(0, 80).map(rowFrom).filter((r) => r.name && r.link);
@@ -89,9 +108,10 @@ export async function onRequestPost({ request, env }) {
         const r = items[i];
         const info = await db
           .prepare(insertSql)
-          .bind(r.name, r.country, r.protocol, r.link, r.enabled, r.category, r.featured)
+          .bind(r.name, r.country, r.protocol, r.link, r.enabled, r.category, r.featured, r.tags)
           .run();
         ids.unshift(info.meta.last_row_id);
+        if (r.featured) await onlyFeatured(info.meta.last_row_id);
       }
       return Response.json({ ok: true, ids });
     } catch (e) {
@@ -107,8 +127,9 @@ export async function onRequestPost({ request, env }) {
   try {
     const info = await db
       .prepare(insertSql)
-      .bind(r.name, r.country, r.protocol, r.link, r.enabled, r.category, r.featured)
+      .bind(r.name, r.country, r.protocol, r.link, r.enabled, r.category, r.featured, r.tags)
       .run();
+    if (r.featured) await onlyFeatured(info.meta.last_row_id);
     return Response.json({ ok: true, id: info.meta.last_row_id });
   } catch (e) {
     return dbError(e);

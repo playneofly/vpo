@@ -61,6 +61,15 @@
   .hero p{color:var(--muted); max-width:560px; margin:0 auto; font-size:15px}
 
   .cats{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:8px 0 6px}
+  .tag-btn{
+    padding:6px 12px; border-radius:99px; border:1px solid var(--border);
+    background:var(--surface2); color:var(--muted); cursor:pointer; font-family:inherit;
+    font-size:12.5px; font-weight:700;
+  }
+  .tag-btn.on{border-color:#fbbf24; color:#fbbf24; background:#16140e}
+  .card-tags{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 2px}
+  .card-tag{font-size:11px; padding:2px 8px; border-radius:99px; border:1px solid var(--border); color:var(--muted)}
+  .feat-today{border-color:rgba(251,191,36,.55); color:#fbbf24; background:#16140e}
   .cat-btn{
     padding:7px 14px; border-radius:4px; border:1px solid var(--border);
     background:var(--surface); color:var(--muted); cursor:pointer; font-family:inherit;
@@ -346,6 +355,7 @@
   .plan-card.silver h4,.plan-card.silver .plan-price{color:#f3f4f6}
   .plan-card.gold h4,.plan-card.gold .plan-price{color:#fbbf24}
   .plan-desc{color:var(--muted); font-size:13px; margin-bottom:12px}
+  .plan-preview{font-size:13px; font-weight:700; color:#86efac; margin:0 0 10px; line-height:1.7}
   .plan-price{font-size:26px; font-weight:800; margin-bottom:14px}
   .plan-price small{font-size:13px; font-weight:600; color:var(--muted)}
   .plan-card ul{list-style:none; font-size:13.5px; color:#d1d5db; margin-bottom:8px}
@@ -416,6 +426,7 @@
     <p>کانفیگ موردنظرت رو انتخاب کن، کپی کن یا با اسکن QR مستقیم به کلاینتت اضافه کن.</p>
     <button type="button" class="how-btn" id="howBtn">چطور استفاده کنم</button>
     <div class="cats" id="cats"></div>
+    <div class="cats" id="tagBar"></div>
     <div class="cat-copy-bar" id="catCopyBar"></div>
   </section>
 
@@ -448,6 +459,7 @@
           <h4>برنز</h4>
           <p class="plan-desc">شروع اقتصادی</p>
           <p class="plan-price">۱۲۰٬۰۰۰ <small>تومان</small></p>
+          <p class="plan-preview">بعد از تأیید فیش، ۱۰ کانفیگ در «سرور های من» می‌آید.</p>
           <ul>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۱۰ کانفیگ اختصاصی</li>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۱ هفته</li>
@@ -462,6 +474,7 @@
           <h4>نقره</h4>
           <p class="plan-desc">انتخاب متعادل</p>
           <p class="plan-price">۲۴۰٬۰۰۰ <small>تومان</small></p>
+          <p class="plan-preview">بعد از تأیید فیش، ۲۰ کانفیگ در «سرور های من» می‌آید.</p>
           <ul>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۲۰ کانفیگ اختصاصی</li>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۲ هفته</li>
@@ -476,6 +489,7 @@
           <h4>طلایی</h4>
           <p class="plan-desc">بهترین تجربه</p>
           <p class="plan-price">۳۶۰٬۰۰۰ <small>تومان</small></p>
+          <p class="plan-preview">بعد از تأیید فیش، ۳۰ کانفیگ در «سرور های من» می‌آید.</p>
           <ul>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۳۰ کانفیگ اختصاصی</li>
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۳ هفته</li>
@@ -607,6 +621,28 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   var modal = document.getElementById('modal');
   var currentLink = '';
   var activeCat = '';
+  var activeTag = '';
+  var categoryTags = {};
+  function parseTagList(raw){
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.map(function(x){ return String(x||'').trim(); }).filter(Boolean);
+    try { var p = JSON.parse(raw); if (Array.isArray(p)) return parseTagList(p); } catch(e){}
+    return String(raw).split(/[,،]/).map(function(x){ return x.trim(); }).filter(Boolean);
+  }
+  function tagsOfServer(s){
+    var a = parseTagList(s && s.tags);
+    var cat = String((s && s.category) || '').trim();
+    (categoryTags[cat] || []).forEach(function(tg){ if (a.indexOf(tg) < 0) a.push(tg); });
+    return a;
+  }
+  function allTags(){
+    var seen = {}, out = [];
+    servers.forEach(function(s){
+      tagsOfServer(s).forEach(function(tg){ if (!seen[tg]) { seen[tg] = 1; out.push(tg); } });
+    });
+    out.sort(function(a, b){ return a.localeCompare(b, 'fa'); });
+    return out;
+  }
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -690,6 +726,9 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     var loc = s.country && /^[A-Z]{2}$/i.test(s.country) ? flagEmoji(s.country) + ' ' + s.country.toUpperCase() : (s.country || '');
     var cat = String(s.category || '').trim();
     var codeLine = s.orderCode ? '<div class="card-code">کد سفارش: <b dir="ltr">'+esc(s.orderCode)+'</b></div>' : '';
+    var tgs = s.orderCode ? [] : tagsOfServer(s);
+    var tagHtml = tgs.length ? '<div class="card-tags">'+tgs.slice(0,6).map(function(tg){ return '<span class="card-tag">'+esc(tg)+'</span>'; }).join('')+'</div>' : '';
+    var featHtml = (!s.orderCode && s.featured) ? '<span class="feat feat-today">پیشنهادی امروز</span>' : '';
     return '' +
       '<div class="card">' +
         codeLine +
@@ -697,8 +736,8 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
           '<div><div class="flag">' + flagEmoji(s.country) + '</div>' +
           '<h3>' + esc(s.name) + '</h3>' +
           '<div class="loc">' + esc(loc) + (cat ? ' · ' + esc(cat) : '') + '</div></div>' +
-          '<div class="card-top-badges">' + (s.featured ? '<span class="feat">پیشنهادی</span>' : '') + badge(s.protocol) + '</div>' +
-        '</div>' +
+          '<div class="card-top-badges">' + featHtml + badge(s.protocol) + '</div>' +
+        '</div>' + tagHtml +
         '<div class="card-actions">' +
           '<button class="btn btn-primary" data-copy="' + esc(s.link) + '">📋 کپی کانفیگ</button>' +
           '<button class="btn btn-ghost" data-qr="' + esc(s.link) + '" data-name="' + esc(s.name) + '" data-loc="' + esc(loc) + '">▦ QR</button>' +
@@ -706,17 +745,32 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
         '</div>' +
       '</div>';
   }
+  function renderTagBar() {
+    var tb = document.getElementById('tagBar');
+    if (!tb) return;
+    var tags = allTags();
+    if (activeTag && tags.indexOf(activeTag) < 0) activeTag = '';
+    if (!tags.length) { tb.innerHTML = ''; return; }
+    var th = '<button type="button" class="tag-btn' + (activeTag ? '' : ' on') + '" data-tag="">همه برچسب‌ها</button>';
+    tags.forEach(function (tg) {
+      th += '<button type="button" class="tag-btn' + (activeTag === tg ? ' on' : '') + '" data-tag="' + esc(tg) + '">' + esc(tg) + '</button>';
+    });
+    tb.innerHTML = th;
+  }
   function renderCats() {
     var box = document.getElementById('cats');
     var bar = document.getElementById('catCopyBar');
     var cats = catsOf(servers);
-    if (!cats.length) { box.innerHTML = ''; bar.innerHTML = ''; return; }
-    if (activeCat && cats.indexOf(activeCat) < 0) activeCat = '';
-    var html = '<button type="button" class="cat-btn' + (activeCat ? '' : ' on') + '" data-cat="">همه</button>';
-    cats.forEach(function (c) {
-      html += '<button type="button" class="cat-btn' + (activeCat === c ? ' on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>';
-    });
-    box.innerHTML = html;
+    if (!cats.length) { box.innerHTML = ''; activeCat = ''; }
+    else {
+      if (activeCat && cats.indexOf(activeCat) < 0) activeCat = '';
+      var html = '<button type="button" class="cat-btn' + (activeCat ? '' : ' on') + '" data-cat="">همه</button>';
+      cats.forEach(function (c) {
+        html += '<button type="button" class="cat-btn' + (activeCat === c ? ' on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>';
+      });
+      box.innerHTML = html;
+    }
+    renderTagBar();
     if (activeCat) {
       var n = linksOfCat(activeCat).length.toLocaleString('fa-IR');
       bar.innerHTML = '<button type="button" class="btn btn-primary" data-copy-cat="' + esc(activeCat) + '">📋 کپی همه کانفیگ‌های «' + esc(activeCat) + '» (' + n + ')</button>' +
@@ -728,14 +782,15 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   function render() {
     renderCats();
     var list = servers;
-    if (activeCat) list = servers.filter(function (s) { return String(s.category || '').trim() === activeCat; });
+    if (activeCat) list = list.filter(function (s) { return String(s.category || '').trim() === activeCat; });
+    if (activeTag) list = list.filter(function (s) { return tagsOfServer(s).indexOf(activeTag) >= 0; });
     if (!servers.length) {
       grid.innerHTML = '<div class="empty"><div class="big">🛰️</div>هنوز سروری اضافه نشده.</div>';
       countEl.textContent = '۰';
       return;
     }
     if (!list.length) {
-      grid.innerHTML = '<div class="empty"><div class="big">📂</div>در این دسته سروری نیست.</div>';
+      grid.innerHTML = '<div class="empty"><div class="big">📂</div>با این فیلتر سروری نیست.</div>';
       countEl.textContent = '۰';
       return;
     }
@@ -764,7 +819,7 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     fetch('/api/servers')
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d && d.ok) { servers = d.servers || []; render(); }
+        if (d && d.ok) { servers = d.servers || []; categoryTags = d.categoryTags || {}; render(); }
         else throw new Error(d && d.error);
       })
       .catch(function () {
@@ -790,6 +845,12 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
     var cat = e.target.closest('[data-cat]');
     if (cat) {
       activeCat = cat.getAttribute('data-cat') || '';
+      render();
+      return;
+    }
+    var tgBtn = e.target.closest('[data-tag]');
+    if (tgBtn) {
+      activeTag = tgBtn.getAttribute('data-tag') || '';
       render();
       return;
     }
@@ -850,12 +911,15 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       var stroke = colors[id];
       var bullets = (p.bullets||[]).map(function(b){ return '<li>'+planCheck(stroke)+esc(b)+'</li>'; }).join('');
       var price = p.price != null ? faNum(p.price) : '';
+      var ncfg = p.configs != null ? p.configs : '';
+      var preview = ncfg !== '' ? '<p class="plan-preview">بعد از تأیید فیش، '+faNum(ncfg)+' کانفیگ در «سرور های من» می‌آید.</p>' : '';
       return '<div class="plan-card '+id+'">'+
         '<div class="plan-bar"></div>'+
         '<div class="plan-body">'+
           '<h4>'+esc(p.title||id)+'</h4>'+
           '<p class="plan-desc">'+esc(p.subtitle||'')+'</p>'+
           '<p class="plan-price">'+price+' <small>تومان</small></p>'+
+          preview+
           '<ul>'+bullets+'</ul>'+
         '</div>'+
         '<div class="plan-foot"><button type="button" class="btn" data-plan="'+id+'">Select Plan</button></div>'+
@@ -1280,12 +1344,39 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
       });
     });
   }
+  function resetSupPanelPos(){
+    var p = document.getElementById('supPanel');
+    if (!p) return;
+    p.style.bottom = ''; p.style.height = ''; p.style.maxHeight = '';
+    p.style.left = ''; p.style.right = ''; p.style.width = ''; p.style.maxWidth = '';
+    p.style.borderRadius = '';
+  }
+  function layoutSupKeyboard(){
+    var p = document.getElementById('supPanel');
+    if (!p || !p.classList.contains('open')) return;
+    var vv = window.visualViewport;
+    if (!vv || window.innerWidth >= 720) { resetSupPanelPos(); return; }
+    var kb = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+    p.style.left = '0';
+    p.style.right = '0';
+    p.style.width = '100%';
+    p.style.maxWidth = '100%';
+    p.style.bottom = kb + 'px';
+    var h = Math.max(240, Math.min(vv.height - 8, kb > 40 ? vv.height - 8 : Math.min(vv.height * 0.78, 580)));
+    p.style.height = h + 'px';
+    p.style.maxHeight = h + 'px';
+    p.style.borderRadius = kb > 40 ? '0' : '14px 14px 0 0';
+    var box = document.getElementById('supMsgs');
+    if (box) box.scrollTop = box.scrollHeight;
+  }
   function supOpenPanel(){
     document.getElementById('supPanel').classList.add('open');
-    if (window.innerWidth < 640) document.body.style.overflow = 'hidden';
+    if (window.innerWidth < 720) document.body.style.overflow = 'hidden';
+    layoutSupKeyboard();
   }
   function supClosePanel(){
     document.getElementById('supPanel').classList.remove('open');
+    resetSupPanelPos();
     document.body.style.overflow = '';
   }
   function setHoursBar(h){ }
@@ -1433,6 +1524,12 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
   });
   document.getElementById('supClose').addEventListener('click', supClosePanel);
   document.getElementById('supSend').addEventListener('click', sendSup);
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', layoutSupKeyboard);
+    visualViewport.addEventListener('scroll', layoutSupKeyboard);
+  }
+  window.addEventListener('resize', layoutSupKeyboard);
+  document.getElementById('supInput').addEventListener('focus', function(){ setTimeout(layoutSupKeyboard, 50); });
   document.getElementById('supInput').addEventListener('keydown', function(e){
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendSup(); }
   });
@@ -1465,6 +1562,14 @@ script>
 </html>
 nterval(function () {
     if (!modal.classList.contains('open')) load();
+  }, 30000);
+})();
+</script>
+</body>
+</html>
+script>
+</body>
+</html>
   }, 30000);
 })();
 </script>
