@@ -310,8 +310,19 @@
       </div>
 
       <div class="card">
+        <h3>تعداد سرور هر اشتراک</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">با خرید هر پلن، همین تعداد کانفیگ اختصاصی می‌گیرد. موقع تخصیص سفارش هم همین سقف است. اگر در متن پلن عدد نوشتی، همان را جدا عوض کن.</p>
+        <div class="form-row">
+          <div class="field"><label>برنز</label><input id="pc-bronze-n" type="number" min="1" max="200" dir="ltr" inputmode="numeric" placeholder="۱۰"></div>
+          <div class="field"><label>نقره</label><input id="pc-silver-n" type="number" min="1" max="200" dir="ltr" inputmode="numeric" placeholder="۲۰"></div>
+          <div class="field"><label>طلایی</label><input id="pc-gold-n" type="number" min="1" max="200" dir="ltr" inputmode="numeric" placeholder="۳۰"></div>
+        </div>
+        <div class="form-actions"><button type="button" class="btn btn-primary" id="vipSaveCounts">ذخیره تعداد سرور</button></div>
+      </div>
+
+      <div class="card">
         <h3>متن پلن‌های خرید</h3>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">عنوان، توضیح کوتاه و بولت‌ها (هر خط یکی). قیمت و تعداد کانفیگ ثابت است.</p>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">عنوان، توضیح کوتاه و بولت‌ها (هر خط یکی).</p>
         <div class="form-row">
           <div class="field"><label>برنز — عنوان</label><input id="pc-bronze-title"></div>
           <div class="field"><label>برنز — توضیح</label><input id="pc-bronze-sub"></div>
@@ -818,12 +829,26 @@
   });
   document.getElementById('vipOvClose').addEventListener('click', function(){ document.getElementById('vipOv').classList.remove('open'); });
 
+  var vipPlanN = { bronze:10, silver:20, gold:30 };
   function loadVipAll(){
     api('/api/admin/vip/settings').then(function(d){
       if(!d.ok) return;
       document.getElementById('vipEnabled').value = d.enabled ? '1' : '0';
       document.getElementById('vipCardNumber').value = d.cardNumber||'';
       document.getElementById('vipCardName').value = d.cardName||'';
+      if(d.planConfigs){
+        ['bronze','silver','gold'].forEach(function(id){
+          var n = parseInt(d.planConfigs[id], 10);
+          if (n >= 1) vipPlanN[id] = n;
+          var el = document.getElementById('pc-'+id+'-n');
+          if (el) el.value = vipPlanN[id];
+        });
+      } else {
+        ['bronze','silver','gold'].forEach(function(id){
+          var el = document.getElementById('pc-'+id+'-n');
+          if (el && !el.value) el.value = vipPlanN[id];
+        });
+      }
       if(d.planCopy){
         ['bronze','silver','gold'].forEach(function(id){
           var p=d.planCopy[id]||{};
@@ -971,6 +996,17 @@
       cardNumber: document.getElementById('vipCardNumber').value,
       cardName: document.getElementById('vipCardName').value
     })}).then(function(d){ toast(d.ok?'تنظیمات ذخیره شد':(d.error||'خطا')); });
+  });
+  document.getElementById('vipSaveCounts').addEventListener('click', function(){
+    var planConfigs={};
+    ['bronze','silver','gold'].forEach(function(id){
+      var n=parseInt((document.getElementById('pc-'+id+'-n')||{}).value,10);
+      planConfigs[id]= n>=1 ? n : vipPlanN[id];
+    });
+    api('/api/admin/vip/settings', { method:'POST', body: JSON.stringify({ planConfigs: planConfigs }) }).then(function(d){
+      if(d.ok){ vipPlanN = planConfigs; toast('تعداد سرور پلن‌ها ذخیره شد'); }
+      else toast(d.error||'خطا');
+    });
   });
   document.getElementById('vipSavePlans').addEventListener('click', function(){
     var planCopy={};
@@ -1186,7 +1222,7 @@
     if(dn){
       var oid=parseInt(dn.getAttribute('data-vdone'),10);
       var ord=vipOrders.find(function(x){return x.id===oid;});
-      var max = ord && ord.plan==='gold' ? 30 : (ord && ord.plan==='silver' ? 20 : 10);
+      var max = (ord && vipPlanN[ord.plan]) || vipPlanN.bronze || 10;
       var html = '<p>حداکثر '+max+' کانفیگ برای این پلن. از استخر انتخاب کن.</p><div class="assign-list">';
       vipConfigs.forEach(function(c){
         html += '<label><input type="checkbox" value="'+c.id+'"> '+esc(c.name)+(c.category?' — '+esc(c.category):'')+(c.enabled?'':' (خاموش)')+'</label>';

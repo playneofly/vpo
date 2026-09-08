@@ -4,6 +4,43 @@ export const PLANS = {
   gold: { id: 'gold', title: 'طلایی', price: 360000, configs: 30 },
 };
 
+export const DEFAULT_PLAN_CONFIGS = { bronze: 10, silver: 20, gold: 30 };
+
+export function clampPlanN(n, fallback) {
+  const x = parseInt(n, 10);
+  if (!Number.isFinite(x) || x < 1) return fallback;
+  return Math.min(200, x);
+}
+
+export function mergePlanConfigs(raw) {
+  let parsed = null;
+  if (raw) {
+    try {
+      parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch (e) {
+      parsed = null;
+    }
+  }
+  const out = {};
+  for (const id of ['bronze', 'silver', 'gold']) {
+    const fb = DEFAULT_PLAN_CONFIGS[id];
+    const src = parsed && parsed[id] != null ? parsed[id] : fb;
+    out[id] = clampPlanN(src, fb);
+  }
+  return out;
+}
+
+export async function getPlanConfigs(db) {
+  const raw = await getSetting(db, 'plan_configs', '');
+  return mergePlanConfigs(raw);
+}
+
+export function planConfigCount(counts, plan) {
+  const id = plan && DEFAULT_PLAN_CONFIGS[plan] != null ? plan : 'bronze';
+  if (counts && counts[id] != null) return counts[id];
+  return DEFAULT_PLAN_CONFIGS[id];
+}
+
 export const SUPPORT_WEEKS = { bronze: 1, silver: 2, gold: 3 };
 export const REPLACE_CAPS = { bronze: 3, silver: 5, gold: 10 };
 

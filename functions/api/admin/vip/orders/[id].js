@@ -1,6 +1,6 @@
 import { readyDB, noDb, dbError } from '../../../../lib/db.js';
 import { verify, deny } from '../../../../lib/auth.js';
-import { PLANS, SUPPORT_WEEKS } from '../../../../lib/vip.js';
+import { SUPPORT_WEEKS, getPlanConfigs, planConfigCount } from '../../../../lib/vip.js';
 
 export async function onRequestGet({ request, env, params }) {
   if (!(await verify(request, env))) return deny();
@@ -51,11 +51,12 @@ export async function onRequestPost({ request, env, params }) {
       if (row.status !== 'in_progress') {
         return Response.json({ ok: false, error: 'اول باید فیش تأیید شود' }, { status: 400 });
       }
-      const plan = PLANS[row.plan] || PLANS.bronze;
+      const counts = await getPlanConfigs(db);
+      const maxN = planConfigCount(counts, row.plan);
       const ids = Array.isArray(body.configIds) ? body.configIds.map(Number).filter(Boolean) : [];
       if (!ids.length) return Response.json({ ok: false, error: 'حداقل یک کانفیگ انتخاب کن' }, { status: 400 });
-      if (ids.length > plan.configs) {
-        return Response.json({ ok: false, error: 'برای این پلن حداکثر ' + plan.configs + ' کانفیگ' }, { status: 400 });
+      if (ids.length > maxN) {
+        return Response.json({ ok: false, error: 'برای این پلن حداکثر ' + maxN + ' کانفیگ' }, { status: 400 });
       }
       const { results } = await db
         .prepare('SELECT id, name, country, protocol, link, category, featured FROM vip_configs')
