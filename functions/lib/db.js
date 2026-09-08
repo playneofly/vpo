@@ -6,9 +6,9 @@ export function getDB(env) {
   return (env && (env.VPO || env.vpo)) || null;
 }
 
-export async function readyDB(env) {
-  const db = getDB(env);
-  if (!db) return null;
+let bootPromise = null;
+
+async function migrate(db) {
   try {
     await db.exec(CREATE_TABLE);
   } catch (e) {}
@@ -55,6 +55,23 @@ export async function readyDB(env) {
       await db.exec(sql);
     } catch (e) {}
   }
+}
+
+export async function readyDB(env) {
+  const db = getDB(env);
+  if (!db) return null;
+  if (!bootPromise) {
+    bootPromise = migrate(db).then(
+      function () {
+        return db;
+      },
+      function () {
+        bootPromise = null;
+        return db;
+      }
+    );
+  }
+  await bootPromise;
   return db;
 }
 
