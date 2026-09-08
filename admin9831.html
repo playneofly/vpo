@@ -190,6 +190,7 @@
   <div class="wrap">
     <div class="admin-tabs" id="adminTabs">
       <button type="button" class="atab on" data-tab="servers">سرورها</button>
+      <button type="button" class="atab" data-tab="gate">کد ورود</button>
       <button type="button" class="atab" data-tab="receipts">فیش‌ها <span class="tab-n" id="receiptBadge"></span></button>
       <button type="button" class="atab" data-tab="repl">جایگزینی سرور <span class="tab-n" id="replBadge"></span></button>
       <button type="button" class="atab" data-tab="vipcf">کانفیگ اختصاصی</button>
@@ -198,16 +199,6 @@
     </div>
 
     <div id="tab-servers">
-    <div class="card" id="gateCard">
-      <h3>کد ورود به سایت</h3>
-      <p style="color:var(--muted);font-size:13px;margin-bottom:12px">بدون ثبت‌نام. اگر خالی باشد دروازه خاموش است. با عوض کردن کد، همه باید دوباره بزنند.</p>
-      <div class="form-row">
-        <div class="field"><label>کد</label><input id="gateCode" dir="ltr" placeholder="مثلاً T-4821" autocomplete="off"></div>
-        <div class="field" style="display:flex;align-items:flex-end">
-          <button type="button" class="btn btn-primary" id="gateSaveBtn" style="width:100%">ذخیره کد ورود</button>
-        </div>
-      </div>
-    </div>
     <div class="card" id="formCard">
       <h3 id="formTitle">➕ افزودن سرور جدید</h3>
       <div class="form-row">
@@ -284,6 +275,19 @@
           </thead>
           <tbody id="rows"></tbody>
         </table>
+      </div>
+    </div>
+    </div>
+
+    <div id="tab-gate" style="display:none">
+    <div class="card" id="gateCard">
+      <h3>کد ورود به سایت</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px">بدون ثبت‌نام. اگر خالی باشد دروازه خاموش است. با عوض کردن کد، همه باید دوباره بزنند.</p>
+      <div class="form-row">
+        <div class="field"><label>کد</label><input id="gateCode" dir="ltr" placeholder="مثلاً T-4821" autocomplete="off"></div>
+        <div class="field" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn btn-primary" id="gateSaveBtn" style="width:100%">ذخیره کد ورود</button>
+        </div>
       </div>
     </div>
     </div>
@@ -560,11 +564,13 @@
   });
 
   // ---- لیست سرورها ----
-  function loadServers(){
+  function loadGateAdmin(){
     api('/api/admin/gate').then(function(g){
       var el=document.getElementById('gateCode');
       if(el && g && g.ok) el.value=g.code||'';
     });
+  }
+  function loadServers(){
     api('/api/admin/servers').then(function(d){
       if(d.ok){ servers=d.servers||[]; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows(); }
       else if(d.error==='unauthorized'){ showLogin(); }
@@ -802,10 +808,11 @@
     var b=e.target.closest('[data-tab]'); if(!b) return;
     var tab=b.getAttribute('data-tab');
     document.querySelectorAll('.atab').forEach(function(x){ x.classList.toggle('on', x===b); });
-    ['servers','receipts','repl','vipcf','site','support'].forEach(function(id){
+    ['servers','gate','receipts','repl','vipcf','site','support'].forEach(function(id){
       var el=document.getElementById('tab-'+id); if(el) el.style.display = tab===id?'block':'none';
     });
-    if(tab==='site') loadSiteAdmin();
+    if(tab==='gate') loadGateAdmin();
+    else if(tab==='site') loadSiteAdmin();
     else if(tab==='support') loadSupportAdmin();
     else if(tab!=='servers') loadVipAll();
   });

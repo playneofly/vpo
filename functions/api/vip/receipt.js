@@ -1,6 +1,9 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
+import { assertGate } from '../../lib/gate.js';
 
 export async function onRequestPost({ request, env }) {
+  const blocked = await assertGate(env, request);
+  if (blocked) return blocked;
   const db = await readyDB(env);
   if (!db) return noDb();
   let body = {};

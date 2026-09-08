@@ -1,6 +1,7 @@
 // GET /api/servers — لیست سرورهای فعال برای کاربران
 import { getDB, readyDB, noDb, dbError } from '../lib/db.js';
 import { getSetting, parseTags, parseCategoryTags } from '../lib/vip.js';
+import { assertGate } from '../lib/gate.js';
 
 const SQL =
   'SELECT id, name, country, protocol, link, category, featured, tags FROM servers WHERE enabled = 1 ORDER BY featured DESC, id DESC';
@@ -27,7 +28,9 @@ function pack(results, categoryTags) {
   );
 }
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ env, request }) {
+  const blocked = await assertGate(env, request);
+  if (blocked) return blocked;
   let db = getDB(env);
   if (!db) return noDb();
   try {

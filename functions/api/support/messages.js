@@ -1,6 +1,7 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
 import { validVisitor, clip, hoursInfo, generateAiReply, supportName, getAI } from '../../lib/support.js';
 import { findOrderCode, isDownAsk, orderPublicBlurb } from '../../lib/vip.js';
+import { assertGate } from '../../lib/gate.js';
 
 async function ownThread(db, visitorId, threadId) {
   return db
@@ -10,6 +11,8 @@ async function ownThread(db, visitorId, threadId) {
 }
 
 export async function onRequestGet({ request, env }) {
+  const blocked = await assertGate(env, request);
+  if (blocked) return blocked;
   const db = await readyDB(env);
   if (!db) return noDb();
   const url = new URL(request.url);
@@ -56,6 +59,8 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost(context) {
   const { request, env, waitUntil } = context;
+  const blocked = await assertGate(env, request);
+  if (blocked) return blocked;
   const db = await readyDB(env);
   if (!db) return noDb();
   let body = {};

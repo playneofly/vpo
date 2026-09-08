@@ -1,7 +1,10 @@
 import { readyDB, noDb, dbError } from '../lib/db.js';
 import { getSetting } from '../lib/vip.js';
+import { assertGate } from '../lib/gate.js';
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ env, request }) {
+  const blocked = await assertGate(env, request);
+  if (blocked) return blocked;
   const db = await readyDB(env);
   if (!db) return noDb();
   try {

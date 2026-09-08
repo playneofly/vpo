@@ -1,4 +1,5 @@
 import { readyDB, noDb } from '../../../lib/db.js';
+import { assertGate } from '../../../lib/gate.js';
 
 function b64ToBytes(b64) {
   const bin = atob(b64);

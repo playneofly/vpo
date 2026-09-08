@@ -27,6 +27,12 @@ export function gateDeny() {
   return Response.json({ ok: false, gate: true, error: 'gate' }, { status: 401 });
 }
 
+export async function assertGate(env, request) {
+  const g = await requireGate(env, request);
+  if (!g.allow) return gateDeny();
+  return null;
+}
+
 export function readCookieVer(request) {
   const raw = request.headers.get('Cookie') || '';
   const m = raw.match(/(?:^|;\s*)fn_gate=([^;]+)/);
