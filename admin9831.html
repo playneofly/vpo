@@ -556,6 +556,40 @@
       });
     });
   }
+  function bakGet(k){ try{ var x=JSON.parse(localStorage.getItem(k)||''); return x&&typeof x==='object'?x:null; }catch(e){ return null; } }
+  function bakSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  function copyScore(pc){
+    var n=0;
+    ['bronze','silver','gold'].forEach(function(id){
+      var p=pc&&pc[id]||{};
+      n += String(p.title||'').length + String(p.subtitle||'').length + ((p.bullets||[]).join(' ')).length;
+    });
+    return n;
+  }
+  function fillPlanCopy(pc){
+    if(!pc) return;
+    ['bronze','silver','gold'].forEach(function(id){
+      var p=pc[id]||{};
+      var ti=document.getElementById('pc-'+id+'-title'); if(ti) ti.value=p.title||'';
+      var su=document.getElementById('pc-'+id+'-sub'); if(su) su.value=p.subtitle||'';
+      var bu=document.getElementById('pc-'+id+'-bullets'); if(bu) bu.value=(p.bullets||[]).join('\n');
+    });
+    vipCopyLoaded = true;
+  }
+  var _restoringServers = false;
+  var _restoringVipCf = false;
+  function restoreBulk(url, items, done){
+    items = (items||[]).filter(function(s){ return s && s.name && s.link; });
+    var i=0;
+    function next(){
+      if(i>=items.length){ if(done) done(true); return; }
+      api(url, { method:'POST', body: JSON.stringify({ bulk: items.slice(i, i+80) }) }).then(function(d){
+        if(!d||!d.ok){ if(done) done(false); return; }
+        i+=80; next();
+      }).catch(function(){ if(done) done(false); });
+    }
+    next();
+  }
 
   // ---- ورود / خروج ----
   function showLogin(){ document.getElementById('loginView').style.display='flex'; document.getElementById('dashView').style.display='none'; }
@@ -594,18 +628,49 @@
       if(el && g && g.ok) el.value=g.code||'';
     });
   }
+  function applyServerBackup(bak, note){
+    if(!bak||!bak.servers||!bak.servers.length) return false;
+    servers=bak.servers; categoryTags=bak.categoryTags||{};
+    fillCatTags(); renderRows();
+    dashErr(note||'لیست از همین مرورگر برگشت.');
+    return true;
+  }
   function loadServers(){
     api('/api/admin/servers').then(function(d){
-      if(d.ok){
-        servers=d.servers||[]; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows();
-        if (d.servers && d.servers.length) dashErr('');
+      var bak=bakGet('fn_admin_servers');
+      if(!bak || !bak.servers || !bak.servers.length){
+        var pub=bakGet('fn_servers_v1');
+        if(pub && pub.servers && pub.servers.length) bak={ servers: pub.servers, categoryTags: pub.categoryTags||{} };
+      }
+      if(d && d.ok && d.servers && d.servers.length){
+        servers=d.servers; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows();
+        bakSet('fn_admin_servers', { servers: servers, categoryTags: categoryTags });
+        dashErr('');
         return;
       }
-      if(d.error==='unauthorized'){ showLogin(); return; }
+      if(d && d.error==='unauthorized'){ showLogin(); return; }
+      if(bak && bak.servers && bak.servers.length){
+        applyServerBackup(bak, (d&&d.ok) ? 'لیست سرور خالی آمد؛ نسخه همین مرورگر برگردانده شد و ذخیره می‌شود.' : 'دیتابیس لیست نداد؛ نسخه همین مرورگر نشان داده شد و ذخیره می‌شود.');
+        if(!_restoringServers){
+          _restoringServers=true;
+          var items=bak.servers.map(function(s){
+            return { name:s.name, link:s.link, country:s.country, protocol:s.protocol, category:s.category, enabled:s.enabled!==0&&s.enabled!==false, featured:!!s.featured, tags:s.tags };
+          });
+          restoreBulk('/api/admin/servers', items, function(ok){
+            if(ok && bak.categoryTags) api('/api/admin/servers', { method:'POST', body: JSON.stringify({ categoryTags: bak.categoryTags }) });
+            _restoringServers=false;
+            if(ok){ toast('سرورها دوباره ذخیره شدند'); dashErr(''); }
+          });
+        }
+        return;
+      }
+      if(d && d.ok){
+        servers=[]; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows();
+        return;
+      }
       var rows=document.getElementById('rows');
-      if(rows) rows.innerHTML='<tr><td colspan="7"><div class="empty">لیست نیامد — داده پاک نشده. '+esc(d.error||'خطای سرور')+'</div></td></tr>';
-      dashErr(d.error||'سرورها از دیتابیس نیامدند. Bindings را چک کن.');
-      toast(d.error||'سرورها نیامدند');
+      if(rows) rows.innerHTML='<tr><td colspan="7"><div class="empty">لیست نیامد — '+esc(d&&d.error||'خطای سرور')+'</div></td></tr>';
+      dashErr(d&&d.error||'سرورها نیامدند');
     });
   }
   function renderRows(){
@@ -854,7 +919,15 @@
   var vipCopyLoaded = false;
   function loadVipAll(){
     api('/api/admin/vip/settings').then(function(d){
-      if(!d.ok){ if(d.error&&d.error!=='unauthorized') toast(d.error); return; }
+      if(!d || !d.ok){
+        var bakFail=bakGet('fn_admin_plan_copy');
+        if(bakFail){
+          fillPlanCopy(bakFail);
+          api('/api/admin/vip/settings', { method:'POST', body: JSON.stringify({ planCopy: bakFail }) });
+        }
+        if(d && d.error && d.error!=='unauthorized') toast(d.error);
+        return;
+      }
       document.getElementById('vipEnabled').value = d.enabled ? '1' : '0';
       document.getElementById('vipCardNumber').value = d.cardNumber||'';
       document.getElementById('vipCardName').value = d.cardName||'';
@@ -871,14 +944,19 @@
           if (el && !el.value) el.value = vipPlanN[id];
         });
       }
-      if(d.planCopy){
-        ['bronze','silver','gold'].forEach(function(id){
-          var p=d.planCopy[id]||{};
-          var ti=document.getElementById('pc-'+id+'-title'); if(ti) ti.value=p.title||'';
-          var su=document.getElementById('pc-'+id+'-sub'); if(su) su.value=p.subtitle||'';
-          var bu=document.getElementById('pc-'+id+'-bullets'); if(bu) bu.value=(p.bullets||[]).join('\n');
-        });
-        vipCopyLoaded = true;
+      var bakCopy=bakGet('fn_admin_plan_copy');
+      var useCopy=d.planCopy||null;
+      if(bakCopy && copyScore(bakCopy) > copyScore(useCopy)+10){
+        useCopy=bakCopy;
+        api('/api/admin/vip/settings', { method:'POST', body: JSON.stringify({ planCopy: bakCopy }) });
+        dashErr('متن پلن‌ها از همین مرورگر برگشت و ذخیره شد.');
+      }
+      if(useCopy){
+        fillPlanCopy(useCopy);
+        if(copyScore(useCopy)>40) bakSet('fn_admin_plan_copy', useCopy);
+      }
+      if(d.cardNumber||d.cardName){
+        bakSet('fn_admin_vip_set', { enabled:d.enabled, cardNumber:d.cardNumber, cardName:d.cardName, planConfigs:d.planConfigs });
       }
     });
     api('/api/admin/vip/orders').then(function(d){
@@ -887,9 +965,24 @@
       renderVipOrders();
     });
     api('/api/admin/vip/configs').then(function(d){
-      if(!d.ok) return;
-      vipConfigs = d.configs||[];
-      renderVipConfigs();
+      var bak=bakGet('fn_admin_vipcf');
+      if(d && d.ok && d.configs && d.configs.length){
+        vipConfigs = d.configs;
+        bakSet('fn_admin_vipcf', d.configs);
+        renderVipConfigs();
+        return;
+      }
+      if(bak && bak.length && !_restoringVipCf){
+        vipConfigs = bak;
+        renderVipConfigs();
+        _restoringVipCf=true;
+        restoreBulk('/api/admin/vip/configs', bak, function(ok){
+          _restoringVipCf=false;
+          if(ok) toast('کانفیگ اختصاصی دوباره ذخیره شد');
+        });
+        return;
+      }
+      if(d && d.ok){ vipConfigs = d.configs||[]; renderVipConfigs(); }
     });
     loadRepl();
   }
@@ -1042,6 +1135,7 @@
       };
     });
     api('/api/admin/vip/settings', { method:'POST', body: JSON.stringify({ planCopy: planCopy }) }).then(function(d){
+      if(d.ok) bakSet('fn_admin_plan_copy', planCopy);
       toast(d.ok?'متن پلن‌ها ذخیره شد':(d.error||'خطا'));
     });
   });
