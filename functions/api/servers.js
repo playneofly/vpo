@@ -23,7 +23,7 @@ function pack(results, categoryTags) {
   });
   return Response.json(
     { ok: true, servers, categoryTags: categoryTags || {} },
-    { headers: { 'Cache-Control': 'public, max-age=10, stale-while-revalidate=60' } }
+    { headers: { 'Cache-Control': 'private, no-store' } }
   );
 }
 

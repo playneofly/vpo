@@ -11,7 +11,7 @@ export async function onRequestGet({ env }) {
       .all();
     return Response.json(
       { ok: true, text, photos: results || [] },
-      { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' } }
+      { headers: { 'Cache-Control': 'private, no-store' } }
     );
   } catch (e) {
     return dbError(e);

@@ -1,5 +1,5 @@
 /* FILTERNET — کش برای نت ضعیف / فیلتر. آپدیت: fn-shell-2 */
-var VER = 'fn-shell-2';
+var VER = 'fn-shell-3';
 
 function netTimeout(req, ms) {
   if (typeof AbortController === 'undefined') return fetch(req);
@@ -68,14 +68,17 @@ self.addEventListener('fetch', function (event) {
   if (p.indexOf('/api/vip/order') === 0 || p.indexOf('/api/vip/receipt') === 0 || p.indexOf('/api/vip/replace') === 0)
     return;
 
+  if (p === '/api/gate') return;
   if (p === '/api/servers' || p === '/api/vip/settings' || p === '/api/site') {
     event.respondWith(
       netTimeout(req, 4000)
         .then(function (res) {
-          var copy = res.clone();
-          caches.open(VER).then(function (c) {
-            c.put(req, copy);
-          });
+          if (res && res.ok) {
+            var copy = res.clone();
+            caches.open(VER).then(function (c) {
+              c.put(req, copy);
+            });
+          }
           return res;
         })
         .catch(function () {

@@ -198,6 +198,16 @@
     </div>
 
     <div id="tab-servers">
+    <div class="card" id="gateCard">
+      <h3>کد ورود به سایت</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px">بدون ثبت‌نام. اگر خالی باشد دروازه خاموش است. با عوض کردن کد، همه باید دوباره بزنند.</p>
+      <div class="form-row">
+        <div class="field"><label>کد</label><input id="gateCode" dir="ltr" placeholder="مثلاً T-4821" autocomplete="off"></div>
+        <div class="field" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn btn-primary" id="gateSaveBtn" style="width:100%">ذخیره کد ورود</button>
+        </div>
+      </div>
+    </div>
     <div class="card" id="formCard">
       <h3 id="formTitle">➕ افزودن سرور جدید</h3>
       <div class="form-row">
@@ -551,6 +561,10 @@
 
   // ---- لیست سرورها ----
   function loadServers(){
+    api('/api/admin/gate').then(function(g){
+      var el=document.getElementById('gateCode');
+      if(el && g && g.ok) el.value=g.code||'';
+    });
     api('/api/admin/servers').then(function(d){
       if(d.ok){ servers=d.servers||[]; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows(); }
       else if(d.error==='unauthorized'){ showLogin(); }
@@ -686,6 +700,12 @@
     api('/api/admin/servers', {method:'POST', body:JSON.stringify({ categoryTags: next })}).then(function(d){
       if(d.ok){ categoryTags = next; toast('برچسب دسته ذخیره شد'); }
       else toast(d.error||'خطا');
+    });
+  });
+  document.getElementById('gateSaveBtn').addEventListener('click', function(){
+    var code=document.getElementById('gateCode').value;
+    api('/api/admin/gate', { method:'POST', body: JSON.stringify({ code: code }) }).then(function(d){
+      toast(d.ok ? (code.trim() ? 'کد ورود ذخیره شد — نسخه '+ (d.ver||'') : 'دروازه خاموش شد') : (d.error||'خطا'));
     });
   });
   document.getElementById('saveBtn').addEventListener('click', function(){

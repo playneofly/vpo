@@ -15,7 +15,7 @@ export async function onRequestGet({ env }) {
     }
     return Response.json(
       { ok: true, enabled, cardNumber, cardName, plans },
-      { headers: { 'Cache-Control': 'public, max-age=20, stale-while-revalidate=120' } }
+      { headers: { 'Cache-Control': 'private, no-store' } }
     );
   } catch (e) {
     return dbError(e);

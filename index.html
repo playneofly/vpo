@@ -6,6 +6,9 @@
 <script>
 try{
   var _h=document.documentElement;
+  _h.classList.add('gate-on');
+  window.__fnTitle=document.title;
+  document.title='✦';
   if(localStorage.getItem('fn_vip_on')==='0') _h.classList.add('vip-off');
   var _m=localStorage.getItem('fn_vip_mine');
   if((_m&&_m.length>4)||localStorage.getItem('fn_vip_code')) _h.classList.add('mine-on');
@@ -15,12 +18,10 @@ try{
 window.__fnJ=function(u){
   var c=typeof AbortController!=='undefined'?new AbortController():null;
   var t=setTimeout(function(){ try{ c&&c.abort(); }catch(e){} }, 4500);
-  return fetch(u, c?{signal:c.signal}:undefined).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
+  var opt={credentials:'same-origin'};
+  if(c) opt.signal=c.signal;
+  return fetch(u, opt).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
 };
-if(!window.__fnHasCache){
-  window.__fnSrv=window.__fnJ('/api/servers');
-  window.__fnVip=window.__fnJ('/api/vip/settings');
-}
 </script>
 <title>FILTERNET | کانفیگ‌های اختصاصی</title>
 <link rel="icon" href="data:image/png;base64,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">
@@ -409,9 +410,164 @@ if(!window.__fnHasCache){
   .st-light.ok{background:#22c55e; box-shadow:0 0 12px rgba(34,197,94,.6)}
   .st-code{margin-top:22px; font-size:13px; color:var(--muted)}
   .st-code b{display:block; color:var(--text); font-size:18px; letter-spacing:1px; direction:ltr; margin-top:4px}
+
+  html.gate-on, html.gate-on body{overflow:hidden !important; background:#05071b}
+  #gatePage{
+    display:none; position:fixed; inset:0; z-index:2147483000;
+    background:#05071b; align-items:center; justify-content:center;
+    overflow:hidden; direction:ltr; font-family:inherit;
+  }
+  html.gate-on #gatePage{display:flex}
+  #gatePage .galaxy {
+    height:800px; width:800px;
+    background-image: radial-gradient(#ffffff 1px, transparent 1px), radial-gradient(#ffffff 1px, transparent 1px);
+    background-size:50px 50px; background-position:0 0, 25px 25px;
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    z-index:-1; animation:gateTwinkle 5s infinite; pointer-events:none;
+  }
+  @keyframes gateTwinkle{0%,100%{opacity:.5} 50%{opacity:1}}
+  #gatePage .stardust, #gatePage .cosmic-ring, #gatePage .starfield, #gatePage .nebula{
+    max-height:70px; max-width:314px; height:100%; width:100%;
+    position:absolute; overflow:hidden; z-index:-1; border-radius:12px; filter:blur(3px);
+  }
+  #gatePage .input{
+    background-color:#05071b; border:none; width:301px; height:56px; border-radius:10px;
+    color:#a9c7ff; padding-inline:59px; font-size:16px; font-family:inherit;
+  }
+  #gateSearch{display:flex; align-items:center; justify-content:center; position:relative}
+  #gatePage .input::placeholder{color:#6e8cff}
+  #gatePage .input:focus{outline:none}
+  #gateMain:focus-within > #gateInputMask{display:none}
+  #gateInputMask{
+    pointer-events:none; width:100px; height:20px; position:absolute;
+    background:linear-gradient(90deg, transparent, #05071b); top:18px; left:70px;
+  }
+  #gateCosmicGlow{
+    pointer-events:none; width:30px; height:20px; position:absolute; background:#4d6dff;
+    top:10px; left:5px; filter:blur(20px); opacity:.8; transition:all 2s;
+  }
+  #gateMain:hover > #gateCosmicGlow{opacity:0}
+  #gatePage .stardust{max-height:63px; max-width:307px; border-radius:10px; filter:blur(2px)}
+  #gatePage .stardust::before{
+    content:""; z-index:-2; top:50%; left:50%; transform:translate(-50%,-50%) rotate(83deg);
+    position:absolute; width:600px; height:600px; background-repeat:no-repeat; filter:brightness(1.4);
+    background-image:conic-gradient(rgba(0,0,0,0) 0%, #4d6dff, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 50%, #6e8cff, rgba(0,0,0,0) 58%);
+    transition:all 2s;
+  }
+  #gatePage .cosmic-ring{max-height:59px; max-width:303px; border-radius:11px; filter:blur(.5px)}
+  #gatePage .cosmic-ring::before{
+    content:""; z-index:-2; top:50%; left:50%; transform:translate(-50%,-50%) rotate(70deg);
+    position:absolute; width:600px; height:600px; filter:brightness(1.3); background-repeat:no-repeat;
+    background-image:conic-gradient(#05071b, #4d6dff 5%, #05071b 14%, #05071b 50%, #6e8cff 60%, #05071b 64%);
+    transition:all 2s;
+  }
+  #gatePage .starfield{max-height:65px; max-width:312px}
+  #gatePage .starfield::before{
+    content:""; z-index:-2; top:50%; left:50%; transform:translate(-50%,-50%) rotate(82deg);
+    position:absolute; width:600px; height:600px; background-repeat:no-repeat;
+    background-image:conic-gradient(rgba(0,0,0,0), #1c2452, rgba(0,0,0,0) 10%, rgba(0,0,0,0) 50%, #2a3875, rgba(0,0,0,0) 60%);
+    transition:all 2s;
+  }
+  #gateSearch:hover > .starfield::before{transform:translate(-50%,-50%) rotate(-98deg)}
+  #gateSearch:hover > .nebula::before{transform:translate(-50%,-50%) rotate(-120deg)}
+  #gateSearch:hover > .stardust::before{transform:translate(-50%,-50%) rotate(-97deg)}
+  #gateSearch:hover > .cosmic-ring::before{transform:translate(-50%,-50%) rotate(-110deg)}
+  #gateSearch:focus-within > .starfield::before{transform:translate(-50%,-50%) rotate(442deg); transition:all 4s}
+  #gateSearch:focus-within > .nebula::before{transform:translate(-50%,-50%) rotate(420deg); transition:all 4s}
+  #gateSearch:focus-within > .stardust::before{transform:translate(-50%,-50%) rotate(443deg); transition:all 4s}
+  #gateSearch:focus-within > .cosmic-ring::before{transform:translate(-50%,-50%) rotate(430deg); transition:all 4s}
+  #gatePage .nebula{overflow:hidden; filter:blur(30px); opacity:.4; max-height:130px; max-width:354px}
+  #gatePage .nebula:before{
+    content:""; z-index:-2; top:50%; left:50%; transform:translate(-50%,-50%) rotate(60deg);
+    position:absolute; width:999px; height:999px; background-repeat:no-repeat;
+    background-image:conic-gradient(#000, #4d6dff 5%, #000 38%, #000 50%, #6e8cff 60%, #000 87%);
+    transition:all 2s;
+  }
+  #gateWormholeIcon{
+    position:absolute; top:8px; right:8px; display:flex; align-items:center; justify-content:center;
+    z-index:2; max-height:40px; max-width:38px; height:100%; width:100%; isolation:isolate;
+    overflow:hidden; border-radius:10px; background:linear-gradient(180deg, #1c2452, #05071b, #2a3875);
+    border:1px solid transparent; cursor:pointer;
+  }
+  #gatePage .wormhole-border{height:42px; width:40px; position:absolute; overflow:hidden; top:7px; right:7px; border-radius:10px}
+  #gatePage .wormhole-border::before{
+    content:""; top:50%; left:50%; transform:translate(-50%,-50%) rotate(90deg); position:absolute;
+    width:600px; height:600px; background-repeat:no-repeat; filter:brightness(1.35);
+    background-image:conic-gradient(rgba(0,0,0,0), #4d6dff, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 50%, #6e8cff, rgba(0,0,0,0) 100%);
+    animation:gateRotate 4s linear infinite;
+  }
+  #gateMain{position:relative}
+  #gateSearchIcon{position:absolute; left:20px; top:15px; pointer-events:none}
+  @keyframes gateRotate{100%{transform:translate(-50%,-50%) rotate(450deg)}}
+  #gateErr{color:#6e8cff; font-size:13px; text-align:center; margin-top:14px; min-height:18px; direction:rtl}
+  #gateAlert{
+    display:none; width:330px; min-height:80px; height:auto; border-radius:8px; box-sizing:border-box;
+    padding:10px 15px; background:#fff; box-shadow:rgba(149,157,165,.2) 0 8px 24px;
+    position:fixed; overflow:hidden; align-items:center; justify-content:space-around; gap:15px;
+    top:18px; left:18px; right:auto; z-index:2147483001; direction:rtl;
+    animation:gateSlide .45s ease;
+  }
+  html.gate-changed #gateAlert{display:flex}
+  @keyframes gateSlide{from{transform:translateX(-120%); opacity:0} to{transform:translateX(0); opacity:1}}
+  #gateAlert .wave{position:absolute; transform:rotate(90deg); left:-31px; top:32px; width:80px; fill:#e11d2e3a}
+  #gateAlert .icon-container{
+    width:35px; height:35px; display:flex; justify-content:center; align-items:center;
+    background:#e11d2e48; border-radius:50%; margin-left:8px; flex:0 0 auto;
+  }
+  #gateAlert .icon{width:17px; height:17px; color:#c81e1e}
+  #gateAlert .message-text-container{display:flex; flex-direction:column; justify-content:center; align-items:flex-start; flex-grow:1}
+  #gateAlert .message-text, #gateAlert .sub-text{margin:0; cursor:default}
+  #gateAlert .message-text{color:#c81e1e; font-size:17px; font-weight:700}
+  #gateAlert .sub-text{font-size:13px; color:#555; line-height:1.5}
+  #gateAlert .cross-icon{width:18px; height:18px; color:#555; cursor:pointer; flex:0 0 auto}
+
 </style>
 </head>
 <body>
+
+<div id="gatePage" aria-hidden="true">
+  <div class="galaxy"></div>
+  <div id="gateAlert">
+    <svg class="wave" viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path d="M0,256L11.4,240C22.9,224,46,192,69,192C91.4,192,114,224,137,234.7C160,245,183,235,206,213.3C228.6,192,251,160,274,149.3C297.1,139,320,149,343,181.3C365.7,213,389,267,411,282.7C434.3,299,457,277,480,250.7C502.9,224,526,192,549,181.3C571.4,171,594,181,617,208C640,235,663,277,686,256C708.6,235,731,149,754,122.7C777.1,96,800,128,823,165.3C845.7,203,869,245,891,224C914.3,203,937,117,960,112C982.9,107,1006,181,1029,197.3C1051.4,213,1074,171,1097,144C1120,117,1143,107,1166,133.3C1188.6,160,1211,224,1234,218.7C1257.1,213,1280,139,1303,133.3C1325.7,128,1349,192,1371,192C1394.3,192,1417,128,1429,96L1440,64L1440,320L1428.6,320C1417.1,320,1394,320,1371,320C1348.6,320,1326,320,1303,320C1280,320,1257,320,1234,320C1211.4,320,1189,320,1166,320C1142.9,320,1120,320,1097,320C1074.3,320,1051,320,1029,320C1005.7,320,983,320,960,320C937.1,320,914,320,891,320C868.6,320,846,320,823,320C800,320,777,320,754,320C731.4,320,709,320,686,320C662.9,320,640,320,617,320C594.3,320,571,320,549,320C525.7,320,503,320,480,320C457.1,320,434,320,411,320C388.6,320,366,320,343,320C320,320,297,320,274,320C251.4,320,229,320,206,320C182.9,320,160,320,137,320C114.3,320,91,320,69,320C45.7,320,23,320,11,320L0,320Z" fill-opacity="1"></path></svg>
+    <div class="icon-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" fill="currentColor"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"/></svg>
+    </div>
+    <div class="message-text-container">
+      <p class="message-text">توجه کنید</p>
+      <p class="sub-text">کد ورود تغییر کرد . از کانال میتونید کد جدید را دریافت کنید.</p>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" class="cross-icon" id="gateAlertX" fill="currentColor"><path fill="currentColor" d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+  </div>
+  <div>
+    <div id="gateSearch">
+      <div class="nebula"></div>
+      <div class="starfield"></div>
+      <div class="stardust"></div>
+      <div class="cosmic-ring"></div>
+      <div id="gateMain">
+        <input class="input" id="gateInput" name="text" type="text" maxlength="64" autocomplete="off" spellcheck="false" placeholder="کد ورود را وارد کنید...">
+        <div id="gateInputMask"></div>
+        <div id="gateCosmicGlow"></div>
+        <div class="wormhole-border"></div>
+        <div id="gateWormholeIcon" role="button" tabindex="0" aria-label="ok">
+          <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#a9c7ff" fill="none" height="24" width="24" viewBox="0 0 24 24">
+            <circle r="10" cy="12" cx="12"></circle>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            <path d="M2 12h20"></path>
+          </svg>
+        </div>
+        <div id="gateSearchIcon">
+          <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="url(#cosmic-search)" fill="none" height="24" width="24" viewBox="0 0 24 24">
+            <circle r="8" cy="11" cx="11"></circle>
+            <line y2="16.65" x2="16.65" y1="21" x1="21"></line>
+            <defs><linearGradient gradientTransform="rotate(45)" id="cosmic-search"><stop stop-color="#a9c7ff" offset="0%"></stop><stop stop-color="#6e8cff" offset="100%"></stop></linearGradient></defs>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div id="gateErr"></div>
+  </div>
+</div>
 
 <header>
   <div class="wrap head">
@@ -624,7 +780,9 @@ if(!window.__fnHasCache){
     if (window.__fnJ) return window.__fnJ(url);
     var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var t = setTimeout(function(){ try { c && c.abort(); } catch (e) {} }, 4500);
-    return fetch(url, c ? { signal: c.signal } : undefined).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
+    var opt = { credentials: 'same-origin' };
+    if (c) opt.signal = c.signal;
+    return fetch(url, opt).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
   }
   var _firstServers = window.__fnSrv || null;
   var _firstVip = window.__fnVip || null;
@@ -880,6 +1038,7 @@ if(!window.__fnHasCache){
     if (!_usedServers && _firstServers) { _usedServers = true; p = _firstServers; }
     else p = fetchJson('/api/servers');
     p.then(function (d) {
+      if (d && d.gate) { kickGate(true); return; }
       if (applyServerData(d)) return;
       if (!servers.length) {
         grid.innerHTML = '<div class="empty"><div class="big">🔌</div>اتصال به سرور برقرار نشد.<br>اگر این صفحه را به‌صورت فایل باز کرده‌اید، از طریق آدرس سایت وارد شوید.</div>';
@@ -1605,25 +1764,93 @@ if(!window.__fnHasCache){
       Notification.requestPermission();
     }, { once: true });
   }
-  updateMineBtn();
-  paintCache();
-  load();
-  loadVipSettings();
-  setTimeout(function(){ refreshVipOrder(); loadMine(); }, 200);
-  setTimeout(function(){ loadSite(); }, 1200);
-  setTimeout(function(){ pingBadge(); }, 1800);
-  setInterval(pollSup, 8000);
-  setInterval(function(){ loadVipSettings(); refreshVipOrder(); loadMine(); }, 20000);
+  var _appStarted = false;
+  function lsGateVer(){
+    try { return parseInt(localStorage.getItem('fn_gate_ver')||'0', 10) || 0; } catch(e){ return 0; }
+  }
+  function showGate(changed){
+    document.documentElement.classList.add('gate-on');
+    document.documentElement.classList.toggle('gate-changed', !!changed);
+    document.title = '✦';
+    var inp = document.getElementById('gateInput');
+    if (inp) setTimeout(function(){ inp.focus(); }, 80);
+  }
+  function kickGate(changed){
+    _appStarted = false;
+    showGate(changed || lsGateVer() > 0);
+  }
+  function gateUnlock(ver){
+    try {
+      if (ver) localStorage.setItem('fn_gate_ver', String(ver));
+      else localStorage.removeItem('fn_gate_ver');
+    } catch(e){}
+    document.documentElement.classList.remove('gate-on', 'gate-changed');
+    if (window.__fnTitle) document.title = window.__fnTitle;
+    startPublic();
+  }
+  function startPublic(){
+    if (_appStarted) return;
+    _appStarted = true;
+    _usedServers = false;
+    _usedVip = false;
+    window.__fnSrv = window.__fnJ('/api/servers');
+    window.__fnVip = window.__fnJ('/api/vip/settings');
+    _firstServers = window.__fnSrv;
+    _firstVip = window.__fnVip;
+    updateMineBtn();
+    paintCache();
+    load();
+    loadVipSettings();
+    setTimeout(function(){ refreshVipOrder(); loadMine(); }, 200);
+    setTimeout(function(){ loadSite(); }, 1200);
+    setTimeout(function(){ pingBadge(); }, 1800);
+    if (!_timersOn) {
+      _timersOn = true;
+      setInterval(pollSup, 8000);
+      setInterval(function(){ if (_appStarted) { loadVipSettings(); refreshVipOrder(); loadMine(); } }, 20000);
+      setInterval(function () {
+        if (!modal.classList.contains('open') && _appStarted) load();
+      }, 30000);
+      setInterval(function(){
+        fetch('/api/gate', { credentials:'same-origin' }).then(function(r){ return r.json(); }).then(function(d){
+          if (!d || !d.ok) return;
+          if (d.open || d.unlocked) return;
+          kickGate(lsGateVer() > 0);
+        }).catch(function(){});
+      }, 25000);
+    }
+  }
+  function submitGate(){
+    var inp = document.getElementById('gateInput');
+    var err = document.getElementById('gateErr');
+    var code = (inp && inp.value || '').trim();
+    if (!code) { if (err) err.textContent = 'کد را وارد کنید'; return; }
+    if (err) err.textContent = '';
+    fetch('/api/gate', {
+      method:'POST', credentials:'same-origin',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ code: code })
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok) { gateUnlock(d.ver || 0); return; }
+      if (err) err.textContent = (d && d.error) || 'کد نادرست است';
+    }).catch(function(){ if (err) err.textContent = 'اتصال برقرار نشد'; });
+  }
+  var gi = document.getElementById('gateInput');
+  if (gi) gi.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); submitGate(); } });
+  var gw = document.getElementById('gateWormholeIcon');
+  if (gw) gw.addEventListener('click', submitGate);
+  var gx = document.getElementById('gateAlertX');
+  if (gx) gx.addEventListener('click', function(){ document.documentElement.classList.remove('gate-changed'); });
+  fetch('/api/gate', { credentials:'same-origin' }).then(function(r){ return r.json(); }).then(function(d){
+    if (!d || !d.ok) { showGate(lsGateVer() > 0); return; }
+    if (d.open || d.unlocked) { gateUnlock(d.open ? 0 : d.ver); return; }
+    showGate(lsGateVer() > 0 && lsGateVer() !== d.ver);
+  }).catch(function(){ showGate(false); });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){
       navigator.serviceWorker.register('/sw.js').catch(function(){});
     });
   }
-
-  // به‌روزرسانی خودکار هر ۳۰ ثانیه — سرورهای جدید بدون رفرش دستی نمایش داده می‌شن
-  setInterval(function () {
-    if (!modal.classList.contains('open')) load();
-  }, 30000);
 })();
 </script>
 </body>
