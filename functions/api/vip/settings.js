@@ -13,7 +13,10 @@ export async function onRequestGet({ env }) {
     for (const id of ['bronze', 'silver', 'gold']) {
       plans[id] = Object.assign({}, PLANS[id], planCopy[id]);
     }
-    return Response.json({ ok: true, enabled, cardNumber, cardName, plans });
+    return Response.json(
+      { ok: true, enabled, cardNumber, cardName, plans },
+      { headers: { 'Cache-Control': 'public, max-age=20, stale-while-revalidate=120' } }
+    );
   } catch (e) {
     return dbError(e);
   }

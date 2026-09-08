@@ -19,7 +19,7 @@ export async function onRequestGet({ env, params }) {
     return new Response(b64ToBytes(m[2].replace(/\s/g, '')), {
       headers: {
         'Content-Type': m[1],
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'public, max-age=86400',
       },
     });
   } catch (e) {
