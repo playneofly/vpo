@@ -30,11 +30,6 @@ export function mergePlanConfigs(raw) {
   return out;
 }
 
-export async function getPlanConfigs(db) {
-  const raw = await getSetting(db, 'plan_configs', '');
-  return mergePlanConfigs(raw);
-}
-
 export function planConfigCount(counts, plan) {
   const id = plan && DEFAULT_PLAN_CONFIGS[plan] != null ? plan : 'bronze';
   if (counts && counts[id] != null) return counts[id];
@@ -245,6 +240,34 @@ export async function setSetting(db, k, v) {
 export async function getPlanCopy(db) {
   const raw = await getSetting(db, 'plan_copy', '');
   return mergePlanCopy(raw);
+}
+
+export async function getPlanConfigs(db) {
+  const raw = await getSetting(db, 'plan_configs', '');
+  return mergePlanConfigs(raw);
+}
+
+export function mergePlanCopyKeep(current, incoming) {
+  const cur = mergePlanCopy(current || {});
+  const src = incoming && typeof incoming === 'object' ? incoming : {};
+  const out = {};
+  for (const id of ['bronze', 'silver', 'gold']) {
+    const p = src[id] || {};
+    const c = cur[id];
+    const title = String(p.title != null ? p.title : '').trim() || c.title;
+    const subIn = p.subtitle != null ? String(p.subtitle) : null;
+    const subtitle = subIn != null && subIn.trim() !== '' ? subIn : c.subtitle;
+    let bullets = [];
+    if (Array.isArray(p.bullets)) bullets = p.bullets.map((x) => String(x).trim()).filter(Boolean);
+    else if (typeof p.bullets === 'string')
+      bullets = String(p.bullets)
+        .split(/\r?\n/)
+        .map((x) => x.trim())
+        .filter(Boolean);
+    if (!bullets.length) bullets = (c.bullets || []).slice();
+    out[id] = { title, subtitle, bullets };
+  }
+  return out;
 }
 
 export function parseAssigned(raw) {

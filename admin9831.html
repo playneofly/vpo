@@ -830,6 +830,7 @@
   document.getElementById('vipOvClose').addEventListener('click', function(){ document.getElementById('vipOv').classList.remove('open'); });
 
   var vipPlanN = { bronze:10, silver:20, gold:30 };
+  var vipCopyLoaded = false;
   function loadVipAll(){
     api('/api/admin/vip/settings').then(function(d){
       if(!d.ok) return;
@@ -856,6 +857,7 @@
           var su=document.getElementById('pc-'+id+'-sub'); if(su) su.value=p.subtitle||'';
           var bu=document.getElementById('pc-'+id+'-bullets'); if(bu) bu.value=(p.bullets||[]).join('\n');
         });
+        vipCopyLoaded = true;
       }
     });
     api('/api/admin/vip/orders').then(function(d){
@@ -1009,6 +1011,7 @@
     });
   });
   document.getElementById('vipSavePlans').addEventListener('click', function(){
+    if(!vipCopyLoaded){ toast('متن پلن‌ها هنوز از سرور نیامده؛ ذخیره نکن تا پاک نشود'); return; }
     var planCopy={};
     ['bronze','silver','gold'].forEach(function(id){
       planCopy[id]={
