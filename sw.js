@@ -1,5 +1,5 @@
-/* FILTERNET — کش برای نت ضعیف / فیلتر. آپدیت: fn-shell-2 */
-var VER = 'fn-shell-3';
+/* FILTERNET — کش برای نت ضعیف / فیلتر. آپدیت: fn-shell-4 */
+var VER = 'fn-shell-4';
 
 function netTimeout(req, ms) {
   if (typeof AbortController === 'undefined') return fetch(req);

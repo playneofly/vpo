@@ -6,19 +6,28 @@
 <script>
 try{
   var _h=document.documentElement;
-  _h.classList.add('gate-on');
   window.__fnTitle=document.title;
-  document.title='✦';
+  var _gt='';
+  try{ _gt=localStorage.getItem('fn_gate_tok')||''; }catch(e){}
+  if(!_gt){ _h.classList.add('gate-on'); document.title='✦'; }
   if(localStorage.getItem('fn_vip_on')==='0') _h.classList.add('vip-off');
   var _m=localStorage.getItem('fn_vip_mine');
   if((_m&&_m.length>4)||localStorage.getItem('fn_vip_code')) _h.classList.add('mine-on');
   var _c=localStorage.getItem('fn_servers_v1');
   window.__fnHasCache=!(!_c||_c.length<20);
 }catch(e){ window.__fnHasCache=false; }
+window.__fnGateTok=function(){ try{ return localStorage.getItem('fn_gate_tok')||''; }catch(e){ return ''; } };
+window.__fnGateHdr=function(){ var x=window.__fnGateTok(); return x?{'X-Fn-Gate':x}:{}; };
+window.__fnFetch=function(u, opt){
+  opt=opt||{};
+  opt.credentials='include';
+  opt.headers=Object.assign({}, window.__fnGateHdr(), opt.headers||{});
+  return fetch(u, opt);
+};
 window.__fnJ=function(u){
   var c=typeof AbortController!=='undefined'?new AbortController():null;
   var t=setTimeout(function(){ try{ c&&c.abort(); }catch(e){} }, 4500);
-  var opt={credentials:'same-origin'};
+  var opt={credentials:'include', headers:window.__fnGateHdr()};
   if(c) opt.signal=c.signal;
   return fetch(u, opt).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
 };
@@ -782,9 +791,9 @@ window.__fnJ=function(u){
     if (window.__fnJ) return window.__fnJ(url);
     var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var t = setTimeout(function(){ try { c && c.abort(); } catch (e) {} }, 4500);
-    var opt = { credentials: 'same-origin' };
+    var opt = { credentials: 'include', headers: window.__fnGateHdr ? window.__fnGateHdr() : {} };
     if (c) opt.signal = c.signal;
-    return fetch(url, opt).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
+    return __fnFetch(url, opt).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
   }
   var _firstServers = window.__fnSrv || null;
   var _firstVip = window.__fnVip || null;
@@ -1249,7 +1258,7 @@ window.__fnJ=function(u){
     if(cur && codes.indexOf(cur)<0) codes.push(cur);
     if(!codes.length){ mineServers=[]; updateMineBtn(); if(cb) cb(); return; }
     Promise.all(codes.map(function(c){
-      return fetch('/api/vip/order?code='+encodeURIComponent(c)).then(function(r){ return r.text().then(function(tx){ try { return JSON.parse(tx); } catch(e){ return null; } }); }).catch(function(){ return null; });
+      return __fnFetch('/api/vip/order?code='+encodeURIComponent(c)).then(function(r){ return r.text().then(function(tx){ try { return JSON.parse(tx); } catch(e){ return null; } }); }).catch(function(){ return null; });
     })).then(function(arr){
       var seen={};
       mineServers=[];
@@ -1300,7 +1309,7 @@ window.__fnJ=function(u){
   function refreshVipOrder(cb){
     var code = localStorage.getItem(VIP_LS);
     if(!code){ vipState.order=null; setChip(null); loadMine(); if(cb) cb(null); return; }
-    fetch('/api/vip/order?code='+encodeURIComponent(code)).then(function(r){ return r.json(); }).then(function(d){
+    __fnFetch('/api/vip/order?code='+encodeURIComponent(code)).then(function(r){ return r.json(); }).then(function(d){
       if(!d || !d.ok){ if(cb) cb(null); return; }
       var prevSt = vipState.order && vipState.order.status;
       vipState.order = d;
@@ -1452,7 +1461,7 @@ window.__fnJ=function(u){
     vipState.buying = true;
     document.querySelectorAll('#vipPlans [data-plan]').forEach(function(x){ x.disabled = true; });
     b.textContent = '…';
-    fetch('/api/vip/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan: plan }) })
+    __fnFetch('/api/vip/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan: plan }) })
       .then(function(r){ return r.json(); })
       .then(function(d){
         vipState.buying = false;
@@ -1494,7 +1503,7 @@ window.__fnJ=function(u){
       var code = rp.getAttribute('data-replace-code');
       var slot = rp.getAttribute('data-replace-slot');
       rp.disabled = true;
-      fetch('/api/vip/replace', {
+      __fnFetch('/api/vip/replace', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ code: code, slot: slot })
@@ -1533,7 +1542,7 @@ window.__fnJ=function(u){
         if (warn) warn.classList.add('show');
         toast('عکس خیلی تاریکه؛ ممکن است خوانده نشود');
       } else if (warn) warn.classList.remove('show');
-      return fetch('/api/vip/receipt', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code: code, image: data }) });
+      return __fnFetch('/api/vip/receipt', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code: code, image: data }) });
     }).then(function(r){ return r.json(); }).then(function(d){
       vipState.sendingReceipt = false;
       if(!d.ok){ btn.disabled=false; btn.textContent=oldSend; toast(d.error||'خطا'); return; }
@@ -1565,7 +1574,7 @@ window.__fnJ=function(u){
   function supJson(url, opt){
     opt = opt || {};
     opt.headers = Object.assign({ 'Content-Type': 'application/json' }, opt.headers || {});
-    return fetch(url, opt).then(function(r){
+    return __fnFetch(url, opt).then(function(r){
       return r.text().then(function(t){
         try { return JSON.parse(t); }
         catch (e) { return { ok: false, error: 'خطای سرور (' + r.status + ')' }; }
@@ -1770,6 +1779,22 @@ window.__fnJ=function(u){
   function lsGateVer(){
     try { return parseInt(localStorage.getItem('fn_gate_ver')||'0', 10) || 0; } catch(e){ return 0; }
   }
+  function lsGateTok(){
+    try { return localStorage.getItem('fn_gate_tok')||''; } catch(e){ return ''; }
+  }
+  function persistGate(ver, token){
+    try {
+      if (ver && token) {
+        localStorage.setItem('fn_gate_ver', String(ver));
+        localStorage.setItem('fn_gate_tok', token);
+        document.cookie = 'fn_gate=' + encodeURIComponent(token) + '; Path=/; Max-Age=31536000; SameSite=Lax';
+      } else {
+        localStorage.removeItem('fn_gate_ver');
+        localStorage.removeItem('fn_gate_tok');
+        document.cookie = 'fn_gate=; Path=/; Max-Age=0; SameSite=Lax';
+      }
+    } catch(e){}
+  }
   function showGate(changed){
     document.documentElement.classList.add('gate-on');
     document.documentElement.classList.toggle('gate-changed', !!changed);
@@ -1781,11 +1806,13 @@ window.__fnJ=function(u){
     _appStarted = false;
     showGate(changed || lsGateVer() > 0);
   }
-  function gateUnlock(ver){
-    try {
-      if (ver) localStorage.setItem('fn_gate_ver', String(ver));
-      else localStorage.removeItem('fn_gate_ver');
-    } catch(e){}
+  function gateUnlock(ver, token){
+    if (ver && token) persistGate(ver, token);
+    else if (!ver) persistGate(0, '');
+    else if (ver && lsGateTok()) persistGate(ver, lsGateTok());
+    else {
+      try { localStorage.setItem('fn_gate_ver', String(ver)); } catch(e){}
+    }
     document.documentElement.classList.remove('gate-on', 'gate-changed');
     if (window.__fnTitle) document.title = window.__fnTitle;
     startPublic();
@@ -1814,10 +1841,13 @@ window.__fnJ=function(u){
         if (!modal.classList.contains('open') && _appStarted) load();
       }, 30000);
       setInterval(function(){
-        fetch('/api/gate', { credentials:'same-origin' }).then(function(r){ return r.json(); }).then(function(d){
+        __fnFetch('/api/gate').then(function(r){ return r.json(); }).then(function(d){
           if (!d || !d.ok) return;
-          if (d.open || d.unlocked) return;
-          kickGate(lsGateVer() > 0);
+          if (d.open || d.unlocked) {
+            if (d.token && d.ver) persistGate(d.ver, d.token);
+            return;
+          }
+          kickGate(lsGateVer() > 0 && lsGateVer() !== d.ver);
         }).catch(function(){});
       }, 25000);
     }
@@ -1828,12 +1858,12 @@ window.__fnJ=function(u){
     var code = (inp && inp.value || '').trim();
     if (!code) { if (err) err.textContent = 'کد را وارد کنید'; return; }
     if (err) err.textContent = '';
-    fetch('/api/gate', {
-      method:'POST', credentials:'same-origin',
+    __fnFetch('/api/gate', {
+      method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ code: code })
     }).then(function(r){ return r.json(); }).then(function(d){
-      if (d && d.ok) { gateUnlock(d.ver || 0); return; }
+      if (d && d.ok) { gateUnlock(d.ver || 0, d.token || ''); return; }
       if (err) err.textContent = (d && d.error) || 'کد نادرست است';
     }).catch(function(){ if (err) err.textContent = 'اتصال برقرار نشد'; });
   }
@@ -1843,11 +1873,23 @@ window.__fnJ=function(u){
   if (gw) gw.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); submitGate(); });
   var gx = document.getElementById('gateAlertX');
   if (gx) gx.addEventListener('click', function(){ document.documentElement.classList.remove('gate-changed'); });
-  fetch('/api/gate', { credentials:'same-origin' }).then(function(r){ return r.json(); }).then(function(d){
-    if (!d || !d.ok) { showGate(lsGateVer() > 0); return; }
-    if (d.open || d.unlocked) { gateUnlock(d.open ? 0 : d.ver); return; }
-    showGate(lsGateVer() > 0 && lsGateVer() !== d.ver);
-  }).catch(function(){ showGate(false); });
+  var hadTok = !!lsGateTok();
+  if (hadTok) {
+    persistGate(lsGateVer(), lsGateTok());
+    document.documentElement.classList.remove('gate-on', 'gate-changed');
+    if (window.__fnTitle) document.title = window.__fnTitle;
+    startPublic();
+  }
+  __fnFetch('/api/gate').then(function(r){ return r.json(); }).then(function(d){
+    if (!d || !d.ok) {
+      if (hadTok) return;
+      showGate(lsGateVer() > 0);
+      return;
+    }
+    if (d.open) { gateUnlock(0, ''); return; }
+    if (d.unlocked) { gateUnlock(d.ver || 0, d.token || lsGateTok()); return; }
+    kickGate(lsGateVer() > 0 && lsGateVer() !== d.ver);
+  }).catch(function(){ if (!hadTok) showGate(false); });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){
       navigator.serviceWorker.register('/sw.js').catch(function(){});
