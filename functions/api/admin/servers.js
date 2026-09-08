@@ -31,7 +31,18 @@ export async function onRequestGet({ request, env }) {
   const db = await readyDB(env);
   if (!db) return noDb();
   try {
-    const { results } = await db.prepare('SELECT * FROM servers ORDER BY featured DESC, id DESC').all();
+    let results;
+    try {
+      const q = await db.prepare('SELECT * FROM servers ORDER BY featured DESC, id DESC').all();
+      results = q.results;
+    } catch (e1) {
+      const q = await db
+        .prepare(
+          'SELECT id, name, country, protocol, link, enabled, category, featured FROM servers ORDER BY id DESC'
+        )
+        .all();
+      results = q.results;
+    }
     const servers = (results || []).map((s) => Object.assign({}, s, { tags: parseTags(s.tags) }));
     const categoryTags = parseCategoryTags(await getSetting(db, 'category_tags', ''));
     return Response.json({ ok: true, servers, categoryTags });

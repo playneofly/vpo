@@ -1,28 +1,25 @@
-// دسترسی به D1 + ساخت خودکار جدول
+// دسترسی به D1 + ساخت خودکار جدول — هرگز DROP/TRUNCATE نمی‌کند
 const CREATE_TABLE =
   "CREATE TABLE IF NOT EXISTS servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, country TEXT DEFAULT '', protocol TEXT NOT NULL DEFAULT 'vless', link TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, category TEXT DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, tags TEXT DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now')))";
 
 export function getDB(env) {
-  return (env && (env.VPO || env.vpo)) || null;
+  return (env && (env.VPO || env.vpo || env.DB || env.d1)) || null;
 }
 
 let bootPromise = null;
 
+async function runSql(db, sql) {
+  await db.prepare(sql).run();
+}
+
 async function migrate(db) {
   try {
-    await db.exec(CREATE_TABLE);
+    await runSql(db, CREATE_TABLE);
   } catch (e) {}
-  try {
-    await db.exec("ALTER TABLE servers ADD COLUMN category TEXT DEFAULT ''");
-  } catch (e) {}
-  try {
-    await db.exec('ALTER TABLE servers ADD COLUMN featured INTEGER NOT NULL DEFAULT 0');
-  } catch (e) {}
-  try {
-    await db.exec('CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers (enabled)');
-  } catch (e) {}
-
-  const vipSql = [
+  const extra = [
+    "ALTER TABLE servers ADD COLUMN category TEXT DEFAULT ''",
+    'ALTER TABLE servers ADD COLUMN featured INTEGER NOT NULL DEFAULT 0',
+    'CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers (enabled)',
     'CREATE TABLE IF NOT EXISTS vip_settings (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
     "CREATE TABLE IF NOT EXISTS vip_configs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, country TEXT DEFAULT '', protocol TEXT DEFAULT 'vless', link TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, category TEXT DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')))",
     "CREATE TABLE IF NOT EXISTS vip_orders (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, plan TEXT NOT NULL, status TEXT NOT NULL, receipt TEXT DEFAULT '', reject_reason TEXT DEFAULT '', assigned TEXT DEFAULT '', created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)",
@@ -34,13 +31,6 @@ async function migrate(db) {
     'CREATE INDEX IF NOT EXISTS idx_support_msg ON support_messages (thread_id, id)',
     "CREATE TABLE IF NOT EXISTS vip_replacements (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id INTEGER NOT NULL, code TEXT NOT NULL, plan TEXT NOT NULL, slot TEXT NOT NULL, old_name TEXT DEFAULT '', old_link TEXT NOT NULL, old_country TEXT DEFAULT '', old_protocol TEXT DEFAULT '', old_category TEXT DEFAULT '', status TEXT NOT NULL DEFAULT 'pending', new_name TEXT DEFAULT '', new_link TEXT DEFAULT '', created_at INTEGER NOT NULL, done_at INTEGER NOT NULL DEFAULT 0)",
     'CREATE INDEX IF NOT EXISTS idx_vip_rep_code ON vip_replacements (code, status)',
-  ];
-  for (const sql of vipSql) {
-    try {
-      await db.exec(sql);
-    } catch (e) {}
-  }
-  const alters = [
     "ALTER TABLE vip_configs ADD COLUMN country TEXT DEFAULT ''",
     "ALTER TABLE vip_configs ADD COLUMN protocol TEXT DEFAULT 'vless'",
     "ALTER TABLE vip_configs ADD COLUMN category TEXT DEFAULT ''",
@@ -50,9 +40,9 @@ async function migrate(db) {
     'ALTER TABLE vip_orders ADD COLUMN replace_used INTEGER DEFAULT 0',
     "ALTER TABLE servers ADD COLUMN tags TEXT DEFAULT ''",
   ];
-  for (const sql of alters) {
+  for (const sql of extra) {
     try {
-      await db.exec(sql);
+      await runSql(db, sql);
     } catch (e) {}
   }
 }
@@ -80,7 +70,7 @@ export function noDb() {
     {
       ok: false,
       error:
-        'دیتابیس وصل نیست. در پروژه Pages برو Settings → Bindings → Add → D1 database — Variable name را دقیقاً VPO بگذار و Database را vpo انتخاب کن. بعد Deployments → Retry deployment.',
+        'دیتابیس وصل نیست. Pages → Settings → Bindings → D1: Variable را دقیقاً VPO بگذار و Database را همان vpo قبلی انتخاب کن — هم Production هم Preview. دیتابیس جدید نساز.',
     },
     { status: 500 }
   );
@@ -90,7 +80,7 @@ export function dbError(e) {
   const msg = String(e && e.message ? e.message : e);
   if (/no such table/i.test(msg)) {
     return Response.json(
-      { ok: false, error: 'جدول سرورها ساخته نشده. schema.sql را در Console دیتابیس vpo اجرا کن.' },
+      { ok: false, error: 'جدول پیدا نشد. schema.sql را روی همان دیتابیس vpo اجرا کن — DROP نزن.' },
       { status: 500 }
     );
   }

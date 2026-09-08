@@ -1,4 +1,5 @@
-// GET /api/admin/check — بررسی لاگین بودن
+import { getDB, readyDB } from '../../lib/db.js';
+
 async function verify(request, env) {
   const cookie = request.headers.get('Cookie') || '';
   const m = cookie.match(/(?:^|;\s*)vpo_admin=([^;]+)/);
@@ -23,5 +24,24 @@ async function verify(request, env) {
 
 export async function onRequestGet({ request, env }) {
   const ok = await verify(request, env);
-  return Response.json({ ok });
+  if (!ok) return Response.json({ ok: false });
+  const bound = !!getDB(env);
+  let db = bound;
+  let serverCount = null;
+  if (bound) {
+    try {
+      const conn = await readyDB(env);
+      const row = await conn.prepare('SELECT COUNT(*) AS n FROM servers').first();
+      serverCount = row && row.n != null ? Number(row.n) : 0;
+    } catch (e) {
+      try {
+        const conn = getDB(env);
+        const row = await conn.prepare('SELECT COUNT(*) AS n FROM servers').first();
+        serverCount = row && row.n != null ? Number(row.n) : 0;
+      } catch (e2) {
+        db = false;
+      }
+    }
+  }
+  return Response.json({ ok: true, db, serverCount });
 }

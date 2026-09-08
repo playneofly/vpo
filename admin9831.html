@@ -560,6 +560,19 @@
   // ---- ورود / خروج ----
   function showLogin(){ document.getElementById('loginView').style.display='flex'; document.getElementById('dashView').style.display='none'; }
   function showDash(){ document.getElementById('loginView').style.display='none'; document.getElementById('dashView').style.display='block'; }
+  function dashErr(msg){
+    var b = document.getElementById('dashDbErr');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'dashDbErr';
+      b.style.cssText = 'margin:12px 20px;padding:12px 14px;border-radius:6px;border:1px solid #7f1d1d;background:#2a1212;color:#fca5a5;font-size:13.5px;font-weight:700';
+      var dash = document.getElementById('dashView');
+      if (dash && dash.firstChild) dash.insertBefore(b, dash.children[1] || dash.firstChild);
+      else if (dash) dash.prepend(b);
+    }
+    b.style.display = msg ? 'block' : 'none';
+    b.textContent = msg || '';
+  }
 
   document.getElementById('loginBtn').addEventListener('click', doLogin);
   document.getElementById('passInput').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
@@ -583,8 +596,16 @@
   }
   function loadServers(){
     api('/api/admin/servers').then(function(d){
-      if(d.ok){ servers=d.servers||[]; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows(); }
-      else if(d.error==='unauthorized'){ showLogin(); }
+      if(d.ok){
+        servers=d.servers||[]; categoryTags=d.categoryTags||{}; fillCatTags(); renderRows();
+        if (d.servers && d.servers.length) dashErr('');
+        return;
+      }
+      if(d.error==='unauthorized'){ showLogin(); return; }
+      var rows=document.getElementById('rows');
+      if(rows) rows.innerHTML='<tr><td colspan="7"><div class="empty">لیست نیامد — داده پاک نشده. '+esc(d.error||'خطای سرور')+'</div></td></tr>';
+      dashErr(d.error||'سرورها از دیتابیس نیامدند. Bindings را چک کن.');
+      toast(d.error||'سرورها نیامدند');
     });
   }
   function renderRows(){
@@ -833,7 +854,7 @@
   var vipCopyLoaded = false;
   function loadVipAll(){
     api('/api/admin/vip/settings').then(function(d){
-      if(!d.ok) return;
+      if(!d.ok){ if(d.error&&d.error!=='unauthorized') toast(d.error); return; }
       document.getElementById('vipEnabled').value = d.enabled ? '1' : '0';
       document.getElementById('vipCardNumber').value = d.cardNumber||'';
       document.getElementById('vipCardName').value = d.cardName||'';
@@ -1401,7 +1422,16 @@
   }, 5000);
 
   // ---- شروع ----
-  api('/api/admin/check').then(function(d){ if(d.ok){ showDash(); loadServers(); loadVipAll(); loadSupportAdmin(); } else showLogin(); });
+  api('/api/admin/check').then(function(d){
+    if(!d.ok){ showLogin(); return; }
+    showDash();
+    if(d.db===false){
+      dashErr('دیتابیس این دیپلوی وصل نیست. Settings → Bindings → D1: اسم متغیر VPO، دیتابیس همان vpo قبلی. هم Production هم Preview. دیتابیس جدید نساز وگرنه لیست خالی می‌بینی.');
+    } else if (d.serverCount === 0) {
+      dashErr('');
+    }
+    loadServers(); loadVipAll(); loadSupportAdmin();
+  });
 })();
 </script>
 </body>
