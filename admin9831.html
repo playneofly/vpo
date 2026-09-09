@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مدیریت سرورها | FILTERNET</title>
+<link rel="preload" href="/fonts/Vazirmatn-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/Estedad-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="data:image/png;base64,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">
 <style>
   :root{
@@ -16,9 +18,25 @@
     --accent:#3b82f6;
     --accent-hover:#2f6fe0;
     --danger:#ef4444;
+    --fn:'Vazirmatn',Tahoma,'Segoe UI',sans-serif;
+    --fn-display:'Estedad','Vazirmatn',Tahoma,sans-serif;
   }
+  @font-face{
+    font-family:'Vazirmatn';
+    src:url('/fonts/Vazirmatn-Variable.woff2') format('woff2-variations'),
+        url('/fonts/Vazirmatn-Variable.woff2') format('woff2');
+    font-weight:100 900; font-style:normal; font-display:swap;
+  }
+  @font-face{
+    font-family:'Estedad';
+    src:url('/fonts/Estedad-Variable.woff2') format('woff2-variations'),
+        url('/fonts/Estedad-Variable.woff2') format('woff2');
+    font-weight:100 900; font-style:normal; font-display:swap;
+  }
+
   *{box-sizing:border-box;margin:0;padding:0}
-  html{scrollbar-width:thin; scrollbar-color:#3d4452 #12151b}
+  html{scrollbar-width:thin; scrollbar-color:#3d4452 #12151b; font-family:var(--fn);
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
   *::-webkit-scrollbar{width:8px;height:8px}
   *::-webkit-scrollbar-track{background:#12151b}
   *::-webkit-scrollbar-thumb{background:#3d4452;border-radius:8px}
@@ -41,8 +59,13 @@
   .sup-ad-msg.ai, .sup-ad-msg.admin{align-self:flex-end; background:var(--surface2)}
   #supAdMsgs{display:flex; flex-direction:column; gap:8px}
   body{
-    font-family:'Vazirmatn',Tahoma,'Segoe UI',sans-serif;
-    background:var(--bg); color:var(--text); min-height:100vh; line-height:1.7;
+    font-family:var(--fn);
+    background:var(--bg); color:var(--text); min-height:100vh; line-height:1.75; font-size:15px;
+    text-rendering:optimizeLegibility;
+  }
+  button, input, textarea, select{font-family:inherit}
+  .brand h1, h3, .ov-box h3{
+    font-family:var(--fn-display);
   }
   .wrap{max-width:980px; margin:0 auto; padding:0 20px}
 
