@@ -13,9 +13,7 @@ try{
   if(localStorage.getItem('fn_vip_on')==='0') _h.classList.add('vip-off');
   var _m=localStorage.getItem('fn_vip_mine');
   if((_m&&_m.length>4)||localStorage.getItem('fn_vip_code')) _h.classList.add('mine-on');
-  var _c=localStorage.getItem('fn_servers_v1');
-  window.__fnHasCache=!(!_c||_c.length<20);
-}catch(e){ window.__fnHasCache=false; }
+}catch(e){}
 window.__fnGateTok=function(){ try{ return localStorage.getItem('fn_gate_tok')||''; }catch(e){ return ''; } };
 window.__fnGateHdr=function(){ var x=window.__fnGateTok(); return x?{'X-Fn-Gate':x}:{}; };
 window.__fnFetch=function(u, opt){
@@ -25,11 +23,7 @@ window.__fnFetch=function(u, opt){
   return fetch(u, opt);
 };
 window.__fnJ=function(u){
-  var c=typeof AbortController!=='undefined'?new AbortController():null;
-  var t=setTimeout(function(){ try{ c&&c.abort(); }catch(e){} }, 4500);
-  var opt={credentials:'include', headers:window.__fnGateHdr()};
-  if(c) opt.signal=c.signal;
-  return fetch(u, opt).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
+  return fetch(u, {credentials:'include', headers:window.__fnGateHdr()}).then(function(r){ return r.json(); }).catch(function(){ return null; });
 };
 </script>
 <title>FILTERNET | کانفیگ‌های اختصاصی</title>
@@ -789,11 +783,7 @@ window.__fnJ=function(u){
 (function () {
   function fetchJson(url){
     if (window.__fnJ) return window.__fnJ(url);
-    var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var t = setTimeout(function(){ try { c && c.abort(); } catch (e) {} }, 4500);
-    var opt = { credentials: 'include', headers: window.__fnGateHdr ? window.__fnGateHdr() : {} };
-    if (c) opt.signal = c.signal;
-    return __fnFetch(url, opt).then(function(r){ clearTimeout(t); return r.json(); }).catch(function(){ clearTimeout(t); return null; });
+    return __fnFetch(url).then(function(r){ return r.json(); }).catch(function(){ return null; });
   }
   var _firstServers = window.__fnSrv || null;
   var _firstVip = window.__fnVip || null;
@@ -1030,19 +1020,8 @@ window.__fnJ=function(u){
     if (!d || !d.ok) return false;
     servers = d.servers || [];
     categoryTags = d.categoryTags || {};
-    try { localStorage.setItem('fn_servers_v1', JSON.stringify({ servers: servers, categoryTags: categoryTags })); } catch (e) {}
     render();
     return true;
-  }
-  function paintCache() {
-    try {
-      var c = JSON.parse(localStorage.getItem('fn_servers_v1') || '');
-      if (c && c.servers && c.servers.length) {
-        servers = c.servers;
-        categoryTags = c.categoryTags || {};
-        render();
-      }
-    } catch (e) {}
   }
   function load() {
     var p;
@@ -1288,7 +1267,6 @@ window.__fnJ=function(u){
     });
   }
   function loadSite(){
-    if (navigator.connection && navigator.connection.saveData) return;
     fetchJson('/api/site').then(function(d){
       if(!d || !d.ok) return;
       var sec = document.getElementById('siteExtra');
@@ -1827,12 +1805,12 @@ window.__fnJ=function(u){
     _firstServers = window.__fnSrv;
     _firstVip = window.__fnVip;
     updateMineBtn();
-    paintCache();
     load();
     loadVipSettings();
-    setTimeout(function(){ refreshVipOrder(); loadMine(); }, 200);
-    setTimeout(function(){ loadSite(); }, 1200);
-    setTimeout(function(){ pingBadge(); }, 1800);
+    loadSite();
+    refreshVipOrder();
+    loadMine();
+    pingBadge();
     if (!_timersOn) {
       _timersOn = true;
       setInterval(pollSup, 8000);
@@ -1891,9 +1869,15 @@ window.__fnJ=function(u){
     kickGate(lsGateVer() > 0 && lsGateVer() !== d.ver);
   }).catch(function(){ if (!hadTok) showGate(false); });
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function(){
+    navigator.serviceWorker.getRegistrations().then(function(rs){
+      rs.forEach(function(r){ r.unregister(); });
+    }).catch(function(){});
+    if (navigator.serviceWorker.register) {
       navigator.serviceWorker.register('/sw.js').catch(function(){});
-    });
+    }
+  }
+  if (window.caches && caches.keys) {
+    caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }).catch(function(){});
   }
 })();
 </script>
