@@ -1,21 +1,28 @@
-import { getSetting } from './vip.js';
+import {
+  getSetting,
+  findOrderCode,
+  isDownAsk,
+  orderDeskReply,
+  orderFactsBlock,
+  wantsOrderInfo,
+  supportUntilOf,
+} from './vip.js';
 
 export const AI_MODELS = [
   '@cf/meta/llama-3.1-8b-instruct-fast',
   '@cf/zai-org/glm-4.7-flash',
   '@cf/meta/llama-3.1-8b-instruct',
-  '@cf/meta/llama-3.2-3b-instruct',
 ];
 
 export const AI_SYS =
-  'تو پشتیبان فارسی FILTERNET هستی. فقط فارسی بنویس. کوتاه باش: حداکثر ۴ جمله. ' +
-  'انگلیسی، شعر، لیست طولانی و حرف اضافه ننویس. مستقیم جواب بده. ' +
-  'سایت کانفیگ V2Ray می‌دهد: کپی یا QR، بعد در v2rayNG یا Hiddify از کلیپ‌بورد وارد می‌شود. ' +
-  'لینک خام روی کارت عمومی نیست. خرید اختصاصی کارت‌به‌کارت است. ' +
-  'مدت پلن فقط پشتیبانی است، کانفیگ خودکار قطع نمی‌شود. ' +
-  'اگر سفارش انجام شده از دکمه طلایی «سرور های من» بالای صفحه بردارد. ' +
-  'پینگ روی سایت نیست. کانفیگ نساز، UUID و رمز نخواه، ادعا نکن فیلتر را برمی‌داری. ' +
-  'اگر نفهمیدی یک سوال کوتاه بپرس.';
+  'تو پشتیبان حرفه‌ای FILTERNET هستی؛ مثل ادمین باتجربه، مودب، دقیق و کوتاه جواب بده. فقط فارسی. ' +
+  'حداکثر ۶ جمله. انگلیسی، شعر، ایموجی زیاد و حرف اضافه ممنوع. ' +
+  'سایت کانفیگ V2Ray می‌دهد: کپی یا QR، بعد v2rayNG یا Hiddify ← افزودن ← وارد کردن از کلیپ‌بورد. لینک خام روی کارت عمومی نیست. ' +
+  'خرید اختصاصی کارت‌به‌کارت است. مدت پلن فقط پشتیبانی است؛ کانفیگ خودکار قطع نمی‌شود. ' +
+  'سفارش انجام‌شده را از دکمه طلایی «سرور های من» بردارد. درخواست جایگزینی فقط از همان دکمه و فقط تا وقتی پشتیبانی مانده. ' +
+  'اگر بلوک «اطلاعات سفارش» آمد، عدد روز/ساعت و وضعیت را فقط از همان بردار. از خودت کد، روز، قیمت و وضعیت نساز. ' +
+  'اگر سفارش پیدا نشد همان را بگو. لینک کانفیگ، UUID، رمز و آی‌پی نده. ادعا نکن فیلتر را برمی‌داری. پینگ روی سایت نیست. ' +
+  'اگر کد سفارش نبود و سؤال دربارهٔ پشتیبانی/وضعیت سفارش بود، مؤدب کد FL- را بخواه.';
 
 export function getAI(env) {
   if (env && env.AI && typeof env.AI.run === 'function') return env.AI;
@@ -71,7 +78,7 @@ export function clip(s, n) {
 
 function looksPersian(s) {
   const fa = (String(s).match(/[\u0600-\u06FF]/g) || []).length;
-  return fa >= 6;
+  return fa >= 4;
 }
 
 export function aiText(out) {
@@ -101,18 +108,19 @@ export function aiText(out) {
   return t;
 }
 
-export async function runAI(env, history) {
+export async function runAI(env, history, extraSys) {
   const ai = getAI(env);
   if (!ai) {
     const err = new Error('NO_AI');
     err.code = 'NO_AI';
     throw err;
   }
-  const messages = [{ role: 'system', content: AI_SYS }].concat(history);
+  const sys = extraSys ? AI_SYS + '\n\n' + extraSys : AI_SYS;
+  const messages = [{ role: 'system', content: sys }].concat(history);
   let last = null;
   for (const model of AI_MODELS) {
     try {
-      const out = await ai.run(model, { messages, max_tokens: 220, temperature: 0.3 });
+      const out = await ai.run(model, { messages, max_tokens: 320, temperature: 0.15 });
       const text = aiText(out);
       if (text && looksPersian(text)) return { text, model };
       if (text) last = new Error('not-fa:' + model);
@@ -124,30 +132,71 @@ export async function runAI(env, history) {
   throw last || new Error('AI_FAIL');
 }
 
+async function loadOrderByCode(db, code) {
+  if (!code) return null;
+  try {
+    return await db.prepare('SELECT * FROM vip_orders WHERE code = ?').bind(code).first();
+  } catch (e) {
+    return null;
+  }
+}
+
+function collectCodes(thread, messages) {
+  const blobs = [thread && thread.vip_code, ...(messages || []).map((m) => m.body)];
+  let found = '';
+  blobs.forEach((b) => {
+    const c = findOrderCode(b);
+    if (c) found = c;
+  });
+  return found;
+}
+
 export async function generateAiReply(env, db, threadId) {
   const now = Math.floor(Date.now() / 1000);
+  const thread = await db.prepare('SELECT * FROM support_threads WHERE id = ?').bind(threadId).first();
   const { results } = await db
-    .prepare('SELECT sender, body FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 8')
+    .prepare('SELECT sender, body FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 10')
     .bind(threadId)
     .all();
-  const hist = (results || [])
-    .reverse()
+  const raw = (results || []).slice().reverse();
+  const hist = raw
     .filter((m) => m.body && !/جواب ندادم|وصل نیست|Retry deployment/i.test(String(m.body)))
     .map((m) => ({
       role: m.sender === 'user' ? 'user' : 'assistant',
-      content: String(m.body).slice(0, 500),
+      content: String(m.body).slice(0, 600),
     }))
-    .slice(-6);
-  let text;
-  try {
-    const ai = await runAI(env, hist);
-    text = ai.text;
-  } catch (e) {
-    text =
-      e && e.code === 'NO_AI'
-        ? 'هوش مصنوعی هنوز وصل نیست. در کلادفلر: Settings → Bindings → Workers AI با اسم دقیقاً AI، بعد Retry deployment.'
-        : 'الان نتونستم درست جواب بدم. یک‌بار دیگه کوتاه بپرس.';
+    .slice(-8);
+  const lastUser = [...raw].reverse().find((m) => m.sender === 'user' && m.body) || { body: '' };
+  const lastText = String(lastUser.body || '');
+  const code = collectCodes(thread, raw);
+  if (code && thread && thread.vip_code !== code) {
+    try {
+      await db.prepare('UPDATE support_threads SET vip_code = ? WHERE id = ?').bind(code, threadId).run();
+    } catch (e) {}
   }
+  const order = await loadOrderByCode(db, code);
+  let hint = '';
+  if (isDownAsk(lastText) && order && order.status === 'done' && supportUntilOf(order) > now) hint = 'replace';
+
+  let text = '';
+  if (wantsOrderInfo(lastText)) {
+    text = orderDeskReply(order, code);
+  } else {
+    const extraSys =
+      'اطلاعات سفارش (منبع حقیقت؛ اگر پیدا نشد همان را بگو):\n' + orderFactsBlock(order, code);
+    try {
+      const ai = await runAI(env, hist, extraSys);
+      text = ai.text;
+    } catch (e) {
+      if (code) text = orderDeskReply(order, code);
+      else
+        text =
+          e && e.code === 'NO_AI'
+            ? 'هوش مصنوعی هنوز وصل نیست. در کلادفلر: Settings → Bindings → Workers AI با اسم دقیقاً AI، بعد Retry deployment.'
+            : 'الان نتونستم درست جواب بدم. یک‌بار دیگه کوتاه بپرس. اگر سؤال دربارهٔ سفارش است کد FL- را بفرست.';
+    }
+  }
+
   const info = await db
     .prepare('INSERT INTO support_messages (thread_id, sender, body, image, created_at) VALUES (?, ?, ?, ?, ?)')
     .bind(threadId, 'ai', text, '', now)
@@ -162,6 +211,7 @@ export async function generateAiReply(env, db, threadId) {
     body: text,
     image: '',
     created_at: now,
+    hint,
   };
 }
 

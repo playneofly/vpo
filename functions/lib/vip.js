@@ -104,10 +104,148 @@ export function parseCategoryTags(raw) {
 }
 
 export function findOrderCode(text) {
-  const m = String(text || '')
+  const u = String(text || '')
     .toUpperCase()
-    .match(/FL-[A-Z0-9]{6}/);
-  return m ? m[0] : '';
+    .replace(/[\u200c\u200f\u202a-\u202e]/g, '');
+  const m = u.match(/FL-?\s*([A-Z0-9]{6})/);
+  return m ? 'FL-' + m[1] : '';
+}
+
+export function faDigits(n) {
+  return String(n).replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+export function faLeftPhrase(sec) {
+  const s = Math.max(0, Number(sec) || 0);
+  if (s <= 0) return '';
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const bits = [];
+  if (d) bits.push(faDigits(d) + ' روز');
+  if (h) bits.push(faDigits(h) + ' ساعت');
+  if (!d && (m || !h)) bits.push(faDigits(Math.max(1, m)) + ' دقیقه');
+  return bits.join(' و ');
+}
+
+export function tehranStamp(unix) {
+  const t = Number(unix) || 0;
+  if (!t) return '';
+  try {
+    return new Intl.DateTimeFormat('fa-IR', {
+      timeZone: 'Asia/Tehran',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(t * 1000));
+  } catch (e) {
+    return '';
+  }
+}
+
+const PLAN_FA = { bronze: 'برنز', silver: 'نقره', gold: 'طلایی' };
+const ST_FA = {
+  awaiting_receipt: 'در انتظار ارسال فیش',
+  pending: 'فیش رسیده؛ منتظر تأیید ادمین',
+  in_progress: 'در حال آماده‌سازی کانفیگ',
+  done: 'انجام شده',
+  rejected: 'رد شده',
+  expired: 'زمان ارسال فیش تمام شده',
+};
+
+export function orderFactsBlock(row, code) {
+  if (!code) return 'کد سفارشی در پیام نیست.';
+  if (!row) return 'کد ' + code + ' در سیستم پیدا نشد.';
+  const now = Math.floor(Date.now() / 1000);
+  const until = supportUntilOf(row);
+  const left = until - now;
+  const used = Number(row.replace_used) || 0;
+  const max = replaceCapOf(row.plan);
+  let s =
+    'کد:' +
+    row.code +
+    '\nپلن:' +
+    (PLAN_FA[row.plan] || row.plan) +
+    '\nوضعیت:' +
+    (ST_FA[row.status] || row.status);
+  if (row.status === 'done') {
+    s +=
+      '\nپشتیبانی_تا:' +
+      (tehranStamp(until) || until) +
+      '\nمانده_ثانیه:' +
+      Math.max(0, left) +
+      '\nمانده_متن:' +
+      (left > 0 ? faLeftPhrase(left) : 'تمام شده') +
+      '\nجایگزینی:' +
+      used +
+      ' از ' +
+      max;
+  }
+  if (row.status === 'rejected' && row.reject_reason) s += '\nدلیل_رد:' + String(row.reject_reason).slice(0, 160);
+  return s;
+}
+
+export function orderDeskReply(row, code) {
+  if (!code) {
+    return 'کد سفارشت را بفرست؛ به شکل FL- و شش حرف یا عدد (همان که موقع خرید دیدی). با همان دقیق می‌گویم چقدر از پشتیبانی مانده.';
+  }
+  if (!row) {
+    return (
+      'کد ' +
+      code +
+      ' در سیستم نیست. یک‌بار دیگر همان کد روی رسید/صفحه خرید را بدون فاصله اضافه بفرست. اگر همین الان خریدی و هنوز فیش نفرستادی، از همان مرورگر بخش خرید را باز کن.'
+    );
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const title = PLAN_FA[row.plan] || row.plan;
+  const st = ST_FA[row.status] || row.status;
+  let s = 'کد «' + row.code + '» را پیدا کردم.\nپلن: ' + title + '\nوضعیت: ' + st + '.';
+  if (row.status === 'done') {
+    const until = supportUntilOf(row);
+    const left = until - now;
+    const used = Number(row.replace_used) || 0;
+    const max = replaceCapOf(row.plan);
+    if (left > 0) {
+      const untilFa = tehranStamp(until);
+      s +=
+        '\nاز مدت پشتیبانی دقیقاً «' +
+        faLeftPhrase(left) +
+        '» مانده' +
+        (untilFa ? ' (تا ' + untilFa + ' به وقت تهران)' : '') +
+        '.';
+    } else {
+      s += '\nمدت پشتیبانی این سفارش تمام شده. کانفیگ قطعِ خودکار نمی‌شود؛ فقط درخواست جایگزینی دیگر فعال نیست.';
+    }
+    s +=
+      '\nجایگزینی: ' +
+      faDigits(used) +
+      ' از ' +
+      faDigits(max) +
+      ' استفاده شده.';
+    s += '\nکانفیگ را از دکمه طلایی «سرور های من» بالای صفحه بردار. لینک خام اینجا فرستاده نمی‌شود.';
+  } else if (row.status === 'awaiting_receipt') {
+    s += '\nهنوز فیش نیامده. از همان مرورگری که خرید زدی، عکس فیش را در بخش پرداخت بفرست.';
+  } else if (row.status === 'pending') {
+    s += '\nفیش رسیده و در صف بررسی ادمین است. همین‌جا صبر کن؛ بعد از تأیید، کانفیگ در «سرور های من» می‌آید.';
+  } else if (row.status === 'in_progress') {
+    s += '\nسفارش تأیید شده و کانفیگ در حال آماده‌سازی است. به‌محض انجام شدن، از «سرور های من» بردار.';
+  } else if (row.status === 'rejected') {
+    s += row.reject_reason ? '\nدلیل: ' + String(row.reject_reason).slice(0, 160) : '';
+    s += '\nاگر فکر می‌کنی اشتباه شده، فیش را دوباره از بخش خرید همان مرورگر بفرست یا دلیل را همین‌جا بنویس.';
+  } else if (row.status === 'expired') {
+    s += '\nمهلت یک‌ساعتهٔ فیش تمام شده. از دکمه خرید یک سفارش تازه بگیر و فیش را همان موقع بفرست.';
+  }
+  return s;
+}
+
+export function wantsOrderInfo(text) {
+  const t = String(text || '');
+  if (findOrderCode(t) && t.replace(/FL-?\s*[A-Za-z0-9]{6}/gi, '').replace(/\s+/g, '').length < 8) return true;
+  return /پشتیبانی|چقدر\s*موند|چقد[ر]?\s*موند|چند\s*روز|تا\s*کی|کی\s*تموم|باقی|مهلت|انقضا|وضعیت\s*سفارش|سفارشم|کد\s*سفارش|چقدر\s*مانده|چقدر\s*مونده|چقد[ر]?\s*مانده/i.test(
+    t
+  );
 }
 
 export function isDownAsk(text) {

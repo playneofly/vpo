@@ -1,6 +1,5 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
 import { validVisitor, clip, hoursInfo, generateAiReply, supportName, getAI } from '../../lib/support.js';
-import { findOrderCode, isDownAsk, orderPublicBlurb } from '../../lib/vip.js';
 import { assertGate } from '../../lib/gate.js';
 
 async function ownThread(db, visitorId, threadId) {
@@ -135,6 +134,7 @@ export async function onRequestPost(context) {
       message: userMsg,
       replies: extra,
       pending,
+      hint: (extra[0] && extra[0].hint) || '',
       hours: hoursInfo(),
       supportName: await supportName(db),
       aiReady: !!getAI(env),
