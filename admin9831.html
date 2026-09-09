@@ -455,6 +455,19 @@
 
     <div id="tab-site" style="display:none">
       <div class="card">
+        <h3>اعلان بالای سایت</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">اگر چیزی بنویسی بالای صفحهٔ عمومی می‌آید (مثلاً فلان سرور قطع است). خالی یعنی خاموش. جدا از کد ورود است.</p>
+        <div class="form-row full">
+          <div class="field">
+            <label>متن اعلان</label>
+            <textarea id="siteAnnounce" maxlength="240" style="min-height:80px;direction:rtl;text-align:right;font-family:inherit" placeholder="مثلاً سرور آلمان قطع است؛ از فرانسه استفاده کنید."></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="siteSaveAnnounce">ذخیره اعلان</button>
+        </div>
+      </div>
+      <div class="card">
         <h3>متن پایین سایت</h3>
         <div class="form-row full">
           <div class="field">
@@ -497,6 +510,19 @@
           </div>
         </div>
         <div class="form-actions"><button type="button" class="btn btn-primary" id="supSaveSet">ذخیره تنظیمات</button></div>
+      </div>
+      <div class="card">
+        <h3>ارسال همگانی</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">یک پیام به همهٔ گفتگوهای باز می‌رود. هوش مصنوعی جواب نمی‌دهد. برای اطلاع‌رسانی مثل «سرور X عوض شد».</p>
+        <div class="form-row full">
+          <div class="field">
+            <label>متن</label>
+            <textarea id="supBroadcast" maxlength="500" style="min-height:80px;direction:rtl;text-align:right;font-family:inherit" placeholder="مثلاً سرور آلمان از کار افتاد؛ از سرور های من درخواست جایگزینی بزنید."></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="supBroadcastBtn">ارسال به گفتگوهای باز</button>
+        </div>
       </div>
       <div class="card">
         <h3>گفتگوها</h3>
@@ -1281,6 +1307,8 @@
     api('/api/admin/site').then(function(d){
       if(!d.ok) return;
       document.getElementById('siteText').value = d.text||'';
+      var an=document.getElementById('siteAnnounce');
+      if (an) an.value = d.announce||'';
       var box=document.getElementById('sitePhotoList');
       var photos=d.photos||[];
       if(!photos.length){ box.innerHTML='<div class="empty">عکسی نیست</div>'; return; }
@@ -1298,6 +1326,11 @@
   document.getElementById('siteSaveText').addEventListener('click', function(){
     api('/api/admin/site', { method:'POST', body: JSON.stringify({ text: document.getElementById('siteText').value }) }).then(function(d){
       toast(d.ok?'متن ذخیره شد':(d.error||'خطا'));
+    });
+  });
+  document.getElementById('siteSaveAnnounce').addEventListener('click', function(){
+    api('/api/admin/site', { method:'POST', body: JSON.stringify({ announce: document.getElementById('siteAnnounce').value }) }).then(function(d){
+      toast(d.ok?'اعلان ذخیره شد':(d.error||'خطا'));
     });
   });
   document.getElementById('siteAddPhoto').addEventListener('click', function(){
@@ -1522,6 +1555,20 @@
       supportName: document.getElementById('supName').value,
       canned: document.getElementById('supCannedText').value
     })}).then(function(d){ toast(d.ok?'ذخیره شد':(d.error||'خطا')); if(d.ok) loadSupportAdmin(); });
+  });
+  document.getElementById('supBroadcastBtn').addEventListener('click', function(){
+    var text = document.getElementById('supBroadcast').value.trim();
+    if (!text) { toast('متن را بنویس'); return; }
+    if (!confirm('این پیام به همهٔ گفتگوهای باز فرستاده شود؟')) return;
+    var btn = document.getElementById('supBroadcastBtn');
+    btn.disabled = true;
+    api('/api/admin/support/broadcast', { method:'POST', body: JSON.stringify({ body: text }) }).then(function(d){
+      btn.disabled = false;
+      if (!d.ok) { toast(d.error||'خطا'); return; }
+      document.getElementById('supBroadcast').value = '';
+      toast(d.sent ? ('ارسال شد برای ' + d.sent + ' گفتگو') : 'گفتگوی بازی نبود');
+      loadSupportAdmin();
+    }).catch(function(){ btn.disabled = false; toast('ارسال نشد'); });
   });
   setInterval(function(){
     if (document.getElementById('dashView').style.display === 'none') return;

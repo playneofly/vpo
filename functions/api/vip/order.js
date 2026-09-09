@@ -1,5 +1,14 @@
 import { readyDB, noDb, dbError } from '../../lib/db.js';
-import { PLANS, newCode, getSetting, parseAssigned, withSlots, supportUntilOf, replaceCapOf } from '../../lib/vip.js';
+import {
+  PLANS,
+  newCode,
+  getSetting,
+  parseAssigned,
+  withSlots,
+  supportUntilOf,
+  replaceCapOf,
+  SUPPORT_WEEKS,
+} from '../../lib/vip.js';
 import { assertGate } from '../../lib/gate.js';
 
 export async function onRequestPost({ request, env }) {

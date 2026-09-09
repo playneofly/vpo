@@ -226,6 +226,39 @@ window.__fnJ=function(u){
     font-size:13.5px; font-weight:700; text-align:center;
   }
   .mine-warn.show{display:block}
+  .site-banner{
+    display:none; position:relative; z-index:8;
+    background:#16140e; border-bottom:1px solid rgba(251,191,36,.45);
+    color:#fbbf24; text-align:center; padding:10px 40px 10px 16px;
+    font-size:13.5px; font-weight:700; line-height:1.7;
+  }
+  .site-banner.show{display:block}
+  html.gate-on .site-banner{display:none !important}
+  .site-banner-x{
+    position:absolute; left:8px; top:50%; transform:translateY(-50%);
+    width:28px; height:28px; border:0; background:transparent; color:#fbbf24;
+    font-size:20px; cursor:pointer; line-height:1;
+  }
+  .mine-support{
+    display:none; margin:0 0 14px; padding:12px 14px; border-radius:6px;
+    border:1px solid rgba(251,191,36,.4); background:#16140e;
+  }
+  .mine-support.show{display:block}
+  .ms-row{margin-bottom:12px}
+  .ms-row:last-child{margin-bottom:0}
+  .ms-top{display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap}
+  .ms-top b{color:#fbbf24; font-size:13.5px; font-weight:800}
+  .ms-top span{color:#e8d5a3; font-size:12.5px}
+  .ms-bar{height:8px; background:#2a2418; border-radius:99px; overflow:hidden; margin-top:8px}
+  .ms-bar i{display:block; height:100%; width:0; background:#fbbf24; border-radius:99px}
+  .ms-row.low .ms-top b{color:#fca5a5}
+  .ms-row.low{border:0}
+  .ms-row.low .ms-bar i{background:#ef4444}
+  .ms-row.done .ms-top b, .ms-row.done .ms-top span{color:var(--muted)}
+  .ms-row.done .ms-bar i{background:#4b5563}
+  .card-left{font-size:12px; color:#fbbf24; font-weight:700; margin-top:4px}
+  .card-left.done{color:var(--muted)}
+
   .how-btn{
     margin-top:14px; display:inline-flex; align-items:center; justify-content:center;
     padding:9px 16px; border-radius:6px; border:1px solid var(--border);
@@ -626,6 +659,10 @@ window.__fnJ=function(u){
     </div>
   </div>
 </header>
+<div class="site-banner" id="siteBanner" hidden>
+  <span id="siteBannerText"></span>
+  <button type="button" class="site-banner-x" id="siteBannerX" aria-label="بستن">×</button>
+</div>
 
 <div class="wrap">
   <section class="hero">
@@ -746,7 +783,7 @@ window.__fnJ=function(u){
     <h3>سرور های من</h3>
     <p class="vip-sub">کانفیگ‌های اختصاصی که خریدی. روی همین مرورگر می‌ماند.</p>
     <p class="vip-sub">اگر سرور FILTERNET قطع شده و هنوز از مدت پشتیبانی مانده، روی همان سرور «درخواست جایگزینی» بزن. با کد سفارش می‌رود برای ادمین؛ بعد از تأیید، همان سرور با جدید عوض می‌شود.</p>
-    <p class="mine-warn" id="mineSupportNote"></p>
+    <div class="mine-support" id="mineSupportBox"></div>
     <div class="cats" id="mineCats"></div>
     <div id="mineCopyBar"></div>
     <div class="grid" id="mineGrid"></div>
@@ -934,7 +971,14 @@ window.__fnJ=function(u){
   function serverCard(s) {
     var loc = s.country && /^[A-Z]{2}$/i.test(s.country) ? flagEmoji(s.country) + ' ' + s.country.toUpperCase() : (s.country || '');
     var cat = String(s.category || '').trim();
-    var codeLine = s.orderCode ? '<div class="card-code">کد سفارش: <b dir="ltr">'+esc(s.orderCode)+'</b></div>' : '';
+    var leftLine = '';
+    if (s.orderCode) {
+      var leftN = Number(s.supportLeft)||0;
+      leftLine = leftN>0
+        ? '<div class="card-left">پشتیبانی: '+esc(faLeft(leftN))+' مانده</div>'
+        : '<div class="card-left done">پشتیبانی این سفارش تمام شده</div>';
+    }
+    var codeLine = s.orderCode ? '<div class="card-code">کد سفارش: <b dir="ltr">'+esc(s.orderCode)+'</b></div>'+leftLine : '';
     var tgs = s.orderCode ? [] : tagsOfServer(s);
     var tagHtml = tgs.length ? '<div class="card-tags">'+tgs.slice(0,6).map(function(tg){ return '<span class="card-tag">'+esc(tg)+'</span>'; }).join('')+'</div>' : '';
     var featHtml = (!s.orderCode && s.featured) ? '<span class="feat feat-today">پیشنهادی امروز</span>' : '';
@@ -1134,6 +1178,18 @@ window.__fnJ=function(u){
   function faNum(n){
     try { return Number(n).toLocaleString('fa-IR'); } catch(e){ return String(n); }
   }
+  function faLeft(sec){
+    sec = Math.max(0, Number(sec) || 0);
+    if (!sec) return 'تمام شده';
+    var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
+    var bits = [];
+    if (d) bits.push(faNum(d) + ' روز');
+    if (h) bits.push(faNum(h) + ' ساعت');
+    if (!d && (m || !h)) bits.push(faNum(Math.max(1, m)) + ' دقیقه');
+    return bits.join(' و ');
+  }
+  var PLAN_WEEKS = { bronze: 1, silver: 2, gold: 3 };
+  var PLAN_FA = { bronze: 'برنز', silver: 'نقره', gold: 'طلایی' };
   function planCheck(color){
     return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>';
   }
@@ -1241,20 +1297,29 @@ window.__fnJ=function(u){
     var label = mineActiveCat ? ('کپی همه «'+mineActiveCat+'» ('+n+')') : ('کپی همه سرورهای من ('+n+')');
     bar.innerHTML = '<button type="button" class="btn btn-primary" id="mineCopyAll">📋 '+esc(label)+'</button>';
     box.innerHTML = list.map(serverCard).join('');
-    var note = document.getElementById('mineSupportNote');
-    if (note) {
+    var boxS = document.getElementById('mineSupportBox');
+    if (boxS) {
       var now = Math.floor(Date.now()/1000);
-      var lefts = [];
-      mineServers.forEach(function(s){ if (s.supportUntil && s.supportUntil > now) lefts.push(s.supportUntil - now); });
-      if (!lefts.length) { note.classList.remove('show'); note.textContent=''; }
-      else {
-        var minL = Math.min.apply(null, lefts);
-        var days = Math.ceil(minL / 86400);
-        if (minL <= 2*86400) {
-          note.textContent = days <= 1 ? 'کمتر از یک روز به پایان پشتیبانی مانده.' : '۲ روز به پایان پشتیبانی مانده.';
-          note.classList.add('show');
-        } else { note.classList.remove('show'); note.textContent=''; }
-      }
+      var seen = {}, rows = [];
+      mineServers.forEach(function(s){
+        var c = s.orderCode; if (!c || seen[c]) return; seen[c] = 1;
+        var left = Number(s.supportLeft);
+        if (!(left > 0) && s.supportUntil) left = Math.max(0, Number(s.supportUntil) - now);
+        var total = Number(s.supportTotal) || ((PLAN_WEEKS[s.plan] || 1) * 7 * 86400);
+        var pct = total > 0 ? Math.max(0, Math.min(100, Math.round((left / total) * 100))) : 0;
+        var low = left > 0 && left <= 2 * 86400;
+        var done = left <= 0;
+        var title = (PLAN_FA[s.plan] || '') + (c ? ' · ' + c : '');
+        var label = done ? 'مدت پشتیبانی تمام شده — جایگزینی دیگر فعال نیست' : faLeft(left) + ' مانده';
+        rows.push(
+          '<div class="ms-row'+(done?' done':'')+(low?' low':'')+'">' +
+            '<div class="ms-top"><b>'+esc(title.trim()||'سفارش')+'</b><span>'+esc(label)+'</span></div>' +
+            '<div class="ms-bar"><i style="width:'+pct+'%"></i></div>' +
+          '</div>'
+        );
+      });
+      if (!rows.length) { boxS.classList.remove('show'); boxS.innerHTML = ''; }
+      else { boxS.classList.add('show'); boxS.innerHTML = rows.join(''); }
     }
   }
   function loadMine(cb){
@@ -1277,8 +1342,10 @@ window.__fnJ=function(u){
             var slot = s.slot != null ? String(s.slot) : String(idx);
             mineServers.push(Object.assign({}, s, {
               orderCode: d.code,
+              plan: d.plan || '',
               slot: slot,
               supportUntil: d.supportUntil || 0,
+              supportTotal: d.supportTotal || 0,
               replaceUsed: d.replaceUsed || 0,
               replaceMax: d.replaceMax || 0,
               replacePending: (d.pendingSlots||[]).indexOf(slot) >= 0,
@@ -1292,9 +1359,28 @@ window.__fnJ=function(u){
       if(cb) cb();
     });
   }
+  function announceHash(s){
+    var h = 0, i, t = String(s||'');
+    for (i = 0; i < t.length; i++) h = ((h << 5) - h + t.charCodeAt(i)) | 0;
+    return String(h);
+  }
+  function applyAnnounce(text){
+    var bar = document.getElementById('siteBanner');
+    var tx = document.getElementById('siteBannerText');
+    if (!bar || !tx) return;
+    text = String(text || '').trim();
+    if (!text) { bar.classList.remove('show'); bar.hidden = true; return; }
+    var hide = '';
+    try { hide = localStorage.getItem('fn_announce_hide') || ''; } catch (e) {}
+    if (hide && hide === announceHash(text)) { bar.classList.remove('show'); bar.hidden = true; return; }
+    tx.textContent = text;
+    bar.hidden = false;
+    bar.classList.add('show');
+  }
   function loadSite(){
     fetchJson('/api/site').then(function(d){
       if(!d || !d.ok) return;
+      applyAnnounce(d.announce);
       var sec = document.getElementById('siteExtra');
       var tx = document.getElementById('siteExtraText');
       var ph = document.getElementById('siteExtraPhotos');
@@ -1634,7 +1720,7 @@ window.__fnJ=function(u){
     box.scrollTop = box.scrollHeight;
   }
   function bubble(m){
-    var who = m.sender === 'user' ? 'شما' : 'هوش مصنوعی';
+    var who = m.sender === 'user' ? 'شما' : (m.sender === 'admin' ? 'پشتیبان FILTERNET' : 'هوش مصنوعی');
     var div = document.createElement('div');
     div.className = 'sup-bubble ' + (m.sender || '');
     var w = document.createElement('div');
@@ -1658,8 +1744,18 @@ window.__fnJ=function(u){
     });
     box.scrollTop = box.scrollHeight;
   }
+  function loadSupHistory(){
+    if (!sup.threadId) return Promise.resolve();
+    return supJson('/api/support/messages?visitorId=' + encodeURIComponent(visId()) + '&threadId=' + sup.threadId).then(function(d){
+      if (!d || !d.ok) return;
+      sup.lastId = 0;
+      appendMsgs(d.messages, true);
+      if (d.hours) setHoursBar(d.hours);
+      setBadge(0);
+    });
+  }
   function ensureAiChat(){
-    if (sup.threadId) return Promise.resolve();
+    if (sup.threadId) return loadSupHistory();
     sup.lastId = 0;
     return supJson('/api/support/thread', {
       method: 'POST',
@@ -1668,13 +1764,7 @@ window.__fnJ=function(u){
       if (!d.ok) { toast(d.error || 'خطا'); return; }
       sup.threadId = d.thread.id;
       setHoursBar(d.hours);
-      return supJson('/api/support/messages?visitorId=' + encodeURIComponent(visId()) + '&threadId=' + sup.threadId);
-    }).then(function(d){
-      if (!d || !d.ok) return;
-      sup.lastId = 0;
-      appendMsgs(d.messages, true);
-      if (d.hours) setHoursBar(d.hours);
-      pingBadge();
+      return loadSupHistory();
     }).catch(function(){ toast('اتصال پشتیبانی نشد'); });
   }
   function sendSup(){
@@ -1713,19 +1803,30 @@ window.__fnJ=function(u){
           box.appendChild(hb);
           box.scrollTop = box.scrollHeight;
         }
-        pingBadge();
+        setBadge(0);
+        if (sup.threadId) {
+          supJson('/api/support/messages?visitorId=' + encodeURIComponent(visId()) + '&threadId=' + sup.threadId + '&afterId=' + sup.lastId).catch(function(){});
+        }
       }).catch(function(){ sup.sending = false; setTyping(false); toast('ارسال نشد'); });
     };
     if (!sup.threadId) ensureAiChat().then(go);
     else go();
   }
+  function setBadge(n){
+    var b = document.getElementById('supFabN');
+    if (!b) return;
+    n = Number(n) || 0;
+    b.textContent = n > 9 ? '۹+' : String(n);
+    b.classList.toggle('show', n > 0);
+  }
   function pingBadge(){
+    if (document.getElementById('supPanel') && document.getElementById('supPanel').classList.contains('open')) {
+      setBadge(0);
+      return;
+    }
     supJson('/api/support/thread?visitorId=' + encodeURIComponent(visId())).then(function(d){
       if (!d || !d.ok) return;
-      var n = d.unread || 0;
-      var b = document.getElementById('supFabN');
-      b.textContent = n > 9 ? '۹+' : String(n);
-      b.classList.toggle('show', n > 0);
+      setBadge(d.unread || 0);
       if (d.hours) sup.hours = d.hours;
     }).catch(function(){});
   }
@@ -1734,6 +1835,7 @@ window.__fnJ=function(u){
     supJson('/api/support/messages?visitorId=' + encodeURIComponent(visId()) + '&threadId=' + sup.threadId + '&afterId=' + sup.lastId)
       .then(function(d){
         if (!d || !d.ok) return;
+        setBadge(0);
         if (d.hours) setHoursBar(d.hours);
         var news = (d.messages || []).filter(function(m){ return m.id > sup.lastId && m.sender !== 'user'; });
         if (news.length) setTyping(false);
@@ -1761,9 +1863,17 @@ window.__fnJ=function(u){
   document.getElementById('supFab').addEventListener('click', function(){
     var p = document.getElementById('supPanel');
     if (p.classList.contains('open')) supClosePanel();
-    else { supOpenPanel(); ensureAiChat(); }
+    else { setBadge(0); supOpenPanel(); ensureAiChat(); }
   });
   document.getElementById('supClose').addEventListener('click', supClosePanel);
+  document.getElementById('siteBannerX').addEventListener('click', function(){
+    var tx = document.getElementById('siteBannerText');
+    var text = tx ? tx.textContent : '';
+    try { if (text) localStorage.setItem('fn_announce_hide', announceHash(text)); } catch (e) {}
+    applyAnnounce('');
+    var bar = document.getElementById('siteBanner');
+    if (bar) { bar.classList.remove('show'); bar.hidden = true; }
+  });
   document.getElementById('supSend').addEventListener('click', sendSup);
   if (window.visualViewport) {
     visualViewport.addEventListener('resize', layoutSupKeyboard);
@@ -1840,7 +1950,7 @@ window.__fnJ=function(u){
     if (!_timersOn) {
       _timersOn = true;
       setInterval(pollSup, 8000);
-      setInterval(function(){ if (_appStarted) { loadVipSettings(); refreshVipOrder(); loadMine(); } }, 20000);
+      setInterval(function(){ if (_appStarted) { loadVipSettings(); refreshVipOrder(); loadMine(); loadSite(); } }, 20000);
       setInterval(function () {
         if (!modal.classList.contains('open') && _appStarted) load();
       }, 30000);

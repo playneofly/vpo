@@ -9,11 +9,12 @@ export async function onRequestGet({ env, request }) {
   if (!db) return noDb();
   try {
     const text = await getSetting(db, 'footer_text', '');
+    const announce = String(await getSetting(db, 'announce_text', '')).trim().slice(0, 240);
     const { results } = await db
       .prepare('SELECT id, caption FROM site_photos ORDER BY sort ASC, id ASC')
       .all();
     return Response.json(
-      { ok: true, text, photos: results || [] },
+      { ok: true, text, announce, photos: results || [] },
       { headers: { 'Cache-Control': 'private, no-store' } }
     );
   } catch (e) {
