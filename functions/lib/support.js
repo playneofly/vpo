@@ -4,8 +4,10 @@ import {
   isDownAsk,
   orderDeskReply,
   orderFactsBlock,
-  wantsOrderInfo,
   supportUntilOf,
+  getPlanCopy,
+  getPlanConfigs,
+  PLANS,
 } from './vip.js';
 
 export const AI_MODELS = [
@@ -15,14 +17,19 @@ export const AI_MODELS = [
 ];
 
 export const AI_SYS =
-  'تو پشتیبان حرفه‌ای FILTERNET هستی؛ مثل ادمین باتجربه، مودب، دقیق و کوتاه جواب بده. فقط فارسی. ' +
-  'حداکثر ۶ جمله. انگلیسی، شعر، ایموجی زیاد و حرف اضافه ممنوع. ' +
-  'سایت کانفیگ V2Ray می‌دهد: کپی یا QR، بعد v2rayNG یا Hiddify ← افزودن ← وارد کردن از کلیپ‌بورد. لینک خام روی کارت عمومی نیست. ' +
-  'خرید اختصاصی کارت‌به‌کارت است. مدت پلن فقط پشتیبانی است؛ کانفیگ خودکار قطع نمی‌شود. ' +
-  'سفارش انجام‌شده را از دکمه طلایی «سرور های من» بردارد. درخواست جایگزینی فقط از همان دکمه و فقط تا وقتی پشتیبانی مانده. ' +
-  'اگر بلوک «اطلاعات سفارش» آمد، عدد روز/ساعت و وضعیت را فقط از همان بردار. از خودت کد، روز، قیمت و وضعیت نساز. ' +
-  'اگر سفارش پیدا نشد همان را بگو. لینک کانفیگ، UUID، رمز و آی‌پی نده. ادعا نکن فیلتر را برمی‌داری. پینگ روی سایت نیست. ' +
-  'اگر کد سفارش نبود و سؤال دربارهٔ پشتیبانی/وضعیت سفارش بود، مؤدب کد FL- را بخواه.';
+  'تو ادمین پشتیبانی FILTERNET هستی. مثل پشتیبان کاربلد و مسلط جواب بده: مودب، دقیق، کامل، بدون حاشیه. فقط فارسی روان. ' +
+  'لحن انسانی و حرفه‌ای؛ قالب تکراری و روباتی ممنوع. به همان سؤال کاربر جواب بده، نه متن آماده. ' +
+  'عدد، قیمت، تعداد کانفیگ، روز/ساعت پشتیبانی و وضعیت سفارش را فقط از بلوک دانش زنده بردار. اگر آنجا نبود، حدس نزن؛ بپرس یا بگو باید از روی کد FL- چک شود. ' +
+  '\nدانش محصول:\n' +
+  'FILTERNET سایت کانفیگ V2Ray است. روی کارت عمومی «کپی کانفیگ» یا QR؛ بعد در v2rayNG یا Hiddify: افزودن ← وارد کردن از کلیپ‌بورد. لینک خام روی صفحه دیده نمی‌شود. ' +
+  'دسته را که انتخاب کند می‌تواند همهٔ کانفیگ همان دسته را یکجا کپی کند؛ روی «همه» کپیِ همه نیست. ' +
+  'خرید اختصاصی: دکمه طلایی، پلن برنز/نقره/طلایی، کارت‌به‌کارت، یک ساعت برای فیش از همان مرورگر. شماره کارت را از حفظ نگو؛ بگو روی صفحه پرداخت است. ' +
+  'مدت پلن فقط مدت پشتیبانی است؛ کانفیگ خودش قطع نمی‌شود. بعد از انجام شدن سفارش، کانفیگ فقط از دکمه طلایی «سرور های من». ' +
+  'اگر سرور اختصاصی قطع شد و پشتیبانی مانده: از «سرور های من» روی همان سرور درخواست جایگزینی؛ یک‌به‌یک عوض می‌شود تا سقف پلن. اگر پشتیبانی تمام شده جایگزینی نیست. ' +
+  'ورود سایت با کد ورود است نه ثبت‌نام. کد ورود را از کانال می‌گیرند؛ تو کد ورود را نمی‌دانی و نباید بسازی. ' +
+  'پینگ روی سایت نیست. اشتراک/سابسکریپشن نداریم. اپ جدا نمی‌دهیم. تلگرام‌بات پشتیبانی نداریم؛ همین چت است و ۲۴ ساعته. ' +
+  'کانفیگ نساز. UUID، رمز، آی‌پی، لینک vless/vmess نفرست. ادعا نکن فیلتر کشور را برمی‌داری. آدرس پنل ادمین نده. ' +
+  'اگر کد سفارش در دانش زنده نیست و سؤال دربارهٔ سفارش/پشتیبانی/مانده است، مؤدب همان کد FL- را بخواه.';
 
 export function getAI(env) {
   if (env && env.AI && typeof env.AI.run === 'function') return env.AI;
@@ -120,7 +127,7 @@ export async function runAI(env, history, extraSys) {
   let last = null;
   for (const model of AI_MODELS) {
     try {
-      const out = await ai.run(model, { messages, max_tokens: 320, temperature: 0.15 });
+      const out = await ai.run(model, { messages, max_tokens: 480, temperature: 0.28 });
       const text = aiText(out);
       if (text && looksPersian(text)) return { text, model };
       if (text) last = new Error('not-fa:' + model);
@@ -151,11 +158,48 @@ function collectCodes(thread, messages) {
   return found;
 }
 
+async function liveDeskContext(db, order, code) {
+  const lines = ['--- دانش زنده (فقط از این اعداد استفاده کن) ---'];
+  try {
+    const on = (await getSetting(db, 'vip_enabled', '0')) === '1';
+    lines.push('خرید_اختصاصی: ' + (on ? 'فعال' : 'فعلاً خاموش'));
+    const copy = await getPlanCopy(db);
+    const counts = await getPlanConfigs(db);
+    const fa = { bronze: 'برنز', silver: 'نقره', gold: 'طلایی' };
+    for (const id of ['bronze', 'silver', 'gold']) {
+      const p = copy[id] || {};
+      const price = PLANS[id] && PLANS[id].price;
+      const bullets = Array.isArray(p.bullets) ? p.bullets.join('؛ ') : '';
+      lines.push(
+        fa[id] +
+          ': عنوان=' +
+          (p.title || fa[id]) +
+          ' | کانفیگ=' +
+          counts[id] +
+          ' | قیمت_تومان=' +
+          price +
+          ' | زیرعنوان=' +
+          (p.subtitle || '') +
+          ' | ویژگی=' +
+          bullets
+      );
+    }
+  } catch (e) {
+    lines.push('پلن‌ها از دیتابیس خوانده نشد.');
+  }
+  lines.push('--- سفارش این گفتگو ---');
+  lines.push(orderFactsBlock(order, code));
+  lines.push(
+    'اگر کاربر کد FL- داد یا پرسید چقدر پشتیبانی مانده، از مانده_متن و پشتیبانی_تا دقیق بگو. لینک کانفیگ نده.'
+  );
+  return lines.join('\n');
+}
+
 export async function generateAiReply(env, db, threadId) {
   const now = Math.floor(Date.now() / 1000);
   const thread = await db.prepare('SELECT * FROM support_threads WHERE id = ?').bind(threadId).first();
   const { results } = await db
-    .prepare('SELECT sender, body FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 10')
+    .prepare('SELECT sender, body FROM support_messages WHERE thread_id = ? ORDER BY id DESC LIMIT 12')
     .bind(threadId)
     .all();
   const raw = (results || []).slice().reverse();
@@ -163,9 +207,9 @@ export async function generateAiReply(env, db, threadId) {
     .filter((m) => m.body && !/جواب ندادم|وصل نیست|Retry deployment/i.test(String(m.body)))
     .map((m) => ({
       role: m.sender === 'user' ? 'user' : 'assistant',
-      content: String(m.body).slice(0, 600),
+      content: String(m.body).slice(0, 700),
     }))
-    .slice(-8);
+    .slice(-10);
   const lastUser = [...raw].reverse().find((m) => m.sender === 'user' && m.body) || { body: '' };
   const lastText = String(lastUser.body || '');
   const code = collectCodes(thread, raw);
@@ -178,23 +222,18 @@ export async function generateAiReply(env, db, threadId) {
   let hint = '';
   if (isDownAsk(lastText) && order && order.status === 'done' && supportUntilOf(order) > now) hint = 'replace';
 
+  const extraSys = await liveDeskContext(db, order, code);
   let text = '';
-  if (wantsOrderInfo(lastText)) {
-    text = orderDeskReply(order, code);
-  } else {
-    const extraSys =
-      'اطلاعات سفارش (منبع حقیقت؛ اگر پیدا نشد همان را بگو):\n' + orderFactsBlock(order, code);
-    try {
-      const ai = await runAI(env, hist, extraSys);
-      text = ai.text;
-    } catch (e) {
-      if (code) text = orderDeskReply(order, code);
-      else
-        text =
-          e && e.code === 'NO_AI'
-            ? 'هوش مصنوعی هنوز وصل نیست. در کلادفلر: Settings → Bindings → Workers AI با اسم دقیقاً AI، بعد Retry deployment.'
-            : 'الان نتونستم درست جواب بدم. یک‌بار دیگه کوتاه بپرس. اگر سؤال دربارهٔ سفارش است کد FL- را بفرست.';
-    }
+  try {
+    const ai = await runAI(env, hist, extraSys);
+    text = ai.text;
+  } catch (e) {
+    if (code) text = orderDeskReply(order, code);
+    else
+      text =
+        e && e.code === 'NO_AI'
+          ? 'هوش مصنوعی هنوز وصل نیست. در کلادفلر: Settings → Bindings → Workers AI با اسم دقیقاً AI، بعد Retry deployment.'
+          : 'الان نتونستم درست جواب بدم. یک‌بار دیگه کوتاه بپرس. اگر سؤال سفارش است کد FL- را بفرست.';
   }
 
   const info = await db
