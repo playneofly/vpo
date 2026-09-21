@@ -10,9 +10,6 @@ try{
   var _gt='';
   try{ _gt=localStorage.getItem('fn_gate_tok')||''; }catch(e){}
   if(!_gt){ _h.classList.add('gate-on'); document.title='✦'; }
-  if(localStorage.getItem('fn_vip_on')==='0') _h.classList.add('vip-off');
-  var _m=localStorage.getItem('fn_vip_mine');
-  if((_m&&_m.length>4)||localStorage.getItem('fn_vip_code')) _h.classList.add('mine-on');
 }catch(e){}
 window.__fnGateTok=function(){ try{ return localStorage.getItem('fn_gate_tok')||''; }catch(e){ return ''; } };
 window.__fnGateHdr=function(){ var x=window.__fnGateTok(); return x?{'X-Fn-Gate':x}:{}; };
@@ -26,7 +23,7 @@ window.__fnJ=function(u){
   return fetch(u, {credentials:'include', headers:window.__fnGateHdr()}).then(function(r){ return r.json(); }).catch(function(){ return null; });
 };
 </script>
-<title>FILTERNET | کانفیگ‌های اختصاصی</title>
+<title>FILTERNET</title>
 <link rel="preload" href="/fonts/Vazirmatn-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/Estedad-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="data:image/png;base64,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">
@@ -716,22 +713,10 @@ window.__fnJ=function(u){
       <img class="logo-img" width="42" height="42" decoding="async" src="data:image/png;base64,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" alt="FILTERNET">
       <div>
         <h1>FILTERNET</h1>
-        <p>کانفیگ‌های اختصاصی و پرسرعت</p>
+        <p>کانفیگ رایگان — کپی یا QR</p>
       </div>
     </div>
     <div class="head-actions">
-      <button type="button" class="vip-buy" id="vipBuyBtn">
-        <img alt="VIP" width="32" height="32" decoding="async" src="data:image/png;base64,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">
-        <span class="vip-buy-txt">خرید کانفیگ اختصاصی</span>
-      </button>
-      <button type="button" class="vip-chip" id="vipChip">
-        <span class="vip-dot pending" id="vipDot"></span>
-        <div class="vip-chip-body">
-          <div class="vip-chip-code" id="vipChipCode">FL-————</div>
-          <div class="vip-chip-hint" id="vipChipHint">برای اطلاع از وضعیت سفارش کلیک کنید</div>
-        </div>
-      </button>
-      <button type="button" class="my-sv" id="myServersBtn"><span class="my-sv-txt">سرور های من</span></button>
       <div class="count-pill"><b id="count">–</b> سرور فعال</div>
     </div>
   </div>
@@ -798,105 +783,6 @@ window.__fnJ=function(u){
 </footer>
 
 
-<div class="vip-ov" id="vipPlans">
-  <div class="vip-box">
-    <button type="button" class="vip-x" data-vip-close="vipPlans">×</button>
-    <h3>خرید کانفیگ اختصاصی</h3>
-    <p class="vip-sub">پله را انتخاب کن. زمان نوشته‌شده فقط مدت پشتیبانی است، نه قطع خودکار.</p>
-    <div class="plan-grid" id="planGrid">
-      <div class="plan-card bronze">
-        <div class="plan-bar"></div>
-        <div class="plan-body">
-          <h4>برنز</h4>
-          <p class="plan-desc">شروع اقتصادی</p>
-          <p class="plan-price">۱۲۰٬۰۰۰ <small>تومان</small></p>
-          <p class="plan-preview">بعد از تأیید فیش، ۱۰ کانفیگ در «سرور های من» می‌آید.</p>
-          <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۱۰ کانفیگ اختصاصی</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۱ هفته</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>سرعت بالا</li>
-          </ul>
-        </div>
-        <div class="plan-foot"><button type="button" class="btn" data-plan="bronze">Select Plan</button></div>
-      </div>
-      <div class="plan-card silver">
-        <div class="plan-bar"></div>
-        <div class="plan-body">
-          <h4>نقره</h4>
-          <p class="plan-desc">انتخاب متعادل</p>
-          <p class="plan-price">۲۴۰٬۰۰۰ <small>تومان</small></p>
-          <p class="plan-preview">بعد از تأیید فیش، ۲۰ کانفیگ در «سرور های من» می‌آید.</p>
-          <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۲۰ کانفیگ اختصاصی</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۲ هفته</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>بدون قطعی، مناسب اینترنت سیم‌کارت</li>
-          </ul>
-        </div>
-        <div class="plan-foot"><button type="button" class="btn" data-plan="silver">Select Plan</button></div>
-      </div>
-      <div class="plan-card gold">
-        <div class="plan-bar"></div>
-        <div class="plan-body">
-          <h4>طلایی</h4>
-          <p class="plan-desc">بهترین تجربه</p>
-          <p class="plan-price">۳۶۰٬۰۰۰ <small>تومان</small></p>
-          <p class="plan-preview">بعد از تأیید فیش، ۳۰ کانفیگ در «سرور های من» می‌آید.</p>
-          <ul>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>۳۰ کانفیگ اختصاصی</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>پشتیبانی ۳ هفته</li>
-            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>بدون قطعی، سرعت بالا، تست‌شده روی اینترنت‌های مختلف و انتخاب بهترین پینگ</li>
-          </ul>
-        </div>
-        <div class="plan-foot"><button type="button" class="btn" data-plan="gold">Select Plan</button></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="vip-ov" id="vipPay">
-  <div class="vip-box" style="max-width:420px">
-    <button type="button" class="vip-x" data-vip-close="vipPay">×</button>
-    <h3>پرداخت کارت‌به‌کارت</h3>
-    <p class="vip-sub" id="payPlanLabel">—</p>
-    <div class="bank-card">
-      <div class="bc-lab">BANK CARD</div>
-      <div class="bc-chip"></div>
-      <div class="bc-num" id="cardNum">---- ---- ---- ----</div>
-      <div class="bc-name" id="cardHolder">—</div>
-    </div>
-    <div class="pay-timer" id="payTimer">۶۰:۰۰</div>
-    <p class="pay-note">یک ساعت فرصت داری عکس فیش واریزی را بفرستی.</p>
-    <button type="button" class="file-btn" id="vipFileBtn">📁 انتخاب عکس فیش</button>
-    <input type="file" id="vipReceiptFile" accept="image/*" hidden>
-    <span class="file-name" id="vipFileName"></span>
-    <p class="pay-warn" id="vipDarkWarn">عکس خیلی تاریکه؛ ممکن است خوانده نشود. اگر می‌توانی روشن‌تر بگیر.</p>
-    <button type="button" class="btn btn-primary" id="vipSendReceipt" style="width:100%">ارسال فیش</button>
-    <p class="pay-note" id="vipPayCodeHint" style="margin-top:14px"></p>
-  </div>
-</div>
-
-<div class="vip-ov" id="vipStatus">
-  <div class="vip-box" style="max-width:420px">
-    <button type="button" class="vip-x" data-vip-close="vipStatus">×</button>
-    <h3>وضعیت سفارش</h3>
-    <div id="vipStatusBox"></div>
-  </div>
-</div>
-
-<div class="vip-ov" id="vipMine">
-  <div class="vip-box" style="max-width:980px">
-    <button type="button" class="vip-x" data-vip-close="vipMine">×</button>
-    <h3>سرور های من</h3>
-    <p class="vip-sub">کانفیگ‌های اختصاصی که خریدی. روی همین مرورگر می‌ماند.</p>
-    <p class="vip-sub">اگر سرور FILTERNET قطع شده و هنوز از مدت پشتیبانی مانده، روی همان سرور «درخواست جایگزینی» بزن. با کد سفارش می‌رود برای ادمین؛ بعد از تأیید، همان سرور با جدید عوض می‌شود.</p>
-    <div class="mine-support" id="mineSupportBox"></div>
-    <div class="cats" id="mineCats"></div>
-    <div id="mineCopyBar"></div>
-    <div class="grid" id="mineGrid"></div>
-  </div>
-</div>
-
-
 <button type="button" class="sup-fab" id="supFab" aria-label="هوش مصنوعی">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" stroke-linejoin="round"/></svg>
   <span class="n" id="supFabN"></span>
@@ -928,7 +814,6 @@ window.__fnJ=function(u){
       <li><b>۱</b>روی کارت بزن «کپی کانفیگ» یا QR را اسکن کن.</li>
       <li><b>۲</b>v2rayNG یا Hiddify را باز کن.</li>
       <li><b>۳</b>افزودن ← وارد کردن از کلیپ‌بورد. لینک خام روی سایت دیده نمی‌شود.</li>
-      <li><b>۴</b>اگر اختصاصی خریدی، کانفیگ را از دکمه طلایی «سرور های من» بردار.</li>
     </ol>
   </div>
 </div>
@@ -955,8 +840,7 @@ window.__fnJ=function(u){
     return __fnFetch(url).then(function(r){ return r.json(); }).catch(function(){ return null; });
   }
   var _firstServers = window.__fnSrv || null;
-  var _firstVip = window.__fnVip || null;
-  var _usedServers = false, _usedVip = false;
+  var _usedServers = false;
   var PROTO = {
     vless:    { label: 'VLESS',       c: '#67e8f9', bg: 'rgba(34,211,238,.14)' },
     vmess:    { label: 'VMess',       c: '#fcd34d', bg: 'rgba(245,158,11,.16)' },
@@ -1062,35 +946,14 @@ window.__fnJ=function(u){
       toast(ok ? '✅ ' + n + ' کانفیگ ' + label + ' کپی شد — تو v2rayNG از کلیپ‌بورد وارد کن' : '❌ کپی نشد');
     });
   }
-  function replaceBtn(s){
-    if (!s || !s.orderCode) return '';
-    var now = Math.floor(Date.now()/1000);
-    var st = s.replaceStatus || (s.replacePending ? 'pending' : '');
-    var badge = '';
-    if (st === 'pending') badge = '<div class="repl-st wait">در انتظار جایگزینی</div>';
-    else if (st === 'done') badge = '<div class="repl-st ok">جایگزین شد</div>';
-    if (st === 'pending') return badge + '<button type="button" class="btn btn-ghost" disabled>در انتظار تأیید ادمین</button>';
-    if (!s.supportUntil || s.supportUntil <= now) return badge;
-    if ((s.replaceUsed||0) >= (s.replaceMax||0)) return badge;
-    return badge + '<button type="button" class="btn btn-ghost" data-replace-code="'+esc(s.orderCode)+'" data-replace-slot="'+esc(s.slot)+'">درخواست جایگزینی</button>';
-  }
   function serverCard(s) {
     var loc = s.country && /^[A-Z]{2}$/i.test(s.country) ? flagEmoji(s.country) + ' ' + s.country.toUpperCase() : (s.country || '');
     var cat = String(s.category || '').trim();
-    var leftLine = '';
-    if (s.orderCode) {
-      var leftN = Number(s.supportLeft)||0;
-      leftLine = leftN>0
-        ? '<div class="card-left">پشتیبانی: '+esc(faLeft(leftN))+' مانده</div>'
-        : '<div class="card-left done">پشتیبانی این سفارش تمام شده</div>';
-    }
-    var codeLine = s.orderCode ? '<div class="card-code">کد سفارش: <b dir="ltr">'+esc(s.orderCode)+'</b></div>'+leftLine : '';
-    var tgs = s.orderCode ? [] : tagsOfServer(s);
+    var tgs = tagsOfServer(s);
     var tagHtml = tgs.length ? '<div class="card-tags">'+tgs.slice(0,6).map(function(tg){ return '<span class="card-tag">'+esc(tg)+'</span>'; }).join('')+'</div>' : '';
-    var featHtml = (!s.orderCode && s.featured) ? '<span class="feat feat-today">پیشنهادی امروز</span>' : '';
+    var featHtml = s.featured ? '<span class="feat feat-today">پیشنهادی امروز</span>' : '';
     return '' +
       '<div class="card">' +
-        codeLine +
         '<div class="card-top">' +
           '<div><div class="flag">' + flagEmoji(s.country) + '</div>' +
           '<h3>' + esc(s.name) + '</h3>' +
@@ -1100,7 +963,6 @@ window.__fnJ=function(u){
         '<div class="card-actions">' +
           '<button class="btn btn-primary" data-copy="' + esc(s.link) + '">📋 کپی کانفیگ</button>' +
           '<button class="btn btn-ghost" data-qr="' + esc(s.link) + '" data-name="' + esc(s.name) + '" data-loc="' + esc(loc) + '">▦ QR</button>' +
-          replaceBtn(s) +
         '</div>' +
       '</div>';
   }
@@ -1253,218 +1115,14 @@ window.__fnJ=function(u){
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') modal.classList.remove('open'); });
 
 
-  var VIP_LS = 'fn_vip_code';
-  var vipState = { enabled:false, cardNumber:'', cardName:'', code:'', order:null, tick:null, buying:false, sendingReceipt:false };
+  function vipOpen(id){ var el=document.getElementById(id); if(el) el.classList.add('open'); }
+  function vipClose(id){ var el=document.getElementById(id); if(el) el.classList.remove('open'); }
+  var howBtn = document.getElementById('howBtn');
+  if (howBtn) howBtn.addEventListener('click', function(){ vipOpen('howTo'); });
+  document.querySelectorAll('[data-vip-close]').forEach(function(b){
+    b.addEventListener('click', function(){ vipClose(b.getAttribute('data-vip-close')); });
+  });
 
-  function vipOpen(id){ document.getElementById(id).classList.add('open'); }
-  function vipClose(id){ document.getElementById(id).classList.remove('open'); }
-
-  function formatCard(n){
-    n = String(n||'').replace(/\D/g,'');
-    if(!n) return '---- ---- ---- ----';
-    return n.replace(/(.{4})/g,'$1 ').trim();
-  }
-  function faPrice(){ return ''; }
-
-  function setChip(order){
-    var chip = document.getElementById('vipChip');
-    if(!order || !order.code){ chip.style.display='none'; return; }
-    if(order.status==='expired' || order.status==='done'){ chip.style.display='none'; return; }
-    chip.style.display='block';
-    document.getElementById('vipChipCode').textContent = order.code;
-    var dot = document.getElementById('vipDot');
-    var hint = document.getElementById('vipChipHint');
-    dot.className = 'vip-dot';
-    if(order.status==='rejected'){ dot.classList.add('rejected'); hint.textContent='برای اطلاع از وضعیت سفارش کلیک کنید'; }
-    else if(order.status==='in_progress'){ dot.classList.add('progress'); hint.textContent='برای اطلاع از وضعیت سفارش کلیک کنید'; }
-    else if(order.status==='done'){ dot.classList.add('done'); hint.textContent='سفارش شما انجام شد برای دریافت کانفیگ ها کلیک کنید'; }
-    else { dot.classList.add('pending'); hint.textContent='برای اطلاع از وضعیت سفارش کلیک کنید'; }
-  }
-
-  function faNum(n){
-    try { return Number(n).toLocaleString('fa-IR'); } catch(e){ return String(n); }
-  }
-  function faLeft(sec){
-    sec = Math.max(0, Number(sec) || 0);
-    if (!sec) return 'تمام شده';
-    var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
-    var bits = [];
-    if (d) bits.push(faNum(d) + ' روز');
-    if (h) bits.push(faNum(h) + ' ساعت');
-    if (!d && (m || !h)) bits.push(faNum(Math.max(1, m)) + ' دقیقه');
-    return bits.join(' و ');
-  }
-  var PLAN_WEEKS = { bronze: 1, silver: 2, gold: 3 };
-  var PLAN_FA = { bronze: 'برنز', silver: 'نقره', gold: 'طلایی' };
-  function planCheck(color){
-    return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linejoin="round" stroke-linecap="round"/></svg>';
-  }
-  function renderPlans(plans){
-    var box = document.getElementById('planGrid');
-    if(!box || !plans) return;
-    var colors = { bronze:'#e67e22', silver:'#e8e8e8', gold:'#d4af37' };
-    box.innerHTML = ['bronze','silver','gold'].map(function(id){
-      var p = plans[id] || {};
-      var stroke = colors[id];
-      var bullets = (p.bullets||[]).map(function(b){ return '<li>'+planCheck(stroke)+esc(b)+'</li>'; }).join('');
-      var price = p.price != null ? faNum(p.price) : '';
-      var ncfg = p.configs != null ? p.configs : '';
-      var preview = ncfg !== '' ? '<p class="plan-preview">بعد از تأیید فیش، '+faNum(ncfg)+' کانفیگ در «سرور های من» می‌آید.</p>' : '';
-      return '<div class="plan-card '+id+'">'+
-        '<div class="plan-bar"></div>'+
-        '<div class="plan-body">'+
-          '<h4>'+esc(p.title||id)+'</h4>'+
-          '<p class="plan-desc">'+esc(p.subtitle||'')+'</p>'+
-          '<p class="plan-price">'+price+' <small>تومان</small></p>'+
-          preview+
-          '<ul>'+bullets+'</ul>'+
-        '</div>'+
-        '<div class="plan-foot"><button type="button" class="btn" data-plan="'+id+'">Select Plan</button></div>'+
-      '</div>';
-    }).join('');
-  }
-  function applyVipSettings(d){
-    if(!d || !d.ok) return;
-    vipState.enabled = !!d.enabled;
-    vipState.cardNumber = d.cardNumber||'';
-    vipState.cardName = d.cardName||'';
-    try { localStorage.setItem('fn_vip_on', vipState.enabled ? '1' : '0'); } catch(e){}
-    document.documentElement.classList.toggle('vip-off', !vipState.enabled);
-    var btn = document.getElementById('vipBuyBtn');
-    if(btn) btn.style.display = vipState.enabled ? 'inline-flex' : 'none';
-    document.getElementById('cardNum').textContent = formatCard(vipState.cardNumber);
-    document.getElementById('cardHolder').textContent = (vipState.cardName||'—').toUpperCase();
-    if(d.plans) renderPlans(d.plans);
-  }
-  function loadVipSettings(){
-    var p;
-    if(!_usedVip && _firstVip){ _usedVip = true; p = _firstVip; }
-    else p = fetchJson('/api/vip/settings');
-    p.then(applyVipSettings);
-  }
-
-  var VIP_MINE = 'fn_vip_mine';
-  var mineServers = [];
-  var mineActiveCat = '';
-  function mineCodes(){
-    try { var a = JSON.parse(localStorage.getItem(VIP_MINE)||'[]'); return Array.isArray(a)?a:[]; } catch(e){ return []; }
-  }
-  function addMine(code){
-    if(!code) return;
-    var a = mineCodes();
-    if(a.indexOf(code)<0){ a.push(code); localStorage.setItem(VIP_MINE, JSON.stringify(a)); }
-  }
-  function celebrateMine(){
-    var b = document.getElementById('myServersBtn');
-    if (!b) return;
-    b.style.display = 'inline-flex';
-    b.classList.remove('glow');
-    void b.offsetWidth;
-    b.classList.add('glow');
-    setTimeout(function(){ b.classList.remove('glow'); }, 4200);
-  }
-  function updateMineBtn(){
-    var b = document.getElementById('myServersBtn');
-    if(!b) return;
-    var show = mineServers.length > 0;
-    if (!show) {
-      try {
-        var codes = mineCodes();
-        if (codes && codes.length) show = true;
-      } catch (e) {}
-    }
-    document.documentElement.classList.toggle('mine-on', !!show);
-    b.style.display = show ? 'inline-flex' : 'none';
-  }
-  function renderMine(){
-    var box = document.getElementById('mineGrid');
-    var catsBox = document.getElementById('mineCats');
-    var bar = document.getElementById('mineCopyBar');
-    if(!box) return;
-    var cats=[], seen={};
-    mineServers.forEach(function(s){
-      var c=String(s.category||'').trim();
-      if(c && !seen[c]){ seen[c]=1; cats.push(c); }
-    });
-    if(mineActiveCat && cats.indexOf(mineActiveCat)<0) mineActiveCat='';
-    var html = '<button type="button" class="cat-btn'+(mineActiveCat?'':' on')+'" data-mine-cat="">همه</button>';
-    cats.forEach(function(c){
-      html += '<button type="button" class="cat-btn'+(mineActiveCat===c?' on':'')+'" data-mine-cat="'+esc(c)+'">'+esc(c)+'</button>';
-    });
-    catsBox.innerHTML = cats.length ? html : '';
-    var list = mineServers;
-    if(mineActiveCat) list = mineServers.filter(function(s){ return String(s.category||'').trim()===mineActiveCat; });
-    if(!mineServers.length){
-      box.innerHTML = '<div class="empty"><div class="big">⭐</div>هنوز کانفیگ اختصاصی نداری.</div>';
-      bar.innerHTML = '';
-      return;
-    }
-    var n = list.length.toLocaleString('fa-IR');
-    var label = mineActiveCat ? ('کپی همه «'+mineActiveCat+'» ('+n+')') : ('کپی همه سرورهای من ('+n+')');
-    bar.innerHTML = '<button type="button" class="btn btn-primary" id="mineCopyAll">📋 '+esc(label)+'</button>';
-    box.innerHTML = list.map(serverCard).join('');
-    var boxS = document.getElementById('mineSupportBox');
-    if (boxS) {
-      var now = Math.floor(Date.now()/1000);
-      var seen = {}, rows = [];
-      mineServers.forEach(function(s){
-        var c = s.orderCode; if (!c || seen[c]) return; seen[c] = 1;
-        var left = Number(s.supportLeft);
-        if (!(left > 0) && s.supportUntil) left = Math.max(0, Number(s.supportUntil) - now);
-        var total = Number(s.supportTotal) || ((PLAN_WEEKS[s.plan] || 1) * 7 * 86400);
-        var pct = total > 0 ? Math.max(0, Math.min(100, Math.round((left / total) * 100))) : 0;
-        var low = left > 0 && left <= 2 * 86400;
-        var done = left <= 0;
-        var title = (PLAN_FA[s.plan] || '') + (c ? ' · ' + c : '');
-        var label = done ? 'مدت پشتیبانی تمام شده — جایگزینی دیگر فعال نیست' : faLeft(left) + ' مانده';
-        rows.push(
-          '<div class="ms-row'+(done?' done':'')+(low?' low':'')+'">' +
-            '<div class="ms-top"><b>'+esc(title.trim()||'سفارش')+'</b><span>'+esc(label)+'</span></div>' +
-            '<div class="ms-bar"><i style="width:'+pct+'%"></i></div>' +
-          '</div>'
-        );
-      });
-      if (!rows.length) { boxS.classList.remove('show'); boxS.innerHTML = ''; }
-      else { boxS.classList.add('show'); boxS.innerHTML = rows.join(''); }
-    }
-  }
-  function loadMine(cb){
-    var codes = mineCodes().slice();
-    var cur = localStorage.getItem(VIP_LS);
-    if(cur && codes.indexOf(cur)<0) codes.push(cur);
-    if(!codes.length){ mineServers=[]; updateMineBtn(); if(cb) cb(); return; }
-    Promise.all(codes.map(function(c){
-      return __fnFetch('/api/vip/order?code='+encodeURIComponent(c)).then(function(r){ return r.text().then(function(tx){ try { return JSON.parse(tx); } catch(e){ return null; } }); }).catch(function(){ return null; });
-    })).then(function(arr){
-      var seen={};
-      mineServers=[];
-      (arr||[]).forEach(function(d){
-        if(!d || !d.ok) return;
-        if(d.status==='done'){
-          addMine(d.code);
-          (d.configs||[]).forEach(function(s, idx){
-            if(!s || !s.link || seen[s.link]) return;
-            seen[s.link]=1;
-            var slot = s.slot != null ? String(s.slot) : String(idx);
-            mineServers.push(Object.assign({}, s, {
-              orderCode: d.code,
-              plan: d.plan || '',
-              slot: slot,
-              supportUntil: d.supportUntil || 0,
-              supportTotal: d.supportTotal || 0,
-              replaceUsed: d.replaceUsed || 0,
-              replaceMax: d.replaceMax || 0,
-              replacePending: (d.pendingSlots||[]).indexOf(slot) >= 0,
-              replaceStatus: (d.slotStatus && d.slotStatus[slot]) || ((d.pendingSlots||[]).indexOf(slot)>=0 ? 'pending' : ''),
-              supportLeft: d.supportLeft || 0
-            }));
-          });
-        }
-      });
-      updateMineBtn();
-      if(cb) cb();
-    });
-  }
   function announceHash(s){
     var h = 0, i, t = String(s||'');
     for (i = 0; i < t.length; i++) h = ((h << 5) - h + t.charCodeAt(i)) | 0;
@@ -1502,257 +1160,6 @@ window.__fnJ=function(u){
       }).join('');
     }).catch(function(){});
   }
-  function refreshVipOrder(cb){
-    var code = localStorage.getItem(VIP_LS);
-    if(!code){ vipState.order=null; setChip(null); loadMine(); if(cb) cb(null); return; }
-    __fnFetch('/api/vip/order?code='+encodeURIComponent(code)).then(function(r){ return r.json(); }).then(function(d){
-      if(!d || !d.ok){ if(cb) cb(null); return; }
-      var prevSt = vipState.order && vipState.order.status;
-      vipState.order = d;
-      vipState.code = d.code;
-      if(d.status==='done') addMine(d.code);
-      setChip(d);
-      if(d.status==='done'){
-        if (prevSt && prevSt !== 'done') {
-          updateMineBtn();
-          celebrateMine();
-        }
-        loadMine(function(){
-          if(document.getElementById('vipMine').classList.contains('open')) renderMine();
-        });
-      }
-      if(cb) cb(d);
-    }).catch(function(){ if(cb) cb(null); });
-  }
-
-  function startTimer(exp){
-    if(vipState.tick) clearInterval(vipState.tick);
-    function draw(){
-      var left = exp - Math.floor(Date.now()/1000);
-      if(left < 0) left = 0;
-      var m = Math.floor(left/60), s = left%60;
-      document.getElementById('payTimer').textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-      if(left<=0){ clearInterval(vipState.tick); document.getElementById('vipSendReceipt').disabled = true; }
-    }
-    draw();
-    vipState.tick = setInterval(draw, 1000);
-  }
-
-  function compressImage(file){
-    return new Promise(function(resolve, reject){
-      var img = new Image();
-      var url = URL.createObjectURL(file);
-      img.onload = function(){
-        try{
-          var max=900, w=img.width, h=img.height;
-          if(w>max || h>max){ if(w>h){ h=Math.round(h*max/w); w=max; } else { w=Math.round(w*max/h); h=max; } }
-          var c=document.createElement('canvas'); c.width=w; c.height=h;
-          var ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
-          var dark=false;
-          try{
-            var px=ctx.getImageData(0,0,c.width,c.height).data, sum=0, nn=0, step=64;
-            for(var i=0;i<px.length;i+=step){ sum += px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114; nn++; }
-            dark = nn && (sum/nn) < 48;
-          }catch(e2){}
-          resolve({ data: c.toDataURL('image/jpeg', 0.65), dark: dark });
-        }catch(e){ reject(e); }
-        URL.revokeObjectURL(url);
-      };
-      img.onerror = reject;
-      img.src = url;
-    }).catch(function(){
-      return new Promise(function(resolve, reject){
-        var r=new FileReader();
-        r.onload=function(){ resolve(r.result); };
-        r.onerror=reject;
-        r.readAsDataURL(file);
-      });
-    });
-  }
-
-  function renderStatus(d){
-    var box = document.getElementById('vipStatusBox');
-    if(!d){ box.innerHTML='<p class="vip-sub">سفارشی پیدا نشد</p>'; return; }
-    var html = '';
-    if(d.status==='awaiting_receipt'){
-      html += '<div class="st-light wait"></div><p>در انتظار ارسال فیش</p><p class="vip-sub">هنوز فیش نفرستادی. از دکمه خرید دوباره وارد پرداخت شو.</p>';
-    } else if(d.status==='pending'){
-      html += '<div class="st-light wait"></div><p>در انتظار تأیید</p><p class="vip-sub">فیش رسیده؛ منتظر بررسی ادمین باش.</p>';
-    } else if(d.status==='rejected'){
-      html += '<div class="st-light no"></div><p>سفارش رد شد</p><p class="vip-sub">'+esc(d.rejectReason||'متأسفانه این سفارش تأیید نشد.')+'</p>';
-      html += '<button type="button" class="btn btn-ghost" id="vipAckReject" style="margin-top:12px">متوجه شدم</button>';
-    } else if(d.status==='in_progress'){
-      html += '<div class="st-light work"></div><p>در حال انجام</p><p class="vip-sub">سفارش قبول شده. کانفیگ‌ها در حال آماده‌سازی است.</p>';
-    } else if(d.status==='done'){
-      html += '<div class="st-light ok"></div><p>سفارش شما قبول شد</p><p class="vip-sub">از این به بعد از دکمه طلایی «سرور های من» بالای صفحه بردار.</p>';
-      html += '<button type="button" class="btn btn-primary" id="vipCopyAll" style="margin-top:12px;width:100%">کپی کانفیگ‌ها</button>';
-      html += '<button type="button" class="btn btn-ghost" id="vipOpenMine" style="margin-top:8px;width:100%">سرور های من</button>';
-    } else if(d.status==='expired'){
-      html += '<div class="st-light wait"></div><p>زمان ارسال فیش تمام شد</p>';
-      html += '<button type="button" class="btn btn-ghost" id="vipAckReject" style="margin-top:12px">بستن</button>';
-    }
-    html += '<div class="st-code">کد اشتراک شما (به کسی ندهید)<b>'+esc(d.code)+'</b></div>';
-    box.innerHTML = html;
-    var ack = document.getElementById('vipAckReject');
-    if(ack) ack.addEventListener('click', function(){
-      localStorage.removeItem(VIP_LS); vipState.order=null; setChip(null); vipClose('vipStatus');
-    });
-    var cp = document.getElementById('vipCopyAll');
-    if(cp) cp.addEventListener('click', function(){
-      var links = d.links||[];
-      if(!links.length && d.configs) links = d.configs.map(function(s){ return s.link; });
-      if(!links.length){ toast('هنوز کانفیگی نیست'); return; }
-      copyText(links.join('\n')).then(function(ok){ toast(ok?'✅ کانفیگ‌ها کپی شد':'❌ کپی نشد'); });
-    });
-    var om = document.getElementById('vipOpenMine');
-    if(om) om.addEventListener('click', function(){
-      vipClose('vipStatus');
-      loadMine(function(){ renderMine(); vipOpen('vipMine'); });
-    });
-  }
-
-  document.getElementById('vipBuyBtn').addEventListener('click', function(){
-    var o = vipState.order;
-    if(o && o.status && ['awaiting_receipt','pending','in_progress'].indexOf(o.status)>=0){
-      document.getElementById('vipChip').click();
-      return;
-    }
-    vipOpen('vipPlans');
-  });
-  function openOrderUI(d){
-    if(!d) return;
-    if(d.status==='awaiting_receipt'){
-      document.getElementById('payPlanLabel').textContent = 'کد شما: '+d.code;
-      document.getElementById('vipPayCodeHint').innerHTML = 'کد اشتراک: <b dir="ltr">'+esc(d.code)+'</b><br>این کد برای اینکه اشتراک شما ثابت شود نیاز است. لطفا این کد را به کسی ندهید.';
-      startTimer(d.expiresAt);
-      vipOpen('vipPay');
-    } else {
-      renderStatus(d); vipOpen('vipStatus');
-    }
-  }
-  document.getElementById('howBtn').addEventListener('click', function(){ vipOpen('howTo'); });
-  document.getElementById('vipChip').addEventListener('click', function(){
-    if(vipState.order) openOrderUI(vipState.order);
-    refreshVipOrder(function(d){ if(d) openOrderUI(d); });
-  });
-  document.querySelectorAll('[data-vip-close]').forEach(function(b){
-    b.addEventListener('click', function(){
-      var id = b.getAttribute('data-vip-close');
-      if(id==='vipStatus' && vipState.order && (vipState.order.status==='rejected' || vipState.order.status==='expired')){
-        localStorage.removeItem(VIP_LS); vipState.order=null; setChip(null);
-      }
-      vipClose(id);
-    });
-  });
-  document.getElementById('vipPlans').addEventListener('click', function(e){
-    var b = e.target.closest('[data-plan]');
-    if(!b || b.disabled) return;
-    if (vipState.buying) return;
-    var cur = vipState.order;
-    if (cur && cur.code && ['awaiting_receipt','pending','in_progress'].indexOf(cur.status)>=0){
-      vipClose('vipPlans'); openOrderUI(cur); toast('سفارش باز داری؛ همان را تمام کن'); return;
-    }
-    var plan = b.getAttribute('data-plan');
-    var old = b.textContent;
-    vipState.buying = true;
-    document.querySelectorAll('#vipPlans [data-plan]').forEach(function(x){ x.disabled = true; });
-    b.textContent = '…';
-    __fnFetch('/api/vip/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan: plan }) })
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        vipState.buying = false;
-        document.querySelectorAll('#vipPlans [data-plan]').forEach(function(x){ x.disabled = false; });
-        b.disabled = false; b.textContent = old;
-        if(!d.ok){ toast(d.error||'خطا'); return; }
-        localStorage.setItem(VIP_LS, d.code);
-        vipState.code = d.code;
-        vipState.order = { code: d.code, plan: d.plan, status: 'awaiting_receipt', expiresAt: d.expiresAt };
-        setChip({ code:d.code, status:'awaiting_receipt' });
-        document.getElementById('payPlanLabel').textContent = 'پلن '+plan+' — مبلغ طبق کارت';
-        document.getElementById('vipPayCodeHint').innerHTML = 'کد اشتراک: <b dir="ltr">'+esc(d.code)+'</b><br>این کد برای اینکه اشتراک شما ثابت شود نیاز است. لطفا این کد را به کسی ندهید.';
-        startTimer(d.expiresAt);
-        vipClose('vipPlans'); vipOpen('vipPay');
-      })
-      .catch(function(){
-        vipState.buying = false;
-        document.querySelectorAll('#vipPlans [data-plan]').forEach(function(x){ x.disabled = false; });
-        b.disabled = false; b.textContent = old; toast('اتصال برقرار نشد');
-      });
-  });
-  document.getElementById('myServersBtn').addEventListener('click', function(){
-    renderMine();
-    vipOpen('vipMine');
-    loadMine(function(){ renderMine(); });
-  });
-  document.getElementById('vipMine').addEventListener('click', function(e){
-    var cat = e.target.closest('[data-mine-cat]');
-    if(cat){ mineActiveCat = cat.getAttribute('data-mine-cat')||''; renderMine(); return; }
-    if(e.target.closest('#mineCopyAll')){
-      var list = mineServers;
-      if(mineActiveCat) list = mineServers.filter(function(s){ return String(s.category||'').trim()===mineActiveCat; });
-      copyText(list.map(function(s){ return s.link; }).join('\n')).then(function(ok){ toast(ok?'✅ کپی شد':'❌ کپی نشد'); });
-      return;
-    }
-    var rp = e.target.closest('[data-replace-code]');
-    if(rp){
-      if(!confirm('درخواست جایگزینی این سرور برود برای ادمین؟ همان سرور بعد از تأیید عوض می‌شود.')) return;
-      var code = rp.getAttribute('data-replace-code');
-      var slot = rp.getAttribute('data-replace-slot');
-      rp.disabled = true;
-      __fnFetch('/api/vip/replace', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ code: code, slot: slot })
-      }).then(function(r){ return r.json(); }).then(function(d){
-        if(!d.ok){ toast(d.error||'ارسال نشد'); rp.disabled=false; return; }
-        toast('درخواست جایگزینی ثبت شد');
-        loadMine(function(){ renderMine(); });
-      }).catch(function(){ toast('ارسال نشد'); rp.disabled=false; });
-    }
-  });
-  document.getElementById('vipFileBtn').addEventListener('click', function(){
-    document.getElementById('vipReceiptFile').click();
-  });
-  document.getElementById('vipReceiptFile').addEventListener('change', function(){
-    var f = this.files && this.files[0];
-    var el = document.getElementById('vipFileName');
-    if (el) el.textContent = f ? ('انتخاب شد: ' + f.name) : '';
-    var b = document.getElementById('vipFileBtn');
-    if (b && f) b.textContent = '📁 ' + f.name;
-  });
-  document.getElementById('vipSendReceipt').addEventListener('click', function(){
-    var btn = document.getElementById('vipSendReceipt');
-    if (vipState.sendingReceipt || btn.disabled) return;
-    var f = document.getElementById('vipReceiptFile').files[0];
-    var code = localStorage.getItem(VIP_LS);
-    if(!code){ toast('کد سفارش نیست'); return; }
-    if(!f){ toast('اول عکس فیش را انتخاب کن'); return; }
-    vipState.sendingReceipt = true;
-    btn.disabled = true;
-    var oldSend = btn.textContent;
-    btn.textContent = 'در حال ارسال…';
-    compressImage(f).then(function(res){
-      var data = (res && res.data) ? res.data : res;
-      var warn = document.getElementById('vipDarkWarn');
-      if (res && res.dark) {
-        if (warn) warn.classList.add('show');
-        toast('عکس خیلی تاریکه؛ ممکن است خوانده نشود');
-      } else if (warn) warn.classList.remove('show');
-      return __fnFetch('/api/vip/receipt', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code: code, image: data }) });
-    }).then(function(r){ return r.json(); }).then(function(d){
-      vipState.sendingReceipt = false;
-      if(!d.ok){ btn.disabled=false; btn.textContent=oldSend; toast(d.error||'خطا'); return; }
-      toast('فیش ارسال شد');
-      btn.textContent = 'ارسال شد';
-      vipClose('vipPay');
-      refreshVipOrder(function(ord){ renderStatus(ord); vipOpen('vipStatus'); });
-    }).catch(function(){
-      vipState.sendingReceipt = false;
-      btn.disabled=false; btn.textContent=oldSend;
-      toast('ارسال فیش نشد');
-    });
-  });
-
 
   var SUP_VIS = 'fn_support_id';
   var sup = { threadId: 0, channel: 'ai', lastId: 0, hours: null, name: 'هوش مصنوعی', sending: false };
@@ -1896,19 +1303,6 @@ window.__fnJ=function(u){
           setTyping(false);
           appendMsgs(d.replies, false);
         }
-        if (d.hint === 'replace') {
-          var box = document.getElementById('supMsgs');
-          var hb = document.createElement('button');
-          hb.type = 'button';
-          hb.className = 'sup-mine-btn';
-          hb.textContent = 'باز کردن سرور های من';
-          hb.addEventListener('click', function(){
-            supClosePanel();
-            renderMine(); vipOpen('vipMine'); loadMine(function(){ renderMine(); });
-          });
-          box.appendChild(hb);
-          box.scrollTop = box.scrollHeight;
-        }
         setBadge(0);
         if (sup.threadId) {
           supJson('/api/support/messages?visitorId=' + encodeURIComponent(visId()) + '&threadId=' + sup.threadId + '&afterId=' + sup.lastId).catch(function(){});
@@ -2037,7 +1431,7 @@ window.__fnJ=function(u){
       title: 'درباره FILTERNET',
       body:
         '<p>FILTERNET وب‌سایت ارائهٔ کانفیگ V2Ray است. کار ما ساده است: ورود با یک کد، دیدن فهرست سرورها، و انتقال کانفیگ به کلاینت از راه کپی یا QR.</p>' +
-        '<p>لینک خام روی صفحه دیده نمی‌شود. اپ جدا، اشتراک و ثبت‌نام ارائه نمی‌کنیم. هویت بصری سایت تیره و کلاسیک است؛ بخش اختصاصی در صورت فعال بودن، طلایی است.</p>' +
+        '<p>لینک خام روی صفحه دیده نمی‌شود. اپ جدا، اشتراک و ثبت‌نام ارائه نمی‌کنیم.</p>' +
         '<p>نام FILTERNET و عناصر گرافیکی سایت متعلق به همین سرویس است و استفادهٔ تجاری از نام یا لوگو بدون اجازه مجاز نیست.</p>'
     },
     mission: {
@@ -2045,13 +1439,13 @@ window.__fnJ=function(u){
       body:
         '<p>مأموریت FILTERNET کوتاه‌کردن مسیر اتصال است: بدون حساب کاربری، بدون ربات، بدون شلوغی اضافه.</p>' +
         '<p>می‌خواهیم کاربر در چند قدم به کانفیگ برسد و مسئولیت تنظیم کلاینت با خودش باشد. شفافیت را به پیچیدگی ترجیح می‌دهیم؛ آنچه نیستیم را هم صریح می‌گوییم.</p>' +
-        '<p>پشتیبانی برای راهنمایی و در خدمات اختصاصی برای جایگزینی در مدت معلوم است، نه برای تضمین عبور از هر فیلتری.</p>'
+        '<p>پشتیبانی برای راهنمایی است، نه برای تضمین عبور از هر فیلتری.</p>'
     },
     scope: {
       title: 'محدوده خدمات',
       body:
         '<h4>چه هستیم</h4>' +
-        '<p>سایت فهرست کانفیگ، امکان کپی و QR، دسته‌بندی، در صورت فعال بودنِ خرید اختصاصیِ کارت‌به‌کارت، نگهداری کانفیگ اختصاصی در «سرور های من»، جایگزینی در سقف و مدت پشتیبانی، و گفتگوی پشتیبانی روی همین صفحه.</p>' +
+        '<p>سایت فهرست کانفیگ، امکان کپی و QR، دسته‌بندی، و گفتگوی پشتیبانی روی همین صفحه.</p>' +
         '<h4>چه نیستیم</h4>' +
         '<p>اپلیکیشن فیلترشکن، سرویس اشتراک/سابسکریپشن، سامانه ثبت‌نام، بات تلگرام، نمایش پینگ، یا تضمین‌کنندهٔ عبور از فیلترینگ کشور یا شبکهٔ کاربر نیستیم.</p>' +
         '<p>قطع شدن یک کانفیگ، کندی اینترنت محلی، یا مسدود شدن مسیر، به‌تنهایی به‌معنای تخلف سایت از این محدوده نیست.</p>'
@@ -2059,17 +1453,16 @@ window.__fnJ=function(u){
     nosignup: {
       title: 'چرا ثبت‌نام نداریم',
       body:
-        '<p>ورود به فهرست عمومی با کد ورود است، نه با ساخت حساب. این انتخاب برای کاهش پیچیدگی و کاهش ردپای حساب کاربری است.</p>' +
-        '<p>کد ورود از کانال اطلاع‌رسانی در اختیار قرار می‌گیرد. سایت کد ورود نمی‌سازد و از طریق پشتیبانی نیز کد ورود جدید صادر نمی‌کند.</p>' +
-        '<p>سفارش اختصاصی — در صورت فعال بودن — به همین مرورگر گره است. با پاک کردن دادهٔ مرورگر یا عوض کردن دستگاه، دسترسی محلی به «سرور های من» از بین می‌رود مگر کد سفارش را نگه داشته باشید.</p>'
+        '<p>ورود به فهرست با کد ورود است، نه با ساخت حساب. این انتخاب برای کاهش پیچیدگی و کاهش ردپای حساب کاربری است.</p>' +
+        '<p>کد ورود از کانال اطلاع‌رسانی در اختیار قرار می‌گیرد. سایت کد ورود نمی‌سازد و از طریق پشتیبانی نیز کد ورود جدید صادر نمی‌کند.</p>'
     },
     use: {
       title: 'قوانین استفاده کاربر',
       body:
         '<p>با استفاده از سایت، این موارد را می‌پذیرید:</p>' +
-        '<p>استفاده شخصی و غیرمخرب. فروش مجدد، انتشار عمومی یا واگذاری کانفیگ اختصاصی به دیگران مجاز نیست.</p>' +
+        '<p>استفاده شخصی و غیرمخرب. فروش مجدد یا انتشار عمومی لینک کانفیگ مجاز نیست.</p>' +
         '<p>مسئولیت نصب کلاینت (از جمله v2rayNG یا Hiddify)، صحت اتصال، و رعایت قوانین محل اقامت با کاربر است.</p>' +
-        '<p>ارسال فیش یا اطلاعات متعلق به دیگری، اهانت در گفتگو، تلاش برای اختلال در سایت یا دور زدن دروازهٔ ورود ممنوع است.</p>' +
+        '<p>اهانت در گفتگو، تلاش برای اختلال در سایت یا دور زدن دروازهٔ ورود ممنوع است.</p>' +
         '<p>کانفیگ را در ابزارهای مشکوک وارد نکنید. لینک را در گروه عمومی نفرستید.</p>'
     },
     site: {
@@ -2085,23 +1478,22 @@ window.__fnJ=function(u){
       body:
         '<p>استفاده از FILTERNET به‌معنای اطلاع از اسناد منوی سایت و پذیرش آن‌هاست. اگر نمی‌پذیرید، از سایت استفاده نکنید.</p>' +
         '<p>متن‌های مقررات ممکن است به‌روز شوند. نسخهٔ معتبر، همان است که در همین سایت در لحظهٔ مراجعه دیده می‌شود.</p>' +
-        '<p>در صورت تعارض با قوانین لازم‌الاجرای جمهوری اسلامی ایران، آن قوانین مقدم است.</p>' +
-        '<p>خرید اختصاصی در صورت فعال بودن، خدمت جداگانه‌ای با مهلت فیش، کد سفارش و مدت پشتیبانی مشخص است و جزئیات آن روی همان مسیر خرید اعلام می‌شود — نه به‌عنوان تعهد دائمی همهٔ بازدیدکنندگان.</p>'
+        '<p>در صورت تعارض با قوانین لازم‌الاجرای جمهوری اسلامی ایران، آن قوانین مقدم است.</p>'
     },
     privacy: {
       title: 'حریم خصوصی',
       body:
-        '<p>حساب کاربری عمومی نداریم. آنچه برای کار سایت لازم است، عمدتاً روی همین مرورگر می‌ماند: از جمله توکن دروازه و در صورت خرید، کد سفارش.</p>' +
-        '<p>عکس فیش — اگر ارسال شود — برای بررسی سفارش روی زیرساخت سایت ذخیره می‌شود. گفتگوی پشتیبانی برای پاسخ‌گویی نگهداری می‌شود.</p>' +
+        '<p>حساب کاربری عمومی نداریم. آنچه برای کار سایت لازم است، عمدتاً روی همین مرورگر می‌ماند؛ از جمله توکن دروازه.</p>' +
+        '<p>گفتگوی پشتیبانی برای پاسخ‌گویی نگهداری می‌شود.</p>' +
         '<p>داده را برای تبلیغات ثالث نمی‌فروشیم. از هوش مصنوعی برای پاسخ گفتگوی عمومی استفاده می‌شود؛ در گفتگو لینک کانفیگ و رمز نفرستید.</p>' +
-        '<p>برای حذف دادهٔ محلی، داده‌های سایت را از مرورگر پاک کنید. برای موضوع فیش یا گفتگو، از پشتیبانی همین صفحه پیام بدهید.</p>'
+        '<p>برای حذف دادهٔ محلی، داده‌های سایت را از مرورگر پاک کنید.</p>'
     },
     cookies: {
       title: 'کوکی و کد ورود',
       body:
         '<p>پس از ورود موفق، یک نشان به‌خاطر سپرده می‌شود تا تا وقتی مدیر کد را عوض نکرده، دوباره کد نپرسد. این نشان برای تبلیغات نیست.</p>' +
         '<p>اگر مدیر کد ورود را تغییر دهد، نشان قبلی از اعتبار می‌افتد و باید کد جدید را بزنید. بنر هشدار در همان حالت نمایش داده می‌شود.</p>' +
-        '<p>می‌توانید کوکی و ذخیره‌سازی محلی مرورگر را پاک کنید؛ در آن صورت دروازه دوباره ظاهر می‌شود و «سرور های من» روی آن مرورگر خالی دیده می‌شود.</p>'
+        '<p>می‌توانید کوکی و ذخیره‌سازی محلی مرورگر را پاک کنید؛ در آن صورت دروازه دوباره ظاهر می‌شود.</p>'
     },
     availability: {
       title: 'در دسترس بودن سرویس',
@@ -2111,6 +1503,35 @@ window.__fnJ=function(u){
         '<p>در دسترس نبودن موقت به‌تنهایی ایجاد حق خسارت نمی‌کند. کانفیگ عمومی ممکن است هر زمان عوض یا خاموش شود.</p>'
     }
   };
+  function bodyToHtml(text){
+    return String(text||'').split(/\n{2,}/).map(function(p){
+      return '<p>'+esc(p).replace(/\n/g,'<br>')+'</p>';
+    }).join('');
+  }
+  function renderDrawer(items){
+    var dr = document.getElementById('fnDrawer');
+    if (!dr || !items || !items.length) return;
+    LEGAL = {};
+    var html = '<div class="fn-drawer-head"><div class="fn-drawer-brand">FILTERNET</div><p>اسناد و مقررات سایت</p></div>';
+    var last = '';
+    items.forEach(function(it){
+      var id = 'p' + String(it.id);
+      LEGAL[id] = { title: it.title, body: bodyToHtml(it.body) };
+      var sec = String(it.section||'').trim();
+      if (sec && sec !== last) {
+        html += '<p class="fn-nav-g">'+esc(sec)+'</p>';
+        last = sec;
+      }
+      html += '<button type="button" class="fn-nav-item" data-legal="'+esc(id)+'">'+esc(it.title)+'</button>';
+    });
+    dr.innerHTML = html;
+  }
+  function loadMenuPages(){
+    fetchJson('/api/menu').then(function(d){
+      if (d && d.ok && d.items && d.items.length) renderDrawer(d.items);
+      legalFromHash();
+    }).catch(function(){});
+  }
 
   function setMenu(on){
     var chk = document.getElementById('check-icon');
@@ -2180,23 +1601,17 @@ window.__fnJ=function(u){
     if (_appStarted) return;
     _appStarted = true;
     _usedServers = false;
-    _usedVip = false;
     window.__fnSrv = window.__fnJ('/api/servers');
-    window.__fnVip = window.__fnJ('/api/vip/settings');
     _firstServers = window.__fnSrv;
-    _firstVip = window.__fnVip;
-    updateMineBtn();
     load();
-    loadVipSettings();
     loadSite();
-    refreshVipOrder();
-    loadMine();
+    loadMenuPages();
     pingBadge();
     legalFromHash();
     if (!_timersOn) {
       _timersOn = true;
       setInterval(pollSup, 8000);
-      setInterval(function(){ if (_appStarted) { loadVipSettings(); refreshVipOrder(); loadMine(); loadSite(); } }, 20000);
+      setInterval(function(){ if (_appStarted) { loadSite(); } }, 20000);
       setInterval(function () {
         if (!modal.classList.contains('open') && _appStarted) load();
       }, 30000);

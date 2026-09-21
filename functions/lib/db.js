@@ -39,6 +39,7 @@ async function migrate(db) {
     'ALTER TABLE vip_orders ADD COLUMN support_until INTEGER DEFAULT 0',
     'ALTER TABLE vip_orders ADD COLUMN replace_used INTEGER DEFAULT 0',
     "ALTER TABLE servers ADD COLUMN tags TEXT DEFAULT ''",
+    "CREATE TABLE IF NOT EXISTS site_menu (id INTEGER PRIMARY KEY AUTOINCREMENT, section TEXT DEFAULT '', title TEXT NOT NULL, body TEXT DEFAULT '', sort INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL DEFAULT 0)",
   ];
   for (const sql of extra) {
     try {

@@ -214,9 +214,7 @@
     <div class="admin-tabs" id="adminTabs">
       <button type="button" class="atab on" data-tab="servers">سرورها</button>
       <button type="button" class="atab" data-tab="gate">کد ورود</button>
-      <button type="button" class="atab" data-tab="receipts">فیش‌ها <span class="tab-n" id="receiptBadge"></span></button>
-      <button type="button" class="atab" data-tab="repl">جایگزینی سرور <span class="tab-n" id="replBadge"></span></button>
-      <button type="button" class="atab" data-tab="vipcf">کانفیگ اختصاصی</button>
+      <button type="button" class="atab" data-tab="menu">منو</button>
       <button type="button" class="atab" data-tab="site">پایین سایت</button>
       <button type="button" class="atab" data-tab="support">پشتیبانی <span class="tab-n" id="supTabBadge"></span></button>
     </div>
@@ -313,6 +311,36 @@
         </div>
       </div>
     </div>
+    </div>
+
+
+    <div id="tab-menu" style="display:none">
+      <div class="card">
+        <h3>منوی سایت</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">این صفحات در منوی همبرگر سایت دیده می‌شوند. اسم و متن را عوض کن یا صفحهٔ جدید اضافه کن.</p>
+        <div class="form-row">
+          <div class="field"><label>گروه (اختیاری)</label><input id="menuSection" placeholder="مثلاً آشنایی"></div>
+          <div class="field"><label>عنوان صفحه *</label><input id="menuTitle" placeholder="مثلاً درباره FILTERNET"></div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>متن</label>
+            <textarea id="menuBody" style="min-height:140px;direction:rtl;text-align:right;font-family:inherit" placeholder="متن صفحه"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="menuSaveBtn">افزودن صفحه</button>
+          <button type="button" class="btn btn-ghost" id="menuCancelBtn" style="display:none">انصراف</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>صفحات منو</h3>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>گروه</th><th>عنوان</th><th>عملیات</th></tr></thead>
+            <tbody id="menuRows"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div id="tab-receipts" style="display:none">
@@ -517,7 +545,7 @@
         <div class="form-row full">
           <div class="field">
             <label>متن</label>
-            <textarea id="supBroadcast" maxlength="500" style="min-height:80px;direction:rtl;text-align:right;font-family:inherit" placeholder="مثلاً سرور آلمان از کار افتاد؛ از سرور های من درخواست جایگزینی بزنید."></textarea>
+            <textarea id="supBroadcast" maxlength="500" style="min-height:80px;direction:rtl;text-align:right;font-family:inherit" placeholder="مثلاً سرور آلمان از کار افتاد؛ از فرانسه استفاده کنید."></textarea>
           </div>
         </div>
         <div class="form-actions">
@@ -662,7 +690,7 @@
   function doLogin(){
     api('/api/admin/login', { method:'POST', body:JSON.stringify({ password: document.getElementById('passInput').value }) })
       .then(function(d){
-        if(d.ok){ showDash(); loadServers(); loadVipAll(); loadSupportAdmin(); document.getElementById('passInput').value=''; }
+        if(d.ok){ showDash(); loadServers(); loadSupportAdmin(); document.getElementById('passInput').value=''; }
         else { document.getElementById('loginErr').textContent=d.error||'رمز اشتباه است'; document.getElementById('loginErr').classList.add('show'); }
       });
   }
@@ -954,13 +982,13 @@
     var b=e.target.closest('[data-tab]'); if(!b) return;
     var tab=b.getAttribute('data-tab');
     document.querySelectorAll('.atab').forEach(function(x){ x.classList.toggle('on', x===b); });
-    ['servers','gate','receipts','repl','vipcf','site','support'].forEach(function(id){
+    ['servers','gate','menu','receipts','repl','vipcf','site','support'].forEach(function(id){
       var el=document.getElementById('tab-'+id); if(el) el.style.display = tab===id?'block':'none';
     });
     if(tab==='gate') loadGateAdmin();
+    else if(tab==='menu') loadMenuAdmin();
     else if(tab==='site') loadSiteAdmin();
     else if(tab==='support') loadSupportAdmin();
-    else if(tab!=='servers') loadVipAll();
   });
   document.getElementById('vipOvClose').addEventListener('click', function(){ document.getElementById('vipOv').classList.remove('open'); });
 
@@ -1446,6 +1474,85 @@
   });
 
 
+
+  var menuItems = [], menuEditingId = null;
+  function menuReset(){
+    menuEditingId = null;
+    var b = document.getElementById('menuSaveBtn'); if (b) b.textContent = 'افزودن صفحه';
+    var c = document.getElementById('menuCancelBtn'); if (c) c.style.display = 'none';
+    var s = document.getElementById('menuSection'); if (s) s.value = '';
+    var ti = document.getElementById('menuTitle'); if (ti) ti.value = '';
+    var bo = document.getElementById('menuBody'); if (bo) bo.value = '';
+  }
+  function loadMenuAdmin(){
+    api('/api/admin/menu').then(function(d){
+      if (!d || !d.ok) return;
+      menuItems = d.items || [];
+      var rows = document.getElementById('menuRows');
+      if (!rows) return;
+      if (!menuItems.length) { rows.innerHTML = '<tr><td colspan="3"><div class="empty">صفحه‌ای نیست</div></td></tr>'; return; }
+      rows.innerHTML = menuItems.map(function(it){
+        return '<tr>' +
+          '<td>' + esc(it.section || '—') + '</td>' +
+          '<td class="t-name">' + esc(it.title) + '</td>' +
+          '<td><div class="row-actions">' +
+            '<button class="mini" data-menu-up="' + it.id + '">بالا</button>' +
+            '<button class="mini" data-menu-down="' + it.id + '">پایین</button>' +
+            '<button class="mini" data-menu-edit="' + it.id + '">✏️ ویرایش</button>' +
+            '<button class="mini del" data-menu-del="' + it.id + '">🗑 حذف</button>' +
+          '</div></td></tr>';
+      }).join('');
+    });
+  }
+  var msb = document.getElementById('menuSaveBtn');
+  if (msb) msb.addEventListener('click', function(){
+    var payload = {
+      section: document.getElementById('menuSection').value,
+      title: document.getElementById('menuTitle').value,
+      body: document.getElementById('menuBody').value
+    };
+    if (!String(payload.title || '').trim()) { toast('عنوان لازم است'); return; }
+    var url = menuEditingId ? '/api/admin/menu/' + menuEditingId : '/api/admin/menu';
+    api(url, { method: 'POST', body: JSON.stringify(payload) }).then(function(d){
+      if (d.ok) { toast(menuEditingId ? 'ذخیره شد' : 'اضافه شد'); menuReset(); loadMenuAdmin(); }
+      else toast(d.error || 'خطا');
+    });
+  });
+  var mcb = document.getElementById('menuCancelBtn');
+  if (mcb) mcb.addEventListener('click', menuReset);
+  var mr = document.getElementById('menuRows');
+  if (mr) mr.addEventListener('click', function(e){
+    var ed = e.target.closest('[data-menu-edit]');
+    if (ed) {
+      var id = parseInt(ed.getAttribute('data-menu-edit'), 10);
+      var it = menuItems.find(function(x){ return x.id === id; });
+      if (!it) return;
+      menuEditingId = id;
+      document.getElementById('menuSection').value = it.section || '';
+      document.getElementById('menuTitle').value = it.title || '';
+      document.getElementById('menuBody').value = it.body || '';
+      document.getElementById('menuSaveBtn').textContent = 'ذخیره تغییرات';
+      document.getElementById('menuCancelBtn').style.display = 'inline-flex';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    var dl = e.target.closest('[data-menu-del]');
+    if (dl) {
+      if (!confirm('این صفحه حذف شود؟')) return;
+      api('/api/admin/menu/' + dl.getAttribute('data-menu-del'), { method: 'DELETE' }).then(function(){ loadMenuAdmin(); });
+      return;
+    }
+    var up = e.target.closest('[data-menu-up]');
+    if (up) {
+      api('/api/admin/menu/' + up.getAttribute('data-menu-up'), { method: 'POST', body: JSON.stringify({ move: 'up' }) }).then(function(){ loadMenuAdmin(); });
+      return;
+    }
+    var dn = e.target.closest('[data-menu-down]');
+    if (dn) {
+      api('/api/admin/menu/' + dn.getAttribute('data-menu-down'), { method: 'POST', body: JSON.stringify({ move: 'down' }) }).then(function(){ loadMenuAdmin(); });
+    }
+  });
+
   var sfb = document.getElementById('siteFileBtn');
   if (sfb) sfb.addEventListener('click', function(){ document.getElementById('siteFile').click(); });
   var sf = document.getElementById('siteFile');
@@ -1594,7 +1701,7 @@
     } else if (d.serverCount === 0) {
       dashErr('');
     }
-    loadServers(); loadVipAll(); loadSupportAdmin();
+    loadServers(); loadSupportAdmin();
   });
 })();
 </script>
