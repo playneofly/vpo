@@ -92,6 +92,74 @@ window.__fnJ=function(u){
     position:sticky; top:0; z-index:10;
     background:var(--surface); border-bottom:1px solid var(--border);
   }
+
+  html.menu-on header{z-index:64}
+  html.gate-on .fn-menu-slot, html.gate-on .fn-scrim, html.gate-on .fn-drawer, html.gate-on .legal-ov{display:none !important}
+  .fn-menu-slot{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    padding:8px; z-index:65; position:relative; margin-inline-end:2px;
+  }
+  .check-icon{position:absolute; opacity:0; pointer-events:none; width:0; height:0}
+  .icon-menu{
+    --gap:5px; --height-bar:2.5px; --pos-y-bar-one:0; --pos-y-bar-three:0;
+    --scale-bar:1; --rotate-bar-one:0; --rotate-bar-three:0;
+    width:25px; display:flex; flex-direction:column; gap:var(--gap);
+    cursor:pointer; position:relative; padding:6px 0;
+  }
+  .bar{
+    position:relative; height:var(--height-bar); width:100%;
+    border-radius:.5rem; background-color:#e8eaee;
+  }
+  .bar--1{top:var(--pos-y-bar-one); transform:rotate(var(--rotate-bar-one)); transition:top 200ms 100ms, transform 100ms}
+  .bar--2{transform:scaleX(var(--scale-bar)); transition:transform 150ms 100ms}
+  .bar--3{bottom:var(--pos-y-bar-three); transform:rotate(var(--rotate-bar-three)); transition:bottom 200ms 100ms, transform 100ms}
+  .check-icon:checked + .icon-menu > .bar--1{transition:top 200ms, transform 200ms 100ms}
+  .check-icon:checked + .icon-menu > .bar--3{transition:bottom 200ms, transform 200ms 100ms}
+  .check-icon:checked + .icon-menu{
+    --pos-y-bar-one: calc(var(--gap) + var(--height-bar));
+    --pos-y-bar-three: calc(var(--gap) + var(--height-bar));
+    --scale-bar:0; --rotate-bar-one:45deg; --rotate-bar-three:-45deg;
+  }
+  .fn-scrim{
+    display:none; position:fixed; inset:0; z-index:60;
+    background:rgba(0,0,0,.55);
+  }
+  html.menu-on .fn-scrim{display:block}
+  .fn-drawer{
+    position:fixed; top:0; right:0; bottom:0; z-index:61;
+    width:min(360px, 88vw); background:#12151b; border-left:1px solid var(--border);
+    transform:translateX(110%); transition:transform .28s ease;
+    display:flex; flex-direction:column; overflow:auto;
+    padding:72px 8px 28px; box-shadow:-16px 0 40px rgba(0,0,0,.45);
+  }
+  html.menu-on .fn-drawer{transform:translateX(0)}
+  .fn-drawer-head{padding:0 16px 18px; border-bottom:1px solid var(--border); margin:0 8px 12px}
+  .fn-drawer-brand{font-size:18px; font-weight:800; letter-spacing:.4px; font-family:var(--fn-display)}
+  .fn-drawer-head p{color:var(--muted); font-size:12.5px; margin-top:4px}
+  .fn-nav-g{
+    font-family:var(--fn-display); font-size:11px; font-weight:800; color:#98a2b3;
+    letter-spacing:.8px; padding:16px 18px 6px; margin:0;
+  }
+  .fn-nav-item{
+    display:block; width:100%; text-align:right; background:transparent; border:0;
+    color:var(--text); font-family:inherit; font-size:14.5px; font-weight:700;
+    padding:11px 18px; border-radius:8px; cursor:pointer; line-height:1.6;
+  }
+  .fn-nav-item:hover{background:var(--surface2)}
+  .legal-ov{
+    position:fixed; inset:0; z-index:70; display:none; align-items:flex-start; justify-content:center;
+    background:rgba(0,0,0,.72); padding:24px 16px; overflow:auto;
+  }
+  .legal-ov.open{display:flex}
+  .legal-box{
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    width:100%; max-width:680px; margin:40px auto 32px; padding:28px 24px 32px; position:relative;
+  }
+  .legal-box h3{font-family:var(--fn-display); font-size:22px; font-weight:800; margin:0 0 18px; padding-left:36px; line-height:1.5}
+  .legal-body{font-size:15px; line-height:1.95; color:#d5d8de}
+  .legal-body p{margin:0 0 14px}
+  .legal-body h4{font-family:var(--fn-display); font-size:15px; margin:18px 0 8px; color:#e8eaee}
+
   .head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0}
   .brand{display:flex; align-items:center; gap:12px}
   .logo-img{width:42px; height:42px; border-radius:4px; flex:0 0 auto; border:1px solid var(--border)}
@@ -386,6 +454,7 @@ window.__fnJ=function(u){
 
   @media (max-width:640px){
     .head{flex-wrap:wrap}
+    .brand{flex:1; min-width:0}
     .head-actions{width:100%; justify-content:flex-start}
   }
   html.vip-off .vip-buy{display:none !important}
@@ -635,6 +704,14 @@ window.__fnJ=function(u){
 
 <header>
   <div class="wrap head">
+    <div class="fn-menu-slot">
+      <input hidden="" class="check-icon" id="check-icon" name="check-icon" type="checkbox">
+      <label class="icon-menu" for="check-icon" aria-label="منو">
+        <div class="bar bar--1"></div>
+        <div class="bar bar--2"></div>
+        <div class="bar bar--3"></div>
+      </label>
+    </div>
     <div class="brand">
       <img class="logo-img" width="42" height="42" decoding="async" src="data:image/png;base64,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" alt="FILTERNET">
       <div>
@@ -659,6 +736,35 @@ window.__fnJ=function(u){
     </div>
   </div>
 </header>
+
+<div class="fn-scrim" id="fnScrim"></div>
+<aside class="fn-drawer" id="fnDrawer" aria-hidden="true">
+  <div class="fn-drawer-head">
+    <div class="fn-drawer-brand">FILTERNET</div>
+    <p>اسناد و مقررات سایت</p>
+  </div>
+  <p class="fn-nav-g">آشنایی</p>
+  <button type="button" class="fn-nav-item" data-legal="about">درباره FILTERNET</button>
+  <button type="button" class="fn-nav-item" data-legal="mission">بیانیه مأموریت</button>
+  <button type="button" class="fn-nav-item" data-legal="scope">محدوده خدمات</button>
+  <button type="button" class="fn-nav-item" data-legal="nosignup">چرا ثبت‌نام نداریم</button>
+  <p class="fn-nav-g">مقررات</p>
+  <button type="button" class="fn-nav-item" data-legal="use">قوانین استفاده کاربر</button>
+  <button type="button" class="fn-nav-item" data-legal="site">قوانین سایت</button>
+  <button type="button" class="fn-nav-item" data-legal="terms">شرایط و ضوابط</button>
+  <p class="fn-nav-g">حریم و پایداری</p>
+  <button type="button" class="fn-nav-item" data-legal="privacy">حریم خصوصی</button>
+  <button type="button" class="fn-nav-item" data-legal="cookies">کوکی و کد ورود</button>
+  <button type="button" class="fn-nav-item" data-legal="availability">در دسترس بودن سرویس</button>
+</aside>
+<div class="legal-ov" id="legalOv">
+  <div class="legal-box">
+    <button type="button" class="vip-x" id="legalX" aria-label="بستن">×</button>
+    <h3 id="legalTitle"></h3>
+    <div class="legal-body" id="legalBody"></div>
+  </div>
+</div>
+
 <div class="site-banner" id="siteBanner" hidden>
   <span id="siteBannerText"></span>
   <button type="button" class="site-banner-x" id="siteBannerX" aria-label="بستن">×</button>
@@ -1874,6 +1980,22 @@ window.__fnJ=function(u){
     var bar = document.getElementById('siteBanner');
     if (bar) { bar.classList.remove('show'); bar.hidden = true; }
   });
+  document.getElementById('check-icon').addEventListener('change', function(){ setMenu(this.checked); });
+  document.getElementById('fnScrim').addEventListener('click', function(){ setMenu(false); });
+  document.getElementById('fnDrawer').addEventListener('click', function(e){
+    var b = e.target.closest('[data-legal]');
+    if (b) openLegal(b.getAttribute('data-legal'));
+  });
+  document.getElementById('legalX').addEventListener('click', closeLegal);
+  document.getElementById('legalOv').addEventListener('click', function(e){
+    if (e.target.id === 'legalOv') closeLegal();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('legalOv').classList.contains('open')) { closeLegal(); return; }
+    if (document.documentElement.classList.contains('menu-on')) setMenu(false);
+  });
+  window.addEventListener('hashchange', legalFromHash);
   document.getElementById('supSend').addEventListener('click', sendSup);
   if (window.visualViewport) {
     visualViewport.addEventListener('resize', layoutSupKeyboard);
@@ -1909,7 +2031,130 @@ window.__fnJ=function(u){
       }
     } catch(e){}
   }
+
+  var LEGAL = {
+    about: {
+      title: 'درباره FILTERNET',
+      body:
+        '<p>FILTERNET وب‌سایت ارائهٔ کانفیگ V2Ray است. کار ما ساده است: ورود با یک کد، دیدن فهرست سرورها، و انتقال کانفیگ به کلاینت از راه کپی یا QR.</p>' +
+        '<p>لینک خام روی صفحه دیده نمی‌شود. اپ جدا، اشتراک و ثبت‌نام ارائه نمی‌کنیم. هویت بصری سایت تیره و کلاسیک است؛ بخش اختصاصی در صورت فعال بودن، طلایی است.</p>' +
+        '<p>نام FILTERNET و عناصر گرافیکی سایت متعلق به همین سرویس است و استفادهٔ تجاری از نام یا لوگو بدون اجازه مجاز نیست.</p>'
+    },
+    mission: {
+      title: 'بیانیه مأموریت',
+      body:
+        '<p>مأموریت FILTERNET کوتاه‌کردن مسیر اتصال است: بدون حساب کاربری، بدون ربات، بدون شلوغی اضافه.</p>' +
+        '<p>می‌خواهیم کاربر در چند قدم به کانفیگ برسد و مسئولیت تنظیم کلاینت با خودش باشد. شفافیت را به پیچیدگی ترجیح می‌دهیم؛ آنچه نیستیم را هم صریح می‌گوییم.</p>' +
+        '<p>پشتیبانی برای راهنمایی و در خدمات اختصاصی برای جایگزینی در مدت معلوم است، نه برای تضمین عبور از هر فیلتری.</p>'
+    },
+    scope: {
+      title: 'محدوده خدمات',
+      body:
+        '<h4>چه هستیم</h4>' +
+        '<p>سایت فهرست کانفیگ، امکان کپی و QR، دسته‌بندی، در صورت فعال بودنِ خرید اختصاصیِ کارت‌به‌کارت، نگهداری کانفیگ اختصاصی در «سرور های من»، جایگزینی در سقف و مدت پشتیبانی، و گفتگوی پشتیبانی روی همین صفحه.</p>' +
+        '<h4>چه نیستیم</h4>' +
+        '<p>اپلیکیشن فیلترشکن، سرویس اشتراک/سابسکریپشن، سامانه ثبت‌نام، بات تلگرام، نمایش پینگ، یا تضمین‌کنندهٔ عبور از فیلترینگ کشور یا شبکهٔ کاربر نیستیم.</p>' +
+        '<p>قطع شدن یک کانفیگ، کندی اینترنت محلی، یا مسدود شدن مسیر، به‌تنهایی به‌معنای تخلف سایت از این محدوده نیست.</p>'
+    },
+    nosignup: {
+      title: 'چرا ثبت‌نام نداریم',
+      body:
+        '<p>ورود به فهرست عمومی با کد ورود است، نه با ساخت حساب. این انتخاب برای کاهش پیچیدگی و کاهش ردپای حساب کاربری است.</p>' +
+        '<p>کد ورود از کانال اطلاع‌رسانی در اختیار قرار می‌گیرد. سایت کد ورود نمی‌سازد و از طریق پشتیبانی نیز کد ورود جدید صادر نمی‌کند.</p>' +
+        '<p>سفارش اختصاصی — در صورت فعال بودن — به همین مرورگر گره است. با پاک کردن دادهٔ مرورگر یا عوض کردن دستگاه، دسترسی محلی به «سرور های من» از بین می‌رود مگر کد سفارش را نگه داشته باشید.</p>'
+    },
+    use: {
+      title: 'قوانین استفاده کاربر',
+      body:
+        '<p>با استفاده از سایت، این موارد را می‌پذیرید:</p>' +
+        '<p>استفاده شخصی و غیرمخرب. فروش مجدد، انتشار عمومی یا واگذاری کانفیگ اختصاصی به دیگران مجاز نیست.</p>' +
+        '<p>مسئولیت نصب کلاینت (از جمله v2rayNG یا Hiddify)، صحت اتصال، و رعایت قوانین محل اقامت با کاربر است.</p>' +
+        '<p>ارسال فیش یا اطلاعات متعلق به دیگری، اهانت در گفتگو، تلاش برای اختلال در سایت یا دور زدن دروازهٔ ورود ممنوع است.</p>' +
+        '<p>کانفیگ را در ابزارهای مشکوک وارد نکنید. لینک را در گروه عمومی نفرستید.</p>'
+    },
+    site: {
+      title: 'قوانین سایت',
+      body:
+        '<p>ادارهٔ فهرست، دسته‌ها، اعلان‌ها و کد ورود با مدیر سایت است و ممکن است بدون اطلاع قبلی تغییر کند.</p>' +
+        '<p>لینک کانفیگ به‌صورت متن قابل‌خواندن روی کارت نشان داده نمی‌شود. کپی و QR تنها روش تحویل روی صفحهٔ عمومی است.</p>' +
+        '<p>خاموش شدن یک سرور، حذف دسته، یا تغییر «پیشنهادی امروز» حق مدیر است و به‌معنای تعهد به یک آدرس همیشگی نیست.</p>' +
+        '<p>سوءاستفاده ممکن است به بستن دسترسی از طریق تغییر کد ورود یا قطع خدمت منجر شود.</p>'
+    },
+    terms: {
+      title: 'شرایط و ضوابط',
+      body:
+        '<p>استفاده از FILTERNET به‌معنای اطلاع از اسناد منوی سایت و پذیرش آن‌هاست. اگر نمی‌پذیرید، از سایت استفاده نکنید.</p>' +
+        '<p>متن‌های مقررات ممکن است به‌روز شوند. نسخهٔ معتبر، همان است که در همین سایت در لحظهٔ مراجعه دیده می‌شود.</p>' +
+        '<p>در صورت تعارض با قوانین لازم‌الاجرای جمهوری اسلامی ایران، آن قوانین مقدم است.</p>' +
+        '<p>خرید اختصاصی در صورت فعال بودن، خدمت جداگانه‌ای با مهلت فیش، کد سفارش و مدت پشتیبانی مشخص است و جزئیات آن روی همان مسیر خرید اعلام می‌شود — نه به‌عنوان تعهد دائمی همهٔ بازدیدکنندگان.</p>'
+    },
+    privacy: {
+      title: 'حریم خصوصی',
+      body:
+        '<p>حساب کاربری عمومی نداریم. آنچه برای کار سایت لازم است، عمدتاً روی همین مرورگر می‌ماند: از جمله توکن دروازه و در صورت خرید، کد سفارش.</p>' +
+        '<p>عکس فیش — اگر ارسال شود — برای بررسی سفارش روی زیرساخت سایت ذخیره می‌شود. گفتگوی پشتیبانی برای پاسخ‌گویی نگهداری می‌شود.</p>' +
+        '<p>داده را برای تبلیغات ثالث نمی‌فروشیم. از هوش مصنوعی برای پاسخ گفتگوی عمومی استفاده می‌شود؛ در گفتگو لینک کانفیگ و رمز نفرستید.</p>' +
+        '<p>برای حذف دادهٔ محلی، داده‌های سایت را از مرورگر پاک کنید. برای موضوع فیش یا گفتگو، از پشتیبانی همین صفحه پیام بدهید.</p>'
+    },
+    cookies: {
+      title: 'کوکی و کد ورود',
+      body:
+        '<p>پس از ورود موفق، یک نشان به‌خاطر سپرده می‌شود تا تا وقتی مدیر کد را عوض نکرده، دوباره کد نپرسد. این نشان برای تبلیغات نیست.</p>' +
+        '<p>اگر مدیر کد ورود را تغییر دهد، نشان قبلی از اعتبار می‌افتد و باید کد جدید را بزنید. بنر هشدار در همان حالت نمایش داده می‌شود.</p>' +
+        '<p>می‌توانید کوکی و ذخیره‌سازی محلی مرورگر را پاک کنید؛ در آن صورت دروازه دوباره ظاهر می‌شود و «سرور های من» روی آن مرورگر خالی دیده می‌شود.</p>'
+    },
+    availability: {
+      title: 'در دسترس بودن سرویس',
+      body:
+        '<p>سایت و کانفیگ‌ها با «بهترین تلاش» ارائه می‌شوند و سطح خدمت تضمینی (SLA) اعلام نمی‌کنیم.</p>' +
+        '<p>قطعی برق و شبکه، فیلتر مسیر، تعمیرات، یا از کار افتادن یک سرور ممکن است رخ دهد. در صورت امکان، اعلان بالای صفحه گذاشته می‌شود.</p>' +
+        '<p>در دسترس نبودن موقت به‌تنهایی ایجاد حق خسارت نمی‌کند. کانفیگ عمومی ممکن است هر زمان عوض یا خاموش شود.</p>'
+    }
+  };
+
+  function setMenu(on){
+    var chk = document.getElementById('check-icon');
+    if (chk) chk.checked = !!on;
+    document.documentElement.classList.toggle('menu-on', !!on);
+    var dr = document.getElementById('fnDrawer');
+    if (dr) dr.setAttribute('aria-hidden', on ? 'false' : 'true');
+    if (on) document.body.style.overflow = 'hidden';
+    else if (!(document.getElementById('supPanel') && document.getElementById('supPanel').classList.contains('open'))) {
+      if (!(document.getElementById('legalOv') && document.getElementById('legalOv').classList.contains('open')))
+        document.body.style.overflow = '';
+    }
+  }
+  function closeLegal(){
+    var ov = document.getElementById('legalOv');
+    if (ov) ov.classList.remove('open');
+    if (location.hash && location.hash.indexOf('#docs-') === 0) {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+    }
+    if (!document.documentElement.classList.contains('menu-on') &&
+        !(document.getElementById('supPanel') && document.getElementById('supPanel').classList.contains('open')))
+      document.body.style.overflow = '';
+  }
+  function openLegal(id, fromHash){
+    var item = LEGAL[id];
+    if (!item) return;
+    setMenu(false);
+    document.getElementById('legalTitle').textContent = item.title;
+    document.getElementById('legalBody').innerHTML = item.body;
+    document.getElementById('legalOv').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (!fromHash) {
+      try { history.replaceState(null, '', location.pathname + location.search + '#docs-' + id); } catch (e) { location.hash = 'docs-' + id; }
+    }
+  }
+  function legalFromHash(){
+    if (document.documentElement.classList.contains('gate-on')) return;
+    var h = (location.hash || '').replace(/^#/, '');
+    if (h.indexOf('docs-') === 0) openLegal(h.slice(5), true);
+  }
+
   function showGate(changed){
+    setMenu(false);
+    closeLegal();
     document.documentElement.classList.add('gate-on');
     document.documentElement.classList.toggle('gate-changed', !!changed);
     document.title = '✦';
@@ -1947,6 +2192,7 @@ window.__fnJ=function(u){
     refreshVipOrder();
     loadMine();
     pingBadge();
+    legalFromHash();
     if (!_timersOn) {
       _timersOn = true;
       setInterval(pollSup, 8000);
