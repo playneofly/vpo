@@ -1,9 +1,6 @@
 /sw.js
   Cache-Control: no-cache
 
-/qr.js
-  Cache-Control: public, max-age=2592000
-
 /admin9831.html
   Cache-Control: no-store
 
