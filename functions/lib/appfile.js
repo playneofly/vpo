@@ -6,13 +6,13 @@ export const MAX_BYTES = 200 * 1024 * 1024;
 
 export async function ensureAppChunks(db) {
   await db
-    .prepare('CREATE TABLE IF NOT EXISTS app_file_chunks (i INTEGER PRIMARY KEY, data TEXT NOT NULL)')
+    .prepare('CREATE TABLE IF NOT EXISTS app_file_chunks (i INTEGER PRIMARY KEY, data BLOB NOT NULL)')
     .run();
 }
 
 export function u8ToB64(u8) {
+  const step = 4096;
   let s = '';
-  const step = 0x8000;
   for (let i = 0; i < u8.length; i += step) {
     s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(i + step, u8.length)));
   }
@@ -24,6 +24,13 @@ export function b64ToU8(b64) {
   const u8 = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
   return u8;
+}
+
+export function toU8(data) {
+  if (data == null) return new Uint8Array(0);
+  if (data instanceof Uint8Array) return data;
+  if (typeof data === 'string') return b64ToU8(data);
+  return new Uint8Array(data);
 }
 
 export function parseAppMeta(raw) {
@@ -102,8 +109,10 @@ export function chunkCount(size) {
 }
 
 export async function clearAppFile(db) {
+  try {
+    await db.prepare('DROP TABLE IF EXISTS app_file_chunks').run();
+  } catch (e) {}
   await ensureAppChunks(db);
-  await db.prepare('DELETE FROM app_file_chunks').run();
   await saveAppMeta(db, {});
 }
 
@@ -115,8 +124,10 @@ export async function startAppUpload(db, info) {
     throw err;
   }
   const chunks = chunkCount(size);
+  try {
+    await db.prepare('DROP TABLE IF EXISTS app_file_chunks').run();
+  } catch (e) {}
   await ensureAppChunks(db);
-  await db.prepare('DELETE FROM app_file_chunks').run();
   await saveAppMeta(db, {
     name: info.name,
     version: info.version,
@@ -129,23 +140,31 @@ export async function startAppUpload(db, info) {
   return { size, chunks };
 }
 
-export async function writeAppChunk(db, i, u8) {
+export async function writeAppChunk(db, i, data) {
   await ensureAppChunks(db);
   const idx = parseInt(i, 10);
-  if (!Number.isFinite(idx) || idx < 0 || idx > 2000) {
+  if (!Number.isFinite(idx) || idx < 0 || idx > 4000) {
     const err = new Error('شماره تکه نامعتبر است');
     err.status = 400;
     throw err;
   }
-  if (!u8 || !u8.length || u8.length > CHUNK + 32) {
+  const u8 = toU8(data);
+  if (!u8.length || u8.length > CHUNK + 64) {
     const err = new Error('تکه نامعتبر است');
     err.status = 400;
     throw err;
   }
-  await db
-    .prepare('INSERT INTO app_file_chunks (i, data) VALUES (?, ?) ON CONFLICT(i) DO UPDATE SET data = excluded.data')
-    .bind(idx, u8ToB64(u8))
-    .run();
+  try {
+    await db
+      .prepare('INSERT INTO app_file_chunks (i, data) VALUES (?, ?) ON CONFLICT(i) DO UPDATE SET data = excluded.data')
+      .bind(idx, u8)
+      .run();
+  } catch (e1) {
+    await db
+      .prepare('INSERT INTO app_file_chunks (i, data) VALUES (?, ?) ON CONFLICT(i) DO UPDATE SET data = excluded.data')
+      .bind(idx, u8ToB64(u8))
+      .run();
+  }
 }
 
 export async function finishAppUpload(db) {
@@ -181,11 +200,11 @@ export function streamAppFile(db, meta) {
       }
       const row = await db.prepare('SELECT data FROM app_file_chunks WHERE i = ?').bind(i).first();
       i += 1;
-      if (!row || !row.data) {
+      if (!row || row.data == null) {
         controller.error(new Error('تکهٔ فایل پیدا نشد'));
         return;
       }
-      controller.enqueue(b64ToU8(row.data));
+      controller.enqueue(toU8(row.data));
     },
   });
 }
