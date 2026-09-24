@@ -216,7 +216,7 @@
       <button type="button" class="atab" data-tab="gate">کد ورود</button>
       <button type="button" class="atab" data-tab="menu">منو</button>
       <button type="button" class="atab" data-tab="site">پایین سایت</button>
-      <button type="button" class="atab" data-tab="app">فایل دانلود</button>
+      <button type="button" class="atab" data-tab="app">لینک دانلود</button>
       <button type="button" class="atab" data-tab="support">پشتیبانی <span class="tab-n" id="supTabBadge"></span></button>
     </div>
 
@@ -345,26 +345,22 @@
     </div>
 
 
-    <div id="tab-app" style="display:none">
+        <div id="tab-app" style="display:none">
       <div class="card">
-        <h3>فایل دانلود برنامه</h3>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">فایل در همان دیتابیس vpo ذخیره می‌شود — R2 و کارت لازم نیست. تا ۲۰۰ مگ، تکه‌تکه آپلود می‌شود. بعد در صفحهٔ <span dir="ltr">/app</span> می‌آید. اگر نوشت «اتصال برقرار نشد»، فایل‌های API هنوز داخل پوشهٔ <span dir="ltr">functions/</span> روی گیتهاب نیستند.</p>
+        <h3>لینک دانلود برنامه</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">فایل را خودت هر جا خواستی آپلود کن و لینک مستقیم دانلود را اینجا بگذار. کاربر در صفحهٔ <span dir="ltr">/app</span> که روی دریافت بزند، همان لینک باز می‌شود.</p>
         <div class="form-row">
           <div class="field"><label>نام نمایشی</label><input id="appName" placeholder="FILTERNET"></div>
           <div class="field"><label>نسخه</label><input id="appVersion" dir="ltr" placeholder="1.0.0"></div>
         </div>
         <div class="form-row">
-          <div class="field"><label>فایل APK</label>
-            <button type="button" class="file-btn" id="appFileBtn">📁 انتخاب فایل .apk</button>
-            <input type="file" id="appFile" accept=".apk,application/vnd.android.package-archive">
-            <span class="file-name" id="appFileName"></span>
-          </div>
+          <div class="field" style="flex:1"><label>لینک دانلود</label><input id="appUrl" dir="ltr" placeholder="https://..."></div>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn btn-primary" id="appUploadBtn">آپلود فایل</button>
-          <button type="button" class="btn btn-danger" id="appDeleteBtn">حذف فایل</button>
+          <button type="button" class="btn btn-primary" id="appSaveBtn">ذخیره لینک</button>
+          <button type="button" class="btn btn-danger" id="appDeleteBtn">حذف لینک</button>
         </div>
-        <p id="appMetaLine" style="color:var(--muted);font-size:13px;margin-top:12px">هنوز فایلی نیست.</p>
+        <p id="appMetaLine" style="color:var(--muted);font-size:13px;margin-top:12px">هنوز لینکی نیست.</p>
       </div>
     </div>
 
@@ -733,112 +729,47 @@
 
   // ---- لیست سرورها ----
 
-  function fmtAppSize(n){
-    n=Number(n)||0;
-    if(!n) return '—';
-    if(n>=1048576) return (Math.round(n/1048576*10)/10)+' MB';
-    return Math.max(1, Math.round(n/1024))+' KB';
-  }
   function fillAppAdmin(d){
     var line=document.getElementById('appMetaLine');
-    if(!d || !d.ok){
-      if(line) line.textContent=(d && d.error) || 'نتوانست اطلاعات فایل را بگیرد.';
-      return;
-    }
     var nameEl=document.getElementById('appName');
     var verEl=document.getElementById('appVersion');
-    if(nameEl && !(nameEl.value||'').trim()) nameEl.value=d.name||'FILTERNET';
-    if(verEl && d.version) verEl.value=d.version;
+    var urlEl=document.getElementById('appUrl');
+    if(!d || !d.ok){
+      if(line) line.textContent=(d && d.error) || 'نتوانست اطلاعات را بگیرد.';
+      return;
+    }
+    if(nameEl) nameEl.value=d.name||'FILTERNET';
+    if(verEl) verEl.value=d.version||'';
+    if(urlEl) urlEl.value=d.url||'';
     if(line){
-      if(d.available){
-        line.textContent='فایل فعلی: '+(d.filename||'apk')+' — '+fmtAppSize(d.size)+(d.version?(' — نسخه '+d.version):'');
-      } else {
-        line.textContent='هنوز فایلی نیست.';
-      }
+      if(d.available && d.url) line.textContent='لینک فعال است'+(d.version?(' — نسخه '+d.version):'');
+      else line.textContent='هنوز لینکی نیست.';
     }
   }
   function loadAppAdmin(){
     fetch('/api/admin/app', { credentials:'include' }).then(readJsonRes).then(fillAppAdmin).catch(function(){
       var line=document.getElementById('appMetaLine');
-      if(line) line.textContent='API فایل روی سرور نیست — functions/api/admin/app.js را در گیتهاب داخل همان پوشه آپلود کن';
+      if(line) line.textContent='اتصال برقرار نشد';
     });
   }
-  document.getElementById('appFileBtn').addEventListener('click', function(){ document.getElementById('appFile').click(); });
-  document.getElementById('appFile').addEventListener('change', function(){
-    var f=this.files && this.files[0];
-    document.getElementById('appFileName').textContent=f ? f.name : '';
-  });
-  document.getElementById('appUploadBtn').addEventListener('click', function(){
-    var inp=document.getElementById('appFile');
-    var f=inp.files && inp.files[0];
-    if(!f){ toast('یک فایل APK انتخاب کن'); return; }
-    if(!/\.apk$/i.test(f.name||'')){ toast('فقط فایل .apk'); return; }
-    var max=200*1024*1024;
-    if(f.size>max){ toast('حداکثر ۲۰۰ مگ'); return; }
-    var CHUNK=360000;
-    var total=Math.ceil(f.size/CHUNK)||1;
-    var btn=document.getElementById('appUploadBtn');
-    btn.disabled=true;
-    btn.textContent='شروع آپلود…';
+  document.getElementById('appSaveBtn').addEventListener('click', function(){
+    var url=(document.getElementById('appUrl').value||'').trim();
     var name=(document.getElementById('appName').value||'FILTERNET').trim()||'FILTERNET';
     var version=(document.getElementById('appVersion').value||'').trim();
-    function sendChunk(i){
-      var blob=f.slice(i*CHUNK, Math.min((i+1)*CHUNK, f.size));
-      var fd=new FormData();
-      fd.append('action','chunk');
-      fd.append('i', String(i));
-      fd.append('chunk', blob, 'p.bin');
-      var tries=0;
-      function once(){
-        return fetch('/api/admin/app', { method:'POST', credentials:'include', body:fd }).then(readJsonRes).then(function(d){
-          if(d && d.ok) return;
-          tries+=1;
-          if(tries>=3) throw new Error((d && d.error) || 'تکه آپلود نشد');
-          return once();
-        });
-      }
-      return once();
-    }
-    fetch('/api/admin/app', {
-      method:'POST', credentials:'include',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'start', name:name, version:version, filename:f.name, size:f.size })
-    }).then(function(r){ return r.json(); }).then(function(d){
-      if(!d || !d.ok) throw new Error((d && d.error) || 'شروع نشد');
-      var i=0;
-      function next(){
-        if(i>=total){
-          btn.textContent='ثبت نهایی…';
-          return fetch('/api/admin/app', {
-            method:'POST', credentials:'include',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ action:'finish' })
-          }).then(readJsonRes).then(function(fin){
-            btn.disabled=false; btn.textContent='آپلود فایل';
-            if(!fin || !fin.ok){ toast((fin && fin.error) || 'ثبت نشد'); return; }
-            toast('فایل ذخیره شد');
-            inp.value='';
-            document.getElementById('appFileName').textContent='';
-            fillAppAdmin(fin);
-          });
-        }
-        btn.textContent='آپلود '+ (i+1) +' از '+ total;
-        return sendChunk(i).then(function(){ i+=1; return next(); });
-      }
-      return next();
-    }).catch(function(e){
-      btn.disabled=false; btn.textContent='آپلود فایل';
-      toast((e && e.message) || 'آپلود نشد');
+    if(!url){ toast('لینک دانلود را بگذار'); return; }
+    api('/api/admin/app', { method:'POST', body: JSON.stringify({ url:url, name:name, version:version }) }).then(function(d){
+      if(!d || !d.ok){ toast((d && d.error) || 'ذخیره نشد'); return; }
+      toast('لینک ذخیره شد');
+      fillAppAdmin(d);
     });
   });
   document.getElementById('appDeleteBtn').addEventListener('click', function(){
-    if(!confirm('فایل دانلود حذف شود؟')) return;
+    if(!confirm('لینک دانلود حذف شود؟')) return;
     api('/api/admin/app', { method:'DELETE' }).then(function(d){
       if(!d || !d.ok){ toast((d && d.error) || 'حذف نشد'); return; }
-      toast('فایل حذف شد');
-      document.getElementById('appFile').value='';
-      document.getElementById('appFileName').textContent='';
-      loadAppAdmin();
+      toast('لینک حذف شد');
+      var u=document.getElementById('appUrl'); if(u) u.value='';
+      fillAppAdmin({ ok:true, available:false });
     });
   });
 
@@ -1070,15 +1001,7 @@
           stickyCategory=payload.category;
           renderRows(); syncCatList();
           toast(bulk.length+' کانفیگ افزوده شد');
-          resetForm(); loadServers();
-        } else toast(d.error||'خطا');
-      });
-      return;
-    }
-    if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
-    api('/api/admin/servers', {method:'POST', body:JSON.stringify(payload)}).then(function(d){
-      if(d.ok){
-        servers.unshift(Object.assign({ id: d.id, created_at: '' }, payload));
+ct.assign({ id: d.id, created_at: '' }, payload));
         stickyCategory = payload.category;
         renderRows();
         syncCatList();
