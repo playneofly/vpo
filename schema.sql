@@ -82,6 +82,11 @@ CREATE TABLE IF NOT EXISTS support_messages (
 CREATE INDEX IF NOT EXISTS idx_support_vis ON support_threads (visitor_id, channel);
 CREATE INDEX IF NOT EXISTS idx_support_msg ON support_messages (thread_id, id);
 
+CREATE TABLE IF NOT EXISTS app_file_chunks (
+  i    INTEGER PRIMARY KEY,
+  data TEXT NOT NULL
+);
+
 -- اگر جدول از قبل بدون ستون دسته ساخته شده:
 -- ALTER TABLE servers ADD COLUMN category TEXT DEFAULT '';
 -- ALTER TABLE servers ADD COLUMN tags TEXT DEFAULT '';

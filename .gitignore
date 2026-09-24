@@ -1,0 +1,4 @@
+# پسورد ادمین را اینجا نذار و کامیت نکن!
+.dev.vars
+node_modules
+.wrangler
