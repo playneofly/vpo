@@ -1001,7 +1001,16 @@
           stickyCategory=payload.category;
           renderRows(); syncCatList();
           toast(bulk.length+' کانفیگ افزوده شد');
-ct.assign({ id: d.id, created_at: '' }, payload));
+          resetForm();
+          loadServers();
+        } else toast(d.error||'خطا');
+      });
+      return;
+    }
+    if(!payload.name || !payload.link){ toast('نام و لینک الزامی است'); return; }
+    api('/api/admin/servers', {method:'POST', body:JSON.stringify(payload)}).then(function(d){
+      if(d.ok){
+        servers.unshift(Object.assign({ id: d.id, created_at: '' }, payload));
         stickyCategory = payload.category;
         renderRows();
         syncCatList();
