@@ -75,13 +75,17 @@ export async function onRequestPost({ request, env }) {
     if (!part || typeof part === 'string') {
       return Response.json({ ok: false, error: 'تکه نرسید' }, { status: 400 });
     }
-    const u8 = new Uint8Array(await part.arrayBuffer());
-    await writeAppChunk(db, i, u8);
+    const buf = await part.arrayBuffer();
+    await writeAppChunk(db, i, buf);
     return Response.json({ ok: true, i: Number(i) });
   } catch (e) {
     if (e && e.status === 400) {
       return Response.json({ ok: false, error: e.message || 'خطا' }, { status: 400 });
     }
-    return dbError(e);
+    try {
+      return dbError(e);
+    } catch (e2) {
+      return Response.json({ ok: false, error: 'خطای سرور در ذخیرهٔ فایل' }, { status: 500 });
+    }
   }
 }
