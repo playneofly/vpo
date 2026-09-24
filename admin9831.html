@@ -348,7 +348,7 @@
     <div id="tab-app" style="display:none">
       <div class="card">
         <h3>فایل دانلود برنامه</h3>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">فایل در همان دیتابیس vpo ذخیره می‌شود — R2 و کارت لازم نیست. تا ۲۰۰ مگ، تکه‌تکه آپلود می‌شود. بعد در صفحهٔ <span dir="ltr">/app</span> می‌آید.</p>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:12px">فایل در همان دیتابیس vpo ذخیره می‌شود — R2 و کارت لازم نیست. تا ۲۰۰ مگ، تکه‌تکه آپلود می‌شود. بعد در صفحهٔ <span dir="ltr">/app</span> می‌آید. اگر نوشت «اتصال برقرار نشد»، فایل‌های API هنوز داخل پوشهٔ <span dir="ltr">functions/</span> روی گیتهاب نیستند.</p>
         <div class="form-row">
           <div class="field"><label>نام نمایشی</label><input id="appName" placeholder="FILTERNET"></div>
           <div class="field"><label>نسخه</label><input id="appVersion" dir="ltr" placeholder="1.0.0"></div>
@@ -649,14 +649,22 @@
     var m=PROTO[p]||{label:String(p||'؟').toUpperCase(),c:'#cbd5e1',bg:'rgba(148,163,184,.14)'};
     return '<span class="badge" style="color:'+m.c+';background:'+m.bg+'">'+m.label+'</span>';
   }
+  function readJsonRes(r){
+    return r.text().then(function(t){
+      t=(t||'').trim();
+      if(!t) return { ok:false, missing:true, error:'سرور جواب خالی داد — API فایل روی سرور نیست. app.js را داخل functions/api/admin آپلود کن، نه ریشهٔ ریپو.' };
+      var c=t.charAt(0);
+      if(c==='<' || t.indexOf('<!doctype')===0 || t.indexOf('<!DOCTYPE')===0){
+        return { ok:false, missing:true, error:'API فایل روی سرور نیست. چهار فایل را داخل پوشهٔ functions آپلود کن (نه ریشه).' };
+      }
+      try { return JSON.parse(t); }
+      catch(e){ return { ok:false, error:'جواب سرور JSON نبود' }; }
+    });
+  }
   function api(url, opts){
     opts=opts||{}; opts.credentials='include';
     opts.headers=Object.assign({'Content-Type':'application/json'}, opts.headers||{});
-    return fetch(url, opts).then(function(r){
-      return r.json().catch(function(){
-        return { ok:false, error:'دیتابیس وصل نیست. در کلادفلر: Settings → Bindings → D1 با اسم VPO بساز و Retry deployment بزن' };
-      });
-    });
+    return fetch(url, opts).then(readJsonRes);
   }
   function bakGet(k){ try{ var x=JSON.parse(localStorage.getItem(k)||''); return x&&typeof x==='object'?x:null; }catch(e){ return null; } }
   function bakSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -750,9 +758,9 @@
     }
   }
   function loadAppAdmin(){
-    fetch('/api/admin/app', { credentials:'include' }).then(function(r){ return r.json(); }).then(fillAppAdmin).catch(function(){
+    fetch('/api/admin/app', { credentials:'include' }).then(readJsonRes).then(fillAppAdmin).catch(function(){
       var line=document.getElementById('appMetaLine');
-      if(line) line.textContent='اتصال برقرار نشد';
+      if(line) line.textContent='API فایل روی سرور نیست — functions/api/admin/app.js را در گیتهاب داخل همان پوشه آپلود کن';
     });
   }
   document.getElementById('appFileBtn').addEventListener('click', function(){ document.getElementById('appFile').click(); });
@@ -782,7 +790,7 @@
       fd.append('chunk', blob, 'p.bin');
       var tries=0;
       function once(){
-        return fetch('/api/admin/app', { method:'POST', credentials:'include', body:fd }).then(function(r){ return r.json(); }).then(function(d){
+        return fetch('/api/admin/app', { method:'POST', credentials:'include', body:fd }).then(readJsonRes).then(function(d){
           if(d && d.ok) return;
           tries+=1;
           if(tries>=3) throw new Error((d && d.error) || 'تکه آپلود نشد');
@@ -805,7 +813,7 @@
             method:'POST', credentials:'include',
             headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ action:'finish' })
-          }).then(function(r){ return r.json(); }).then(function(fin){
+          }).then(readJsonRes).then(function(fin){
             btn.disabled=false; btn.textContent='آپلود فایل';
             if(!fin || !fin.ok){ toast((fin && fin.error) || 'ثبت نشد'); return; }
             toast('فایل ذخیره شد');
