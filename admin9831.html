@@ -738,16 +738,35 @@
       if(line) line.textContent=(d && d.error) || 'نتوانست اطلاعات را بگیرد.';
       return;
     }
-    if(nameEl) nameEl.value=d.name||'FILTERNET';
-    if(verEl) verEl.value=d.version||'';
-    if(urlEl) urlEl.value=d.url||'';
+    if(nameEl && d.name) nameEl.value=d.name;
+    if(verEl && d.version!=null) verEl.value=d.version;
+    if(urlEl && d.url) urlEl.value=d.url;
     if(line){
       if(d.available && d.url) line.textContent='لینک فعال است'+(d.version?(' — نسخه '+d.version):'');
       else line.textContent='هنوز لینکی نیست.';
     }
   }
   function loadAppAdmin(){
-    fetch('/api/admin/app', { credentials:'include' }).then(readJsonRes).then(fillAppAdmin).catch(function(){
+    fetch('/api/admin/app', { credentials:'include' }).then(readJsonRes).then(function(d){
+      if(d && d.ok && d.url){
+        bakSet('fn_admin_app', { url:d.url, name:d.name||'', version:d.version||'' });
+        fillAppAdmin(d);
+        return;
+      }
+      var bak=bakGet('fn_admin_app');
+      if(bak && bak.url){
+        fillAppAdmin({ ok:true, available:true, url:bak.url, name:bak.name, version:bak.version });
+        var line=document.getElementById('appMetaLine');
+        if(line) line.textContent='از ذخیرهٔ همین مرورگر — یک‌بار ذخیره لینک را بزن تا روی سرور بماند';
+        return;
+      }
+      fillAppAdmin(d || { ok:false });
+    }).catch(function(){
+      var bak=bakGet('fn_admin_app');
+      if(bak && bak.url){
+        fillAppAdmin({ ok:true, available:true, url:bak.url, name:bak.name, version:bak.version });
+        return;
+      }
       var line=document.getElementById('appMetaLine');
       if(line) line.textContent='اتصال برقرار نشد';
     });
@@ -757,18 +776,23 @@
     var name=(document.getElementById('appName').value||'FILTERNET').trim()||'FILTERNET';
     var version=(document.getElementById('appVersion').value||'').trim();
     if(!url){ toast('لینک دانلود را بگذار'); return; }
+    bakSet('fn_admin_app', { url:url, name:name, version:version });
     api('/api/admin/app', { method:'POST', body: JSON.stringify({ url:url, name:name, version:version }) }).then(function(d){
       if(!d || !d.ok){ toast((d && d.error) || 'ذخیره نشد'); return; }
       toast('لینک ذخیره شد');
+      bakSet('fn_admin_app', { url:d.url||url, name:d.name||name, version:d.version||version });
       fillAppAdmin(d);
     });
   });
   document.getElementById('appDeleteBtn').addEventListener('click', function(){
     if(!confirm('لینک دانلود حذف شود؟')) return;
+    try{ localStorage.removeItem('fn_admin_app'); }catch(e){}
     api('/api/admin/app', { method:'DELETE' }).then(function(d){
       if(!d || !d.ok){ toast((d && d.error) || 'حذف نشد'); return; }
       toast('لینک حذف شد');
       var u=document.getElementById('appUrl'); if(u) u.value='';
+      var n=document.getElementById('appName'); if(n) n.value='FILTERNET';
+      var v=document.getElementById('appVersion'); if(v) v.value='';
       fillAppAdmin({ ok:true, available:false });
     });
   });
