@@ -11,7 +11,10 @@ export async function onRequestGet({ env, request }) {
   try {
     const meta = await loadAppMeta(db);
     return Response.json(publicAppPayload(meta), {
-      headers: { 'Cache-Control': 'private, no-store' },
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'CDN-Cache-Control': 'no-store',
+      },
     });
   } catch (e) {
     return dbError(e);
