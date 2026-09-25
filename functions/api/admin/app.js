@@ -8,7 +8,12 @@ export async function onRequestGet({ request, env }) {
   if (!db) return noDb();
   try {
     const meta = await loadAppMeta(db);
-    return Response.json({ ok: true, ...publicAppPayload(meta) });
+    return Response.json({ ok: true, ...publicAppPayload(meta) }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'CDN-Cache-Control': 'no-store',
+      },
+    });
   } catch (e) {
     return dbError(e);
   }
